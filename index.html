@@ -62,6 +62,90 @@
       border:1px solid rgba(255,255,255,.25);
     }
     .nav-btn:hover{background:rgba(255,255,255,.28)}
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      /* Navigation mobile */
+      nav{padding:.5rem}
+      nav ul{
+        flex-direction:column;
+        gap:.5rem;
+        align-items:stretch
+      }
+      nav a{padding:.5rem;text-align:center}
+      
+      /* Container */
+      .container{padding:1rem}
+      
+      /* Stats grid */
+      .stats-grid{grid-template-columns:repeat(2,1fr);gap:.75rem}
+      .stat-card{padding:1rem}
+      .stat-number{font-size:1.5rem}
+      
+      /* Tables responsive */
+      table{font-size:.85rem}
+      th,td{padding:.5rem}
+      .notes-cell{max-width:120px}
+      
+      /* Formes */
+      form{padding:1rem}
+      .form-group{margin-bottom:1rem}
+      
+      /* Search + value row */
+      #inventory>div[style*="display:flex"]{
+        flex-direction:column;
+        gap:.5rem
+      }
+      #inventory>div[style*="display:flex"]>div{
+        justify-content:center
+      }
+      
+      /* Modal edit */
+      #edit-modal{padding:.5rem}
+      #edit-modal>div{padding:1rem}
+      
+      /* Modal password */
+      .password-content{padding:1.5rem}
+      
+      /* Use mode quantity */
+      #use-mode>div[style*="display:flex"]{
+        flex-direction:column;
+        gap:.5rem
+      }
+      
+      /* Buttons row */
+      #edit-modal>div>form>div[style*="display:flex"]{
+        flex-direction:column;
+        gap:.5rem
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid{grid-template-columns:1fr}
+      h1{font-size:1.3rem}
+      h2{font-size:1.1rem}
+      h3{font-size:1rem}
+      
+      /* Hide less important columns on very small screens */
+      #med-table th:nth-child(5),
+      #med-table td:nth-child(5),
+      #med-table th:nth-child(6),
+      #med-table td:nth-child(6),
+      #med-table-edit th:nth-child(4),
+      #med-table-edit td:nth-child(4),
+      #med-table-edit th:nth-child(5),
+      #med-table-edit td:nth-child(5),
+      #med-table-delete th:nth-child(4),
+      #med-table-delete td:nth-child(4),
+      #med-table-delete th:nth-child(5),
+      #med-table-delete td:nth-child(5),
+      #med-table-use th:nth-child(4),
+      #med-table-use td:nth-child(4),
+      #med-table-use th:nth-child(5),
+      #med-table-use td:nth-child(5){
+        display:none
+      }
+    }
   </style>
 </head>
 
@@ -127,7 +211,7 @@
     <section id="inventory" class="section">
       <h2>📦 Inventaire complet</h2>
 
-      <div style="display:flex;gap:1rem;margin:1rem 0;align-items:center;">
+      <div style="display:flex;gap:1rem;margin:1rem 0;align-items:center;flex-wrap:wrap;">
         <input type="text" id="search" placeholder="🔎 Rechercher (nom, dosage, notes)…" style="flex:1;">
         <div style="background:#e8f5e8;padding:.6rem 1rem;border-radius:var(--radius);font-size:.95rem;">
           💰 Valeur totale : <strong id="total-value">0.00 DH</strong>
@@ -231,7 +315,7 @@
 
       <div class="form-group" style="max-width:420px;">
         <label for="use-qty">Quantité à utiliser :</label>
-        <div style="display:flex;gap:.75rem;align-items:center;">
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
           <input type="number" id="use-qty" min="1" value="1" style="width:120px;">
           <span class="chip">Alerte stock faible ≤ 5</span>
         </div>
@@ -318,7 +402,7 @@
 
         <div class="form-group"><label>Notes</label><textarea id="edit-notes"></textarea></div>
 
-        <div style="display:flex;gap:1rem;">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
           <button type="submit" style="flex:1;">💾 Enregistrer</button>
           <button type="button" id="edit-cancel" style="flex:1;background:#6c757d;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;">❌ Annuler</button>
         </div>
