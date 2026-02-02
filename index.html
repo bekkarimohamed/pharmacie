@@ -15,7 +15,7 @@
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;background:#fff;color:var(--text);min-height:100vh}
-    nav{background:var(--primary);padding:1rem;position:sticky;top:0;z-index:100}
+    nav{background:var(--primary);padding:.75rem;position:sticky;top:0;z-index:100}
     nav ul{display:flex;flex-wrap:wrap;gap:1rem;list-style:none;align-items:center}
     nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;border-radius:var(--radius);transition:background .3s;display:inline-block}
     nav a:hover{background:rgba(255,255,255,.2)}
@@ -65,72 +65,135 @@
 
     /* ========== RESPONSIVE ========== */
     @media (max-width: 768px) {
-      /* Navigation mobile */
-      nav{padding:.5rem}
+      /* Navigation mobile - menu compact en grille */
+      nav{padding:.3rem}
       nav ul{
-        flex-direction:column;
-        gap:.5rem;
-        align-items:stretch
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:.3rem;
+        align-items:center
       }
-      nav a{padding:.5rem;text-align:center}
+      nav a{
+        padding:.3rem .4rem;
+        font-size:.75rem;
+        text-align:center
+      }
       
-      /* Container */
-      .container{padding:1rem}
+      /* Container - plus compact */
+      .container{padding:.5rem}
       
-      /* Stats grid */
-      .stats-grid{grid-template-columns:repeat(2,1fr);gap:.75rem}
-      .stat-card{padding:1rem}
-      .stat-number{font-size:1.5rem}
+      /* Titres réduits */
+      h1{font-size:1rem}
+      h2{font-size:.95rem}
+      h3{font-size:.9rem}
       
-      /* Tables responsive */
-      table{font-size:.85rem}
-      th,td{padding:.5rem}
-      .notes-cell{max-width:120px}
+      /* Stats grid - compact */
+      .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:.4rem;
+        margin:.5rem 0
+      }
+      .stat-card{
+        padding:.5rem
+      }
+      .stat-number{font-size:1.1rem}
       
-      /* Formes */
-      form{padding:1rem}
-      .form-group{margin-bottom:1rem}
+      /* Forms - compact */
+      form{
+        padding:.5rem;
+        margin-top:.3rem
+      }
+      .form-group{margin-bottom:.5rem}
+      label{font-size:.9rem;margin-bottom:.3rem}
+      
+      /* Inputs plus compacts */
+      input,textarea,select{
+        padding:.4rem;
+        font-size:.85rem
+      }
+      
+      /* Buttons */
+      button[type=submit]{
+        padding:.4rem .75rem;
+        font-size:.85rem
+      }
       
       /* Search + value row */
       #inventory>div[style*="display:flex"]{
         flex-direction:column;
-        gap:.5rem
+        gap:.3rem
       }
       #inventory>div[style*="display:flex"]>div{
         justify-content:center
       }
       
-      /* Modal edit */
-      #edit-modal{padding:.5rem}
-      #edit-modal>div{padding:1rem}
-      
-      /* Modal password */
-      .password-content{padding:1.5rem}
-      
       /* Use mode quantity */
       #use-mode>div[style*="display:flex"]{
         flex-direction:column;
-        gap:.5rem
+        gap:.3rem
       }
       
-      /* Buttons row */
+      /* Tables responsive avec scroll horizontal */
+      table{
+        font-size:.75rem;
+        display:block;
+        overflow-x:auto;
+        white-space:nowrap
+      }
+      th,td{
+        padding:.3rem .25rem;
+        min-width:50px
+      }
+      .notes-cell{max-width:60px}
+      
+      /* Modal edit */
+      #edit-modal{padding:.2rem}
+      #edit-modal>div{
+        padding:.5rem;
+        max-width:98vw
+      }
+      
+      /* Modal password */
+      .password-content{
+        padding:.75rem;
+        max-width:90vw
+      }
+      
+      /* Buttons row in modal */
       #edit-modal>div>form>div[style*="display:flex"]{
         flex-direction:column;
-        gap:.5rem
+        gap:.3rem
       }
     }
 
     @media (max-width: 480px) {
-      .stats-grid{grid-template-columns:1fr}
-      h1{font-size:1.3rem}
-      h2{font-size:1.1rem}
-      h3{font-size:1rem}
+      /* Navigation mobile - 7 boutons visibles en grille */
+      nav ul{
+        grid-template-columns:repeat(4,1fr);
+        gap:.2rem
+      }
+      nav a{
+        padding:.25rem .3rem;
+        font-size:.7rem
+      }
+      .stats-grid{grid-template-columns:repeat(2,1fr)}
       
-      /* Hide less important columns on very small screens */
-      #med-table th:nth-child(5),
-      #med-table td:nth-child(5),
-      #med-table th:nth-child(6),
-      #med-table td:nth-child(6),
+      /* Masquer les boutons secondaires sur très petit écran */
+      #btn-save,
+      #btn-restore,
+      #btn-clear,
+      #logout-link{
+        display:none
+      }
+      
+      /* Garder les boutons essentiels */
+      nav ul li:nth-child(-n+7){
+        display:block
+      }
+      
+      /* Cacher la colonne Actions (colonne 10) */
+      #med-table th:nth-child(10),
+      #med-table td:nth-child(10),
       #med-table-edit th:nth-child(4),
       #med-table-edit td:nth-child(4),
       #med-table-edit th:nth-child(5),
@@ -144,6 +207,44 @@
       #med-table-use th:nth-child(5),
       #med-table-use td:nth-child(5){
         display:none
+      }
+      
+      /* Colonnes visibles sur mobile */
+      #med-table th:nth-child(1),
+      #med-table td:nth-child(1){
+        min-width:80px
+      }
+      #med-table th:nth-child(2),
+      #med-table td:nth-child(2){
+        min-width:60px
+      }
+      #med-table th:nth-child(3),
+      #med-table td:nth-child(3){
+        min-width:50px
+      }
+      #med-table th:nth-child(4),
+      #med-table td:nth-child(4){
+        min-width:40px
+      }
+      #med-table th:nth-child(5),
+      #med-table td:nth-child(5){
+        min-width:50px
+      }
+      #med-table th:nth-child(6),
+      #med-table td:nth-child(6){
+        min-width:50px
+      }
+      #med-table th:nth-child(7),
+      #med-table td:nth-child(7){
+        min-width:60px
+      }
+      #med-table th:nth-child(8),
+      #med-table td:nth-child(8){
+        min-width:50px
+      }
+      #med-table th:nth-child(9),
+      #med-table td:nth-child(9){
+        min-width:70px
       }
     }
   </style>
