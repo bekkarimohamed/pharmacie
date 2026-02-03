@@ -1245,52 +1245,45 @@ async function connectCloud(){
 
 async function syncToCloud(){
   if(!cloudId) return;
-  let data = { meds: meds, toBuyList: toBuyList, timestamp: Date.now() };
-  console.log('Sync: Debut, cloudId=' + cloudId);
+  // Fusionner avec donnees cloud pour ne pas perdre les donnees de lautre appareil
+  let cloudMeds = meds;
   try{
-    showCloudStatus('Synchronisation...');
+    let res = await fetch(CLOUD_URL + cloudId + '/latest', {
+      headers: { 'X-Master-Key': CLOUD_API_KEY }
+    });
+    if(res.ok){
+      let text = await res.text();
+      try{
+        let data = JSON.parse(text);
+        let cloudRecord = data.record || data;
+        if(cloudRecord && cloudRecord.meds){
+          // Fusionner: ajouter les medicaments qui nexistent pas localement
+          let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
+          for(let m of cloudRecord.meds){
+            if(!localKeys.has(keyOf(m.name, m.dosage))){
+              meds.push(m);
+            }
+          }
+          console.log('Sync: fusionne avec cloud, total: ' + meds.length);
+        }
+      }catch(e){}
+    }
+  }catch(e){}
+  
+  let data = { meds: meds, toBuyList: toBuyList, timestamp: Date.now() };
+  console.log('Sync: Envoi vers cloud, total meds: ' + meds.length);
+  try{
+    showCloudStatus('Sync... (' + meds.length + ' meds)');
     let res = await fetch(CLOUD_URL + cloudId, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
       body: JSON.stringify(data)
     });
     console.log('Sync PUT: status=' + res.status);
-    if(res.status === 401){
-      showCloudStatus('Erreur 401: Cle API invalide. Voir console pour instructions.');
-      console.log('%c=== POUR ACTIVER LA SYNC CLOUD ===', 'font-size:16px;font-weight:bold;color:blue;');
-      console.log('1. Allez sur https://jsonbin.io et inscrivez-vous (gratuit)');
-      console.log('2. Allez dans "API Keys" et copiez votre cle');
-      console.log('3. Ouvrez le fichier index.html dans un editeur de texte');
-      console.log('4. Remplacez CLOUD_API_KEY par votre vraie cle');
-      console.log('5. Reessayez la synchronisation');
-      return;
-    }
-    let text = await res.text();
-    console.log('Sync PUT: response=' + text);
     if(res.ok || res.status === 200 || res.status === 201){
-      console.log('Sync: OK');
-      showCloudStatus('Sauvegarde OK!');
-    }else if(res.status === 404 || res.status === 400){
-      showCloudStatus('Creation du cloud...');
-      let createRes = await fetch('https://api.jsonbin.io/v3/b', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
-        body: JSON.stringify(data)
-      });
-      let createText = await createRes.text();
-      console.log('Sync POST: status=' + createRes.status + ', response=' + createText);
-      if(createRes.ok){
-        try{
-          let created = JSON.parse(createText);
-          cloudId = created.metadata.id;
-          localStorage.setItem(CLOUD_KEY, cloudId);
-          showCloudStatus('Cloud cree: ' + cloudId);
-        }catch(e){
-          showCloudStatus('Erreur creation: ' + e);
-        }
-      }else{
-        showCloudStatus('Erreur POST: ' + createRes.status);
-      }
+      showCloudStatus('Sync OK (' + meds.length + ' meds)');
+      renderAll();
+      updateStats();
     }else{
       showCloudStatus('Erreur sync: ' + res.status);
     }
@@ -1308,70 +1301,59 @@ function showCloudStatus(msg){
 async function syncFromCloud(){
   if(!cloudId) return;
   try{
-    showCloudStatus('Rapatriement...');
+    showCloudStatus('Lecture cloud...');
     let url = CLOUD_URL + cloudId + '/latest';
     console.log('SyncFrom: fetching ' + url);
     let res = await fetch(url, {
       headers: { 'X-Master-Key': CLOUD_API_KEY }
     });
     console.log('SyncFrom: status=' + res.status);
-    if(res.status === 401){
-      showCloudStatus('Erreur 401: API key');
-      return;
-    }
     if(res.status === 404){
-      showCloudStatus('Bin pas trouve. Lancez Sync sur PC dabord.');
+      showCloudStatus('Pas encore de cloud. Lancez sync sur PC.');
       return;
     }
-    if(res.ok){
-      let text = await res.text();
-      console.log('SyncFrom: raw response=' + text.substring(0, 500));
-      if(text.length < 10){
-        showCloudStatus('Reponse vide du cloud');
-        return;
+    if(!res.ok){
+      showCloudStatus('Erreur lecture: ' + res.status);
+      return;
+    }
+    let text = await res.text();
+    if(text.length < 10){
+      showCloudStatus('Cloud vide');
+      return;
+    }
+    try{
+      let data = JSON.parse(text);
+      let cloudRecord = data.record || data;
+      if(cloudRecord && cloudRecord.meds && Array.isArray(cloudRecord.meds)){
+        // Fusionner: ajouter les medicaments cloud qui nexistent pas localement
+        let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
+        let added = 0;
+        for(let m of cloudRecord.meds){
+          if(!localKeys.has(keyOf(m.name, m.dosage))){
+            meds.push(m);
+            added++;
+          }
+        }
+        // Mettre a jour toBuyList aussi
+        if(cloudRecord.toBuyList && Array.isArray(cloudRecord.toBuyList)){
+          toBuyList = cloudRecord.toBuyList;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+        localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+        renderAll();
+        updateStats();
+        showCloudStatus('Recu: ' + cloudRecord.meds.length + ' meds (' + added + ' nouveaux)');
+        console.log('SyncFrom: total meds=' + meds.length + ', added=' + added);
+      }else{
+        showCloudStatus('Pas de donnees valides dans cloud');
       }
-      try{
-        let data = JSON.parse(text);
-        console.log('SyncFrom: parsed OK');
-        // Chercher les donnees dans differentes structures possibles
-        let medsData = null;
-        let toBuyData = null;
-        
-        if(data.record){
-          medsData = data.record.meds;
-          toBuyData = data.record.toBuyList;
-        }
-        if(!medsData && data.meds){
-          medsData = data.meds;
-          toBuyData = data.toBuyList;
-        }
-        if(!medsData && Array.isArray(data)){
-          medsData = data;
-        }
-        
-        if(medsData && Array.isArray(medsData)){
-          meds = medsData;
-          toBuyList = toBuyData || [];
-          console.log('SyncFrom: saving meds to localStorage', meds.length);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-          localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-          renderAll();
-          showCloudStatus('Recu: ' + meds.length + ' medocs (localStorage updated)');
-          console.log('SyncFrom: localStorage content:', localStorage.getItem(STORAGE_KEY).substring(0, 200));
-        }else{
-          showCloudStatus('Pas de donnees valides');
-          console.log('SyncFrom: medsData null or not array');
-        }
-      }catch(e){
-        console.log('SyncFrom: parse error', e.message);
-        showCloudStatus('Parse error: ' + e.message.substring(0,30));
-      }
-    }else{
-      showCloudStatus('Erreur: ' + res.status);
+    }catch(e){
+      console.log('SyncFrom: parse error', e.message);
+      showCloudStatus('Erreur lecture');
     }
   }catch(e){
-    console.log('Sync from cloud: Erreur', e.name, e.message);
-    showCloudStatus('Erreur: ' + e.name);
+    console.log('SyncFrom: erreur', e.name, e.message);
+    showCloudStatus('Erreur connexion');
   }
 }
 
