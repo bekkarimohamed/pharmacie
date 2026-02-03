@@ -1352,12 +1352,15 @@ async function syncFromCloud(){
         if(medsData && Array.isArray(medsData)){
           meds = medsData;
           toBuyList = toBuyData || [];
+          console.log('SyncFrom: saving meds to localStorage', meds.length);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
           localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
           renderAll();
-          showCloudStatus('Recu: ' + meds.length + ' medicaments');
+          showCloudStatus('Recu: ' + meds.length + ' medocs (localStorage updated)');
+          console.log('SyncFrom: localStorage content:', localStorage.getItem(STORAGE_KEY).substring(0, 200));
         }else{
           showCloudStatus('Pas de donnees valides');
+          console.log('SyncFrom: medsData null or not array');
         }
       }catch(e){
         console.log('SyncFrom: parse error', e.message);
