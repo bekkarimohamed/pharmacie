@@ -1367,8 +1367,8 @@ async function syncFromCloud(){
       showCloudStatus('Erreur: ' + res.status);
     }
   }catch(e){
-    console.log('Sync from cloud: Erreur', e);
-    showCloudStatus('Erreur connexion');
+    console.log('Sync from cloud: Erreur', e.name, e.message);
+    showCloudStatus('Erreur: ' + e.name);
   }
 }
 
