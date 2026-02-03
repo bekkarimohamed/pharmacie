@@ -1214,7 +1214,7 @@ document.addEventListener('keydown', e=>{
 ========================= */
 const CLOUD_KEY = 'pharmacie_cloud_id';
 const CLOUD_URL = 'https://api.jsonbin.io/v3/b/';
-const CLOUD_API_KEY = '$2a$10$8gG6qLSqVPLpp8HFdKk5zeoa3K5Z9Q5';
+const CLOUD_API_KEY = '$2a$10$yn0pJFQNZ.FUA7ozos/WtO19llV8crfyi5vBSx5xBKrcxCVe5Z2TW';
 
 let cloudId = localStorage.getItem(CLOUD_KEY);
 
@@ -1255,6 +1255,16 @@ async function syncToCloud(){
       body: JSON.stringify(data)
     });
     console.log('Sync PUT: status=' + res.status);
+    if(res.status === 401){
+      showCloudStatus('Erreur 401: Cle API invalide. Voir console pour instructions.');
+      console.log('%c=== POUR ACTIVER LA SYNC CLOUD ===', 'font-size:16px;font-weight:bold;color:blue;');
+      console.log('1. Allez sur https://jsonbin.io et inscrivez-vous (gratuit)');
+      console.log('2. Allez dans "API Keys" et copiez votre cle');
+      console.log('3. Ouvrez le fichier index.html dans un editeur de texte');
+      console.log('4. Remplacez CLOUD_API_KEY par votre vraie cle');
+      console.log('5. Reessayez la synchronisation');
+      return;
+    }
     let text = await res.text();
     console.log('Sync PUT: response=' + text);
     if(res.ok || res.status === 200 || res.status === 201){
