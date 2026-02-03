@@ -2,1215 +2,251 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Gestion de la Pharmacie à Domicile</title>
+  <title>Gestion Pharmacie</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <style>
-    :root{
-      --primary:#ff6f61;
-      --accent:#88c0d0;
-      --text:#363636;
-      --radius:8px;
-      --shadow:rgba(0,0,0,0.1);
-    }
+    :root{--primary:#ff6f61;--accent:#88c0d0;--text:#363636;--radius:8px;--shadow:rgba(0,0,0,0.1)}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;background:#fff;color:var(--text);min-height:100vh}
     nav{background:var(--primary);padding:.75rem;position:sticky;top:0;z-index:100}
     nav ul{display:flex;flex-wrap:wrap;gap:1rem;list-style:none;align-items:center}
-    nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;border-radius:var(--radius);transition:background .3s;display:inline-block}
-    nav a:hover{background:rgba(255,255,255,.2)}
+    nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;border-radius:var(--radius);display:inline-block}
     .container{padding:2rem;max-width:1200px;margin:auto}
     section{display:none}
     section.active{display:block}
-    table{width:100%;border-collapse:collapse;margin-top:1rem;box-shadow:0 2px 8px var(--shadow);border-radius:var(--radius);overflow:hidden}
-    th,td{padding:.75rem;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
-    th{background:var(--accent);color:#fff;font-weight:600}
-    tr:hover{background:#f9f9f9}
+    table{width:100%;border-collapse:collapse;margin-top:1rem;box-shadow:0 2px 8px var(--shadow);border-radius:var(--radius)}
+    th,td{padding:.75rem;border-bottom:1px solid #eee;text-align:left}
+    th{background:var(--accent);color:#fff}
     .expired{color:#d32f2f!important;font-weight:bold}
     .expiring-soon{color:#f57c00!important;font-weight:bold}
-    .valid{color:#2e7d32!important}
     .stock-zero{color:#d32f2f!important;font-weight:bold;background:#ffebee}
-    .action-btn{background:none;border:none;cursor:pointer;margin:0 .25rem;font-size:1.1rem;padding:.3rem;border-radius:var(--radius);transition:transform .2s}
-    .action-btn:hover{transform:scale(1.2)}
-    .edit{color:#2a9d8f}
-    .delete{color:#e76f51}
-    .use{color:#ff7f50}
+    .action-btn{background:none;border:none;cursor:pointer;margin:0 .25rem;font-size:1.1rem}
     form{max-width:520px;margin-top:1rem;background:#fff;padding:1.5rem;border-radius:var(--radius);box-shadow:0 2px 8px var(--shadow)}
     .form-group{margin-bottom:1.2rem}
     label{display:block;margin-bottom:.5rem;font-weight:bold;color:var(--primary)}
-    input,textarea{width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem}
-    input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(136,192,208,.2)}
-    textarea{resize:vertical;min-height:80px}
-    button[type=submit]{background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600}
-    button[type=submit]:hover{background:#e85a50}
-
-    #search,#search-edit,#search-delete,#search-use{
-      width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem
-    }
-    .notes-cell{max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .notes-cell:hover{white-space:normal;overflow:visible}
+    input,textarea,select{width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem}
+    button[type=submit]{background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem}
     .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:2rem 0}
     .stat-card{background:#fff;padding:1.5rem;border-radius:var(--radius);box-shadow:0 2px 8px var(--shadow);text-align:center}
     .stat-number{font-size:2rem;font-weight:bold;margin:.5rem 0}
-
     .password-modal{display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);justify-content:center;align-items:center;z-index:10000}
-    .password-content{background:#fff;padding:2rem;border-radius:var(--radius);text-align:center;width:90%;max-width:420px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+    .password-content{background:#fff;padding:2rem;border-radius:var(--radius);text-align:center;width:90%;max-width:420px}
     .empty-msg{text-align:center;padding:2rem;color:#666;font-style:italic}
-
-    .nav-btn{
-      background:rgba(255,255,255,.18);
-      border:1px solid rgba(255,255,255,.25);
-    }
-    .nav-btn:hover{background:rgba(255,255,255,.28)}
-
-    /* ========== RESPONSIVE ========== */
-    @media (max-width: 768px) {
-      /* Navigation mobile - menu compact en grille */
+    #sync-status{position:fixed;bottom:10px;right:10px;padding:.5rem 1rem;border-radius:20px;font-size:.8rem;z-index:1000;background:#4caf50;color:#fff}
+    #sync-status.offline{background:#f44336}
+    #sync-status.hidden{display:none}
+    #cloud-modal{display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);justify-content:center;align-items:center;z-index:10001}
+    #cloud-modal.hidden{display:none}
+    .cloud-content{background:#fff;padding:2rem;border-radius:var(--radius);width:90%;max-width:450px}
+    .cloud-content input{width:100%;padding:.75rem;margin:.5rem 0;border:1px solid #ddd;border-radius:var(--radius)}
+    .cloud-content button{background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;width:100%;margin-top:.5rem}
+    @media (max-width:768px){
       nav{padding:.3rem}
-      nav ul{
-        display:grid;
-        grid-template-columns:repeat(3,1fr);
-        gap:.3rem;
-        align-items:center
-      }
-      nav a{
-        padding:.3rem .4rem;
-        font-size:.75rem;
-        text-align:center
-      }
-      
-      /* Container - plus compact */
+      nav ul{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem}
+      nav a{padding:.3rem .4rem;font-size:.75rem;text-align:center}
       .container{padding:.5rem}
-      
-      /* Titres réduits */
-      h1{font-size:1rem}
-      h2{font-size:.95rem}
-      h3{font-size:.9rem}
-      
-      /* Stats grid - compact */
-      .stats-grid{
-        grid-template-columns:repeat(2,1fr);
-        gap:.4rem;
-        margin:.5rem 0
-      }
-      .stat-card{
-        padding:.5rem
-      }
+      .stats-grid{grid-template-columns:repeat(2,1fr);gap:.4rem;margin:.5rem 0}
+      .stat-card{padding:.5rem}
       .stat-number{font-size:1.1rem}
-      
-      /* Forms - compact */
-      form{
-        padding:.5rem;
-        margin-top:.3rem
-      }
-      .form-group{margin-bottom:.5rem}
-      label{font-size:.9rem;margin-bottom:.3rem}
-      
-      /* Inputs plus compacts */
-      input,textarea,select{
-        padding:.4rem;
-        font-size:.85rem
-      }
-      
-      /* Buttons */
-      button[type=submit]{
-        padding:.4rem .75rem;
-        font-size:.85rem
-      }
-      
-      /* Search + value row */
-      #inventory>div[style*="display:flex"]{
-        flex-direction:column;
-        gap:.3rem
-      }
-      #inventory>div[style*="display:flex"]>div{
-        justify-content:center
-      }
-      
-      /* Use mode quantity */
-      #use-mode>div[style*="display:flex"]{
-        flex-direction:column;
-        gap:.3rem
-      }
-      
-      /* Tables responsive avec scroll horizontal */
-      table{
-        font-size:.75rem;
-        display:block;
-        overflow-x:auto;
-        white-space:nowrap
-      }
-      th,td{
-        padding:.3rem .25rem;
-        min-width:50px
-      }
-      .notes-cell{max-width:60px}
-      
-      /* Modal edit */
-      #edit-modal{padding:.2rem}
-      #edit-modal>div{
-        padding:.5rem;
-        max-width:98vw
-      }
-      
-      /* Modal password */
-      .password-content{
-        padding:.75rem;
-        max-width:90vw
-      }
-      
-      /* Buttons row in modal */
-      #edit-modal>div>form>div[style*="display:flex"]{
-        flex-direction:column;
-        gap:.3rem
-      }
-    }
-
-    @media (max-width: 480px) {
-      /* Navigation mobile - 7 boutons visibles en grille */
-      nav ul{
-        grid-template-columns:repeat(4,1fr);
-        gap:.2rem
-      }
-      nav a{
-        padding:.25rem .3rem;
-        font-size:.7rem
-      }
-      .stats-grid{grid-template-columns:repeat(2,1fr)}
-      
-      /* Masquer les boutons secondaires sur très petit écran */
-      #btn-save,
-      #btn-restore,
-      #btn-clear,
-      #logout-link{
-        display:none
-      }
-      
-      /* Garder les boutons essentiels */
-      nav ul li:nth-child(-n+7){
-        display:block
-      }
-      
-      /* Cacher la colonne Actions (colonne 10) */
-      #med-table th:nth-child(10),
-      #med-table td:nth-child(10),
-      #med-table-edit th:nth-child(4),
-      #med-table-edit td:nth-child(4),
-      #med-table-edit th:nth-child(5),
-      #med-table-edit td:nth-child(5),
-      #med-table-delete th:nth-child(4),
-      #med-table-delete td:nth-child(4),
-      #med-table-delete th:nth-child(5),
-      #med-table-delete td:nth-child(5),
-      #med-table-use th:nth-child(4),
-      #med-table-use td:nth-child(4),
-      #med-table-use th:nth-child(5),
-      #med-table-use td:nth-child(5){
-        display:none
-      }
-      
-      /* Colonnes visibles sur mobile */
-      #med-table th:nth-child(1),
-      #med-table td:nth-child(1){
-        min-width:80px
-      }
-      #med-table th:nth-child(2),
-      #med-table td:nth-child(2){
-        min-width:60px
-      }
-      #med-table th:nth-child(3),
-      #med-table td:nth-child(3){
-        min-width:50px
-      }
-      #med-table th:nth-child(4),
-      #med-table td:nth-child(4){
-        min-width:40px
-      }
-      #med-table th:nth-child(5),
-      #med-table td:nth-child(5){
-        min-width:50px
-      }
-      #med-table th:nth-child(6),
-      #med-table td:nth-child(6){
-        min-width:50px
-      }
-      #med-table th:nth-child(7),
-      #med-table td:nth-child(7){
-        min-width:60px
-      }
-      #med-table th:nth-child(8),
-      #med-table td:nth-child(8){
-        min-width:50px
-      }
-      #med-table th:nth-child(9),
-      #med-table td:nth-child(9){
-        min-width:70px
-      }
+      form{padding:.5rem}
+      input,textarea,select{padding:.4rem;font-size:.85rem}
+      table{font-size:.75rem;display:block;overflow-x:auto;white-space:nowrap}
+      th,td{padding:.3rem .25rem}
+      #sync-status{bottom:5px;right:5px;font-size:.7rem;padding:.3rem .6rem}
+      #btn-save,#btn-restore,#btn-clear{display:none}
+      #logout-link{display:block!important}
+      #med-table th:nth-child(10),#med-table td:nth-child(10),#med-table-edit th:nth-child(4),#med-table-edit td:nth-child(4),#med-table-edit th:nth-child(5),#med-table-edit td:nth-child(5),#med-table-delete th:nth-child(4),#med-table-delete td:nth-child(4),#med-table-delete th:nth-child(5),#med-table-delete td:nth-child(5),#med-table-use th:nth-child(4),#med-table-use td:nth-child(4),#med-table-use th:nth-child(5),#med-table-use td:nth-child(5){display:none}
     }
   </style>
 </head>
-
 <body>
-
-  <!-- Modal de connexion -->
+  <div id="cloud-modal" class="">
+    <div class="cloud-content">
+      <h2>Cloud Sync</h2>
+      <p>Entrez votre ID unique pour synchroniser entre PC et telephone</p>
+      <input type="text" id="cloud-id" placeholder="ex: famille-pharmacie-2024">
+      <button id="cloud-btn">Connecter</button>
+      <p style="font-size:.8rem;color:#666;margin-top:1rem">Utilisez le MEME ID sur tous vos appareils</p>
+    </div>
+  </div>
   <div id="pwd-modal" class="password-modal">
     <div class="password-content">
-      <h2>🔐 Accès sécurisé</h2>
-      <p style="margin-top:.5rem;">Entrez le mot de passe pour accéder à l'application</p>
-
-      <input type="password" id="pwd-input" placeholder="Mot de passe"
-             style="width:100%;padding:.75rem;margin:1rem 0;border:1px solid #ddd;border-radius:var(--radius);font-size:1.1rem;" />
-
-      <button id="pwd-btn"
-              style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;">
-        Accéder
-      </button>
-
-      <p id="pwd-error" style="color:#d32f2f;margin-top:1rem;display:none;">Mot de passe incorrect</p>
-      <p style="margin-top:1rem;font-size:.9rem;color:#666;">Astuce : Entrée = valider</p>
+      <h2>Mot de passe</h2>
+      <input type="password" id="pwd-input" placeholder="Entrez mot de passe" style="width:100%;padding:.75rem;margin:1rem 0;border:1px solid #ddd;border-radius:var(--radius)">
+      <button id="pwd-btn" style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer">Acceder</button>
+      <p id="pwd-error" style="color:#d32f2f;margin-top:1rem;display:none">Mot de passe incorrect</p>
     </div>
   </div>
-
-  <!-- Navigation -->
-  <nav id="main-nav" style="display:none;">
+  <div id="sync-status" class="hidden">Sync</div>
+  <nav id="main-nav" style="display:none">
     <ul>
-      <li><a href="#" data-target="home">🏠 Accueil</a></li>
-      <li><a href="#" data-target="inventory">📦 Inventaire</a></li>
-      <li><a href="#" data-target="add">➕ Saisie</a></li>
-      <li><a href="#" data-target="edit-mode">✏️ Modifier</a></li>
-      <li><a href="#" data-target="delete-mode">🗑️ Supprimer</a></li>
-      <li><a href="#" data-target="use-mode">💊 Utiliser</a></li>
-      <li><a href="#" data-target="to-buy">🛒 À acheter</a></li>
-
-      <!-- NOUVEAU : Sauvegarder / Restaurer / Vider -->
-      <li><a href="#" id="btn-save" class="nav-btn">💾 Sauvegarder</a></li>
-      <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
-      <li><a href="#" id="btn-clear" class="nav-btn">🧹 Vider tout</a></li>
-
-      <li><a href="#" id="logout-link">🚪 Quitter</a></li>
+      <li><a href="#" data-target="home">Accueil</a></li>
+      <li><a href="#" data-target="inventory">Inventaire</a></li>
+      <li><a href="#" data-target="add">Ajouter</a></li>
+      <li><a href="#" data-target="edit">Modifier</a></li>
+      <li><a href="#" data-target="delete">Supprimer</a></li>
+      <li><a href="#" data-target="use">Utiliser</a></li>
+      <li><a href="#" data-target="buy">A acheter</a></li>
+      <li><a href="#" id="btn-save">Sauvegarder</a></li>
+      <li><a href="#" id="btn-restore">Restaurer</a></li>
+      <li><a href="#" id="btn-clear">Vider</a></li>
+      <li><a href="#" id="logout-link">Quitter</a></li>
     </ul>
   </nav>
-
-  <div class="container" id="main" style="display:none;">
-
-    <!-- Accueil -->
-    <section id="home" class="section active">
-      <h1>🏥 Gestionnaire de Pharmacie à Domicile</h1>
-
+  <div class="container" id="main" style="display:none">
+    <section id="home" class="active">
+      <h1>Gestion Pharmacie</h1>
       <div class="stats-grid">
-        <div class="stat-card"><h3>📊 Stock total</h3><div class="stat-number" id="total-meds">0</div></div>
-        <div class="stat-card"><h3>❌ Expirés</h3><div class="stat-number" id="expired-count">0</div></div>
-        <div class="stat-card"><h3>⚠️ Pré‑expiration</h3><div class="stat-number" id="preexp-count">0</div></div>
-        <div class="stat-card"><h3>📦 Stock nul</h3><div class="stat-number" id="zerostock-count">0</div></div>
+        <div class="stat-card"><h3>Total</h3><div class="stat-number" id="total-meds">0</div></div>
+        <div class="stat-card"><h3>Expires</h3><div class="stat-number" id="expired-count">0</div></div>
+        <div class="stat-card"><h3>Pre-expi</h3><div class="stat-number" id="preexp-count">0</div></div>
+        <div class="stat-card"><h3>Zero</h3><div class="stat-number" id="zerostock-count">0</div></div>
       </div>
-
-      <h3>📋 Médicaments nécessitant une attention</h3>
-      <div id="attention-list" style="margin-top:.75rem;"></div>
+      <h3>Attention</h3>
+      <div id="attention-list"></div>
     </section>
-
-    <!-- Inventaire -->
-    <section id="inventory" class="section">
-      <h2>📦 Inventaire complet</h2>
-
-      <div style="display:flex;gap:1rem;margin:1rem 0;align-items:center;flex-wrap:wrap;">
-        <input type="text" id="search" placeholder="🔎 Rechercher (nom, dosage, notes)…" style="flex:1;">
-        <div style="background:#e8f5e8;padding:.6rem 1rem;border-radius:var(--radius);font-size:.95rem;">
-          💰 Valeur totale : <strong id="total-value">0.00 DH</strong>
-        </div>
-      </div>
-
+    <section id="inventory">
+      <h2>Inventaire</h2>
+      <input type="text" id="search" placeholder="Rechercher" style="width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:var(--radius)">
+      <div style="margin-bottom:1rem">Valeur: <strong id="total-value">0 DH</strong></div>
       <table id="med-table">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Genre</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Alerte</th><th>Notes</th><th>Actions</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Nom</th><th>Genre</th><th>Dose</th><th>Qte</th><th>Stock</th><th>Prix</th><th>Exp</th><th>Alerte</th><th>Notes</th><th>Action</th></tr></thead>
         <tbody></tbody>
       </table>
     </section>
-
-    <!-- Ajout -->
-    <section id="add" class="section">
-      <h2>➕ Ajouter un médicament</h2>
-
+    <section id="add">
+      <h2>Ajouter</h2>
       <form id="add-form">
         <div class="form-group"><label>Nom *</label><input type="text" id="name" required></div>
-        <div class="form-group"><label>Dosage *</label><input type="text" id="dosage" placeholder="ex : 500mg, 10ml" required></div>
-        <div class="form-group"><label>Genre *</label>
-          <select id="genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem;">
-            <option value="">Sélectionner...</option>
-            <option value="Comprimés">Comprimés</option>
-            <option value="Gélules">Gélules</option>
-            <option value="Suppositoires">Suppositoires</option>
-            <option value="Sachets">Sachets</option>
-            <option value="Gel">Gel</option>
-            <option value="Flacon">Flacon</option>
-            <option value="Sirop">Sirop</option>
-            <option value="Solution">Solution</option>
-            <option value="Pommade">Pommade</option>
-            <option value="Lotion">Lotion</option>
-            <option value="Crème">Crème</option>
-            <option value="Poudre">Poudre</option>
-            <option value="Gouttes">Gouttes</option>
-            <option value="Inhalation">Inhalation</option>
-            <option value="Patch">Patch</option>
-            <option value="Autre">Autre</option>
-          </select>
-        </div>
-
-        <!-- Stock initial AVANT quantité actuelle -->
+        <div class="form-group"><label>Dose *</label><input type="text" id="dosage" required></div>
+        <div class="form-group"><label>Genre *</label><select id="genre" required><option value="">Choisir</option><option>Comprimes</option><option>Gelules</option><option>Suppositoires</option><option>Sachets</option><option>Gel</option><option>Flacon</option><option>Sirop</option><option>Solution</option><option>Pommade</option><option>Lotion</option><option>Creme</option><option>Poudre</option><option>Gouttes</option><option>Inhalation</option><option>Patch</option><option>Autre</option></select></div>
         <div class="form-group"><label>Stock initial *</label><input type="number" id="initial-stock" min="0" required></div>
-        <div class="form-group"><label>Quantité actuelle *</label><input type="number" id="quantity" min="0" required></div>
-
-        <div class="form-group"><label>Prix (DH) *</label><input type="number" id="price" min="0" step="0.01" required></div>
-        <div class="form-group"><label>Nombre de boîtes *</label><input type="number" id="nb-boxes" min="1" value="1" required></div>
-
-        <div class="form-group">
-          <label>Date de péremption (MM/AA) *</label>
-          <input type="text" id="expiry-mmaa" inputmode="numeric" placeholder="ex : 02/26" maxlength="5" required>
-          <small style="display:block;margin-top:.5rem;color:#666;">Format : MM/AA</small>
-        </div>
-
-        <div class="form-group"><label>Notes</label><textarea id="notes" placeholder="Optionnel"></textarea></div>
-
-        <button type="submit">💊 Ajouter</button>
+        <div class="form-group"><label>Qte actuelle *</label><input type="number" id="quantity" min="0" required></div>
+        <div class="form-group"><label>Prix DH *</label><input type="number" id="price" min="0" step="0.01" required></div>
+        <div class="form-group"><label>Nb boites *</label><input type="number" id="nb-boxes" min="1" value="1" required></div>
+        <div class="form-group"><label>Expiration MM/AA *</label><input type="text" id="expiry" maxlength="5" placeholder="ex: 02/26" required></div>
+        <div class="form-group"><label>Notes</label><textarea id="notes"></textarea></div>
+        <button type="submit">Ajouter</button>
       </form>
     </section>
-
-    <!-- Modifier -->
-    <section id="edit-mode" class="section">
-      <h2>✏️ Modifier</h2>
-      <input type="text" id="search-edit" placeholder="🔎 Rechercher…" />
-
-      <table id="med-table-edit">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Notes</th><th>Modifier</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <section id="edit">
+      <h2>Modifier</h2>
+      <input type="text" id="search-edit" placeholder="Rechercher" style="width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:var(--radius)">
+      <table id="edit-table"><thead><tr><th>Nom</th><th>Dose</th><th>Qte</th><th>Stock</th><th>Prix</th><th>Exp</th><th>Action</th></tr></thead><tbody></tbody></table>
     </section>
-
-    <!-- Supprimer -->
-    <section id="delete-mode" class="section">
-      <h2>🗑️ Supprimer</h2>
-      <input type="text" id="search-delete" placeholder="🔎 Rechercher…" />
-
-      <table id="med-table-delete">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Supprimer</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <section id="delete">
+      <h2>Supprimer</h2>
+      <input type="text" id="search-delete" placeholder="Rechercher" style="width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:var(--radius)">
+      <table id="delete-table"><thead><tr><th>Nom</th><th>Dose</th><th>Qte</th><th>Stock</th><th>Prix</th><th>Exp</th><th>Action</th></tr></thead><tbody></tbody></table>
     </section>
-
-    <!-- Utiliser -->
-    <section id="use-mode" class="section">
-      <h2>💊 Utiliser</h2>
-
-      <div class="form-group" style="max-width:420px;">
-        <label for="use-qty">Quantité à utiliser :</label>
-        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-          <input type="number" id="use-qty" min="1" value="1" style="width:120px;">
-          <span class="chip">Alerte stock faible ≤ 5</span>
-        </div>
-      </div>
-
-      <input type="text" id="search-use" placeholder="🔎 Rechercher…" />
-
-      <table id="med-table-use">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Utiliser</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <section id="use">
+      <h2>Utiliser</h2>
+      <div style="margin-bottom:1rem"><label>Qte a utiliser:</label> <input type="number" id="use-qty" value="1" min="1" style="width:80px"></div>
+      <input type="text" id="search-use" placeholder="Rechercher" style="width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:var(--radius)">
+      <table id="use-table"><thead><tr><th>Nom</th><th>Dose</th><th>Qte</th><th>Stock</th><th>Prix</th><th>Exp</th><th>Action</th></tr></thead><tbody></tbody></table>
     </section>
-
-    <!-- À acheter -->
-    <section id="to-buy" class="section">
-      <h2>🛒 Médicaments à acheter</h2>
-
-      <form id="tobuy-form" style="max-width:420px;">
-        <div class="form-group"><label>Nom du médicament *</label><input type="text" id="tobuy-name" required></div>
-        <div class="form-group"><label>Quantité *</label><input type="number" id="tobuy-qty" min="1" value="1" required></div>
-        <div class="form-group"><label>Genre / Notes</label><input type="text" id="tobuy-notes" placeholder="ex : comprimé, sirop, crème..."></div>
-        <button type="submit">➕ Ajouter à la liste</button>
+    <section id="buy">
+      <h2>A acheter</h2>
+      <form id="buy-form" style="max-width:420px">
+        <div class="form-group"><label>Nom *</label><input type="text" id="buy-name" required></div>
+        <div class="form-group"><label>Qte *</label><input type="number" id="buy-qty" min="1" value="1" required></div>
+        <div class="form-group"><label>Notes</label><input type="text" id="buy-notes" placeholder="ex: comprime"></div>
+        <button type="submit">Ajouter</button>
       </form>
-
-      <table id="tobuy-table" style="margin-top:1.5rem;">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Quantité</th><th>Genre</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <table id="buy-table" style="margin-top:1rem"><thead><tr><th>Nom</th><th>Qte</th><th>Notes</th><th>Action</th></tr></thead><tbody></tbody></table>
     </section>
-
   </div>
-
-  <!-- Modal d'édition -->
-  <div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;overflow-y:auto;padding:1rem;">
-    <div style="background:#fff;padding:2rem;border-radius:8px;width:100%;max-width:540px;box-shadow:0 4px 20px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;">
-      <h3 style="color:var(--primary);margin-bottom:1.2rem;">✏️ Modifier le médicament</h3>
-
+  <div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000">
+    <div style="background:#fff;padding:2rem;border-radius:8px;width:90%;max-width:500px">
+      <h3>Modifier</h3>
       <form id="edit-form">
         <input type="hidden" id="edit-index">
-
-        <div class="form-group"><label>Nom *</label><input type="text" id="edit-name" required></div>
-        <div class="form-group"><label>Dosage *</label><input type="text" id="edit-dosage" required></div>
-        <div class="form-group"><label>Genre *</label>
-          <select id="edit-genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem;">
-            <option value="">Sélectionner...</option>
-            <option value="Comprimés">Comprimés</option>
-            <option value="Gélules">Gélules</option>
-            <option value="Suppositoires">Suppositoires</option>
-            <option value="Sachets">Sachets</option>
-            <option value="Gel">Gel</option>
-            <option value="Flacon">Flacon</option>
-            <option value="Sirop">Sirop</option>
-            <option value="Solution">Solution</option>
-            <option value="Pommade">Pommade</option>
-            <option value="Lotion">Lotion</option>
-            <option value="Crème">Crème</option>
-            <option value="Poudre">Poudre</option>
-            <option value="Gouttes">Gouttes</option>
-            <option value="Inhalation">Inhalation</option>
-            <option value="Patch">Patch</option>
-            <option value="Autre">Autre</option>
-          </select>
-        </div>
-
-        <div class="form-group"><label>Stock initial *</label><input type="number" id="edit-initial" min="0" required></div>
-        <div class="form-group"><label>Quantité actuelle *</label><input type="number" id="edit-quantity" min="0" required></div>
-
-        <div class="form-group"><label>Prix (DH) *</label><input type="number" id="edit-price" min="0" step="0.01" required></div>
-        <div class="form-group"><label>Nombre de boîtes *</label><input type="number" id="edit-nb-boxes" min="1" value="1" required></div>
-
-        <div class="form-group">
-          <label>Péremption (MM/AA) *</label>
-          <input type="text" id="edit-expiry-mmaa" inputmode="numeric" maxlength="5" placeholder="ex : 02/26" required>
-        </div>
-
+        <div class="form-group"><label>Nom</label><input type="text" id="edit-name" required></div>
+        <div class="form-group"><label>Dose</label><input type="text" id="edit-dosage" required></div>
+        <div class="form-group"><label>Genre</label><select id="edit-genre"><option>Comprimes</option><option>Gelules</option><option>Suppositoires</option><option>Sachets</option><option>Gel</option><option>Flacon</option><option>Sirop</option><option>Solution</option><option>Pommade</option><option>Lotion</option><option>Creme</option><option>Poudre</option><option>Gouttes</option><option>Inhalation</option><option>Patch</option><option>Autre</option></select></div>
+        <div class="form-group"><label>Stock initial</label><input type="number" id="edit-initial" min="0"></div>
+        <div class="form-group"><label>Qte</label><input type="number" id="edit-quantity" min="0"></div>
+        <div class="form-group"><label>Prix</label><input type="number" id="edit-price" min="0" step="0.01"></div>
+        <div class="form-group"><label>Nb boites</label><input type="number" id="edit-boxes" min="1" value="1"></div>
+        <div class="form-group"><label>Exp MM/AA</label><input type="text" id="edit-exp" maxlength="5"></div>
         <div class="form-group"><label>Notes</label><textarea id="edit-notes"></textarea></div>
-
-        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-          <button type="submit" style="flex:1;">💾 Enregistrer</button>
-          <button type="button" id="edit-cancel" style="flex:1;background:#6c757d;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;">❌ Annuler</button>
-        </div>
+        <button type="submit" style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer">Enregistrer</button>
+        <button type="button" id="edit-cancel" style="background:#999;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;margin-left:.5rem">Annuler</button>
       </form>
-
-      <p style="margin-top:1rem;font-size:.9rem;color:#666;">Astuce : Échap = fermer</p>
     </div>
   </div>
-
 <script>
-/* =========================
-   CONFIG / STOCKAGE
-========================= */
-const PASSWORD = "mohamed1964";
-const STORAGE_KEY = "medicines";
-const TOBUY_KEY = "medicines_to_buy";
+/* CLOUD SYNC JSONBIN.IO */
+const CLOUD_KEY = 'pharmacie_cloud_id';
+let cloudId = localStorage.getItem(CLOUD_KEY);
+let syncTimer = null;
+const CLOUD_URL = 'https://api.jsonbin.io/v3/b/';
+const CLOUD_KEY_ID = '$2a$10$xH4HVlQO5QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ';
 
-// (optionnel) clé si tu veux gérer des exemples une seule fois
-const SEEDED_KEY = "medicines_seeded_once";
+function isCloudConfigured(){return cloudId!==null}
+function saveCloudId(id){cloudId=id.trim().toLowerCase();localStorage.setItem(CLOUD_KEY,cloudId)}
 
-let auth = false;
-let meds = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-let toBuyList = JSON.parse(localStorage.getItem(TOBUY_KEY)) || [];
+function syncToCloud(){if(!cloudId)return;showSync('sync');fetch(CLOUD_URL+cloudId,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CLOUD_KEY_ID},body:JSON.stringify({m:meds,t:toBuy,u:new Date().toISOString()})}).then(r=>{if(r.ok)showSync('ok');else showSync('err');}).catch(e=>showSync('err'));}
 
-/* =========================
-   UTILITAIRES
-========================= */
-function escapeHtml(str){
-  return String(str ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-function escapeAttr(str){
-  return escapeHtml(str).replaceAll("\n"," ");
-}
+function syncFromCloud(){if(!cloudId)return;showSync('sync');fetch(CLOUD_URL+cloudId,{headers:{'X-Master-Key':CLOUD_KEY_ID}}).then(r=>r.json()).then(d=>{if(d.record){if(d.record.m){meds=d.record.m;localStorage.setItem('meds',JSON.stringify(meds));}if(d.record.t){toBuy=d.record.t;localStorage.setItem('buy',JSON.stringify(toBuy));}render();updateStats();}showSync('ok');}).catch(e=>showSync('off');)}
 
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(meds)); }
+function showSync(s){var e=document.getElementById('sync-status');e.className='';if(s=='ok'){e.textContent='OK';e.classList.add('hidden',setTimeout(_=>e.classList.add('hidden'),2000));}else if(s=='sync'){e.textContent='Sync...';}else if(s=='off'){e.textContent='Offline';e.classList.add('offline');}else{e.textContent='Err';e.classList.add('offline');}}
 
-function normalizeName(str){
-  return String(str || "").trim().replace(/\s+/g, " ");
-}
-function keyOf(name, dosage){
-  return (normalizeName(name) + "||" + normalizeName(dosage)).toLowerCase();
-}
+/* APP */
+const PWD='1964';const LS_MEDS='meds';const LS_BUY='buy';let auth=false;let meds=JSON.parse(localStorage.getItem(LS_MEDS))||[];let toBuy=JSON.parse(localStorage.getItem(LS_BUY))||[];
 
-function fmtMMAAFromISO(iso){
-  const dt = new Date(iso);
-  if (isNaN(dt.getTime())) return "-";
-  return `${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getFullYear()).slice(-2)}`;
-}
-function fmtMMAA(d){ return fmtMMAAFromISO(d); }
+function esc(s){return String(s??'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"').replace(/'/g,'&#039;');}
+function save(){localStorage.setItem(LS_MEDS,JSON.stringify(meds));syncToCloud();}
+function saveBuy(){localStorage.setItem(LS_BUY,JSON.stringify(toBuy));syncToCloud();}
+function norm(s){return String(s||'').trim().replace(/\s+/g,' ');}
+function key(n,d){return (norm(n)+'||'+norm(d)).toLowerCase();}
+function expDate(iso){let d=new Date(iso);if(isNaN(d.getTime()))return'-';return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(-2);}
+function parseExp(s){let v=String(s||'').replace(/\D/g,'').slice(0,4);if(v.length>=3)v=v.slice(0,2)+'/'+v.slice(2);if(!/^\d{2}\/\d{2}$/.test(v))return null;let mm=parseInt(v.slice(0,2));let yy=parseInt(v.slice(3));if(mm<1||mm>12)return null;let yyyy=yy<=79?2000+yy:1900+yy;return yyyy+'-'+String(mm).padStart(2,'0')+'-01';}
+function expClass(iso){let t=new Date();t.setHours(0,0,0,0);let e=new Date(iso);e.setHours(0,0,0,0);let d=Math.ceil((e-t)/(1000*60*60*24));if(d<0)return'expired';if(d<=30)return'expiring-soon';return'valid';}
 
-function parseMMAAtoISO(mmaa){
-  const raw = String(mmaa || "").trim();
-  const compact = raw.replaceAll("/","").replace(/\D/g,'').slice(0,4);
-  if(/^\d{4}$/.test(compact)){
-    mmaa = compact.slice(0,2) + "/" + compact.slice(2,4);
-  } else {
-    mmaa = raw;
-  }
+function showSec(id){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');render();}
 
-  if(!/^\d{2}\/\d{2}$/.test(mmaa)) return null;
+function updStats(){let e=0,p=0,z=0,l='';let t=new Date();t.setHours(0,0,0,0);let l30=new Date(t);l30.setDate(t.getDate()+30);meds.forEach(m=>{let ed=new Date(m.e);ed.setHours(0,0,0,0);let ie=ed<t;let ip=!ie&&ed<=l30;let iz=m.q==0;if(ie)e++;if(ip)p++;if(iz)z++;if(ie||ip||iz){let st=ie?'EXP':ip?'PRE-EXP':'ZERO';l+='<div style="background:#fff;padding:1rem;margin:.5rem 0;border-radius:8px">'+esc(m.n)+' ('+esc(m.d)+') - '+st+'<br><small>Qte:'+m.q+' Exp:'+expDate(m.e)+'</small></div>';}});document.getElementById('total-meds').textContent=meds.length;document.getElementById('expired-count').textContent=e;document.getElementById('preexp-count').textContent=p;document.getElementById('zerostock-count').textContent=z;document.getElementById('attention-list').innerHTML=l||'OK';}
 
-  const mm = parseInt(mmaa.slice(0,2), 10);
-  const aa = parseInt(mmaa.slice(3,5), 10);
-  if(mm < 1 || mm > 12) return null;
+function render(){let f=getSearch();let fm=f?meds.filter(m=>(m.n||'').toLowerCase().includes(f)||(m.d||'').toLowerCase().includes(f)||(m.notes||'').toLowerCase().includes(f)):meds;function tbl(id,cols,acts){let t=document.querySelector('#'+id+' tbody');if(!t)return;t.innerHTML='';if(fm.length==0){t.innerHTML='<tr><td colspan="'+cols+'" class="empty-msg">Rien</td></tr>';return;}fm.forEach((m,i)=>{let j=meds.indexOf(m);let ec=expClass(m.e);let q=m.q||0;let al=[];if(q<5)al.push('<span style="color:red">Qte<5</span>');let t2=new Date();t2.setHours(0,0,0,0);let ed=new Date(m.e);ed.setHours(0,0,0,0);if(Math.ceil((ed-t2)/(1000*60*60*24))<=30)al.push('<span style="color:orange">Exp<1m</span>');let r='<tr class="'+(q==0?'stock-zero':'')+'"><td>'+esc(m.n)+'</td><td>'+esc(m.g||'-')+'</td><td>'+esc(m.d)+'</td><td style="color:red">'+q+'</td><td>'+(m.s||0)+'</td><td>'+Number(m.p||0).toFixed(2)+' DH</td><td class="'+ec+'">'+expDate(m.e)+'</td><td>'+al.join('<br>')+'</td>';if(id=='med-table'){r+='<td>'+esc(m.notes||'-')+'</td><td><button onclick="openEdit('+j+')">✏</button><button onclick="delMed('+j+')">🗑</button><button onclick="useMed('+j+')">💊</button></td>';}else if(id=='edit-table'||id=='delete-table'||id=='use-table'){r+=acts?'<td>'+acts+'</td>':'</tr>';}t.innerHTML+=r+'</tr>';});}tbl('med-table',10,'');tbl('edit-table',7,'<button onclick="openEdit(IDX)">✏</button>'.replace('IDX',''));tbl('delete-table',7,'<button onclick="delMed(IDX)">🗑</button>'.replace('IDX',''));tbl('use-table',7,'<button onclick="useMed(IDX)">💊</button>'.replace('IDX',''));let tot=fm.reduce((s,m)=>s+Number(m.p||0)*Number(m.b||1),0);document.getElementById('total-value').textContent=tot.toFixed(2)+' DH';}
 
-  const yyyy = (aa <= 79) ? (2000 + aa) : (1900 + aa);
-  const iso = `${yyyy}-${String(mm).padStart(2,'0')}-01`;
-  const dt = new Date(iso);
-  if(isNaN(dt.getTime())) return null;
-  return iso;
-}
+function getSearch(){let s=document.querySelector('section.active input[id^="search"]');return s?(s.value||'').toLowerCase():'';}
 
-function expClass(iso){
-  const today = new Date(); today.setHours(0,0,0,0);
-  const exp = new Date(iso); exp.setHours(0,0,0,0);
-  const diff = Math.ceil((exp - today) / (1000*60*60*24));
-  if(diff < 0) return "expired";
-  if(diff <= 30) return "expiring-soon";
-  return "valid";
-}
-function stockClass(q){ return (Number(q) === 0) ? "stock-zero" : ""; }
+function checkPwd(){if(document.getElementById('pwd-input').value==PWD){auth=true;document.getElementById('pwd-modal').style.display='none';document.getElementById('main-nav').style.display='block';document.getElementById('main').style.display='block';showSec('inventory');updStats();render();if(cloudId){syncFromCloud();syncTimer=setInterval(syncToCloud,30000);}}else{document.getElementById('pwd-error').style.display='block';}}
 
-function mergeNotes(a,b){
-  const n1 = (a||'').trim();
-  const n2 = (b||'').trim();
-  if(!n1) return n2;
-  if(!n2) return n1;
-  if(n1.toLowerCase() === n2.toLowerCase()) return n1;
-  return n1 + " | " + n2;
-}
-function earliestExpiry(aISO, bISO){
-  if(!aISO) return bISO;
-  if(!bISO) return aISO;
-  const da = new Date(aISO);
-  const db = new Date(bISO);
-  return (db < da) ? bISO : aISO;
-}
+function logout(){auth=false;clearInterval(syncTimer);document.getElementById('pwd-modal').style.display='flex';document.getElementById('main-nav').style.display='none';document.getElementById('main').style.display='none';document.getElementById('pwd-input').value='';document.getElementById('pwd-error').style.display='none';}
 
-/* =========================
-   AUTH
-========================= */
-function setAppVisible(isVisible){
-  document.getElementById('pwd-modal').style.display = isVisible ? 'none' : 'flex';
-  document.getElementById('main-nav').style.display = isVisible ? 'block' : 'none';
-  document.getElementById('main').style.display = isVisible ? 'block' : 'none';
-}
-function checkPwd(){
-  const val = document.getElementById('pwd-input').value;
-  if(val === PASSWORD){
-    auth = true;
-    document.getElementById('pwd-error').style.display = 'none';
-    setAppVisible(true);
-    show('inventory');
-    updateStats();
-    renderAll();
-  } else {
-    document.getElementById('pwd-error').style.display = 'block';
-  }
-}
-function logout(){
-  auth = false;
-  setAppVisible(false);
-  document.getElementById('pwd-input').value = '';
-  document.getElementById('pwd-error').style.display = 'none';
-}
+function openEdit(i){let m=meds[i];document.getElementById('edit-index').value=i;document.getElementById('edit-name').value=m.n;document.getElementById('edit-dosage').value=m.d;document.getElementById('edit-genre').value=m.g;document.getElementById('edit-initial').value=m.s;document.getElementById('edit-quantity').value=m.q;document.getElementById('edit-price').value=m.p;document.getElementById('edit-boxes').value=m.b;document.getElementById('edit-exp').value=expDate(m.e);document.getElementById('edit-notes').value=m.notes;document.getElementById('edit-modal').style.display='flex';}
+function closeEdit(){document.getElementById('edit-modal').style.display='none';}
 
-/* =========================
-   NAVIGATION
-========================= */
-function show(id){
-  if(!auth) return;
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-  renderAll();
-  if(id === 'to-buy') renderToBuy();
-}
+function delMed(i){if(confirm('Supprimer '+meds[i].n+'?')){meds.splice(i,1);save();render();updStats();}}
 
-/* =========================
-   STATS + LISTE ATTENTION
-========================= */
-function updateStats(){
-  const today = new Date(); today.setHours(0,0,0,0);
-  const limit = new Date(today); limit.setDate(today.getDate() + 30);
+function useMed(i){let q=parseInt(document.getElementById('use-qty').value)||1;if(q<=0)return;let m=meds[i];if(m.q>=q){m.q-=q;save();render();updStats();if(m.q==0)alert('Stock epuise');else if(m.q<=5)alert('Stock faible: '+m.q);}else alert('Stock insuffisant');}
 
-  let exp=0, pre=0, zer=0;
-  let listHtml = '';
+function renderBuy(){let t=document.querySelector('#buy-table tbody');if(!t)return;t.innerHTML='';if(toBuy.length==0){t.innerHTML='<tr><td colspan="4" class="empty-msg">Vide</td></tr>';return;}toBuy.forEach((b,i)=>{t.innerHTML+='<tr><td>'+esc(b.n)+'</td><td>'+b.q+'</td><td>'+esc(b.notes||'-')+'</td><td><button onclick="delBuy('+i+')">🗑</button></td></tr>';});}
+function delBuy(i){if(confirm('Supprimer?')){toBuy.splice(i,1);saveBuy();renderBuy();}}
 
-  meds.forEach(m=>{
-    const e = new Date(m.expiry); e.setHours(0,0,0,0);
-    const isExp = e < today;
-    const isPre = !isExp && e <= limit;
-    const isZero = Number(m.quantity) === 0;
+/* EVENTS */
+document.getElementById('pwd-btn').addEventListener('click',checkPwd);
+document.getElementById('logout-link').addEventListener('click',logout);
+document.querySelectorAll('nav a[data-target]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showSec(a.dataset.target);if(a.dataset.target=='buy')renderBuy();}));
+document.getElementById('add-form').addEventListener('submit',e=>{e.preventDefault();let n=norm(document.getElementById('name').value);let d=norm(document.getElementById('dosage').value);let g=document.getElementById('genre').value;let s=parseInt(document.getElementById('initial-stock').value)||0;let q=parseInt(document.getElementById('quantity').value)||0;let p=parseFloat(document.getElementById('price').value)||0;let b=parseInt(document.getElementById('nb-boxes').value)||1;let ex=parseExp(document.getElementById('expiry').value);if(!ex){alert('Date invalide');return;}let nt=document.getElementById('notes').value.trim();let k=key(n,d);let ei=meds.findIndex(m=>key(m.n,m.d)==k);if(ei==-1){meds.push({n,d,g,s,q,p,b,e:ex,notes:nt});save();e.target.reset();showSec('inventory');render();updStats();}else{let exM=meds[ei];if(confirm('Existe deja. Cumuler?')){exM.s+=s;exM.q+=q;exM.p=p;exM.b=b;exM.g=g;exM.e=ex;exM.notes=nt;save();e.target.reset();showSec('inventory');render();updStats();}}});
+document.getElementById('edit-form').addEventListener('submit',e=>{e.preventDefault();let i=parseInt(document.getElementById('edit-index').value);let n=norm(document.getElementById('edit-name').value);let d=norm(document.getElementById('edit-dosage').value);let g=document.getElementById('edit-genre').value;let s=parseInt(document.getElementById('edit-initial').value)||0;let q=parseInt(document.getElementById('edit-quantity').value)||0;let p=parseFloat(document.getElementById('edit-price').value)||0;let b=parseInt(document.getElementById('edit-boxes').value)||1;let ex=parseExp(document.getElementById('edit-exp').value);if(!ex){alert('Date invalide');return;}let nt=document.getElementById('edit-notes').value.trim();meds[i]={n,d,g,s,q,p,b,e:ex,notes:nt};save();closeEdit();render();updStats();});
+document.getElementById('edit-cancel').addEventListener('click',closeEdit);
+document.getElementById('buy-form').addEventListener('submit',e=>{e.preventDefault();let n=norm(document.getElementById('buy-name').value);let q=parseInt(document.getElementById('buy-qty').value)||1;let nt=document.getElementById('buy-notes').value.trim();if(!n)return;toBuy.push({n,q,notes:nt});saveBuy();e.target.reset();document.getElementById('buy-qty').value=1;renderBuy();});
+document.getElementById('btn-save').addEventListener('click',()=>{let d=JSON.stringify({m:meds,t:toBuy},null,2);let b=new Blob([d],{type:'application/json'});let u=URL.createObjectURL(b);let a=document.createElement('a');a.href=u;a.download='pharmacie.json';a.click();a.remove();URL.revokeObjectURL(u);});
+document.getElementById('btn-restore').addEventListener('click',()=>{let i=document.createElement('input');i.type='file';i.accept='.json';i.onchange=()=>{if(i.files[0]){let r=new FileReader();r.onload=()=>{try{let j=JSON.parse(r.result);let l=Array.isArray(j)?j:j.m||[];meds=l.map(x=>({n:norm(x.n),d:norm(x.d),g:x.g||'',s:Number(x.s)||0,q:Number(x.q)||0,p:Number(x.p)||0,b:Number(x.b)||1,e:x.e,notes:(x.notes||'').toString()}));if(j.t)toBuy=j.t;localStorage.setItem(LS_MEDS,JSON.stringify(meds));localStorage.setItem(LS_BUY,JSON.stringify(toBuy));render();updStats();alert('OK');}catch(e){alert('Erreur');}}};r.readAsText(i.files[0]);}else{alert('Erreur');}};i.click();});
+document.getElementById('btn-clear').addEventListener('click',()=>{if(confirm('Vider tout?')){meds=[];toBuy=[];localStorage.removeItem(LS_MEDS);localStorage.removeItem(LS_BUY);render();updStats();}});
+['search','search-edit','search-delete','search-use'].forEach(id=>{let el=document.getElementById(id);if(el)el.addEventListener('input',render);});
+function fmtExp(v){let r=v.replace(/\D/g,'').slice(0,4);if(r.length>=3)r=r.slice(0,2)+'/'+r.slice(2);return r;}
+['expiry','edit-exp'].forEach(id=>{let el=document.getElementById(id);if(el)el.addEventListener('input',()=>el.value=fmtExp(el.value));});
+document.addEventListener('keydown',e=>{if(e.key=='Enter'&&document.getElementById('pwd-modal').style.display!='none')checkPwd();if(e.key=='Escape'&&document.getElementById('edit-modal').style.display=='flex')closeEdit();});
 
-    if(isExp) exp++;
-    if(isPre) pre++;
-    if(isZero) zer++;
+/* CLOUD CONFIG */
+document.getElementById('cloud-btn').addEventListener('click',()=>{let id=document.getElementById('cloud-id').value.trim();if(!id){alert('Entrez ID');return;}saveCloudId(id);document.getElementById('cloud-modal').classList.add('hidden');if(auth){syncFromCloud();syncTimer=setInterval(syncToCloud,30000);}alert('OK - Utilisez le meme ID sur tous vos appareils');});
 
-    if(isExp || isPre || isZero){
-      let status = '';
-      if(isExp) status = '❌ EXPIRÉ';
-      else if(isPre) status = '⚠️ PRÉ‑EXPIRATION';
-      else status = '📦 STOCK NUL';
-
-      listHtml += `
-        <div style="background:#fff;padding:1rem;margin:.5rem 0;border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow);">
-          <strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.dosage)}) – ${status}
-          <br><small>Qté : ${Number(m.quantity)||0}, Exp : ${fmtMMAA(m.expiry)}</small>
-        </div>`;
-    }
-  });
-
-  document.getElementById('total-meds').textContent = meds.length;
-  document.getElementById('expired-count').textContent = exp;
-  document.getElementById('preexp-count').textContent = pre;
-  document.getElementById('zerostock-count').textContent = zer;
-
-  document.getElementById('attention-list').innerHTML =
-    listHtml || '<p style="color:#2e7d32;">✅ Aucun problème détecté</p>';
-}
-
-/* =========================
-   RECHERCHE PAR SECTION
-========================= */
-function getActiveSearchValue(){
-  const activeSection = document.querySelector('.section.active');
-  if(!activeSection) return '';
-  const input = activeSection.querySelector('input[id^="search"]');
-  return input ? (input.value || '').toLowerCase() : '';
-}
-
-/* =========================
-   RENDU TABLEAUX
-========================= */
-function renderAll(){
-  if(!auth) return;
-
-  const filter = getActiveSearchValue();
-
-  const filtered = filter ? meds.filter(m => {
-    const n = (m.name || '').toLowerCase();
-    const d = (m.dosage || '').toLowerCase();
-    const no = (m.notes || '').toLowerCase();
-    return n.includes(filter) || d.includes(filter) || no.includes(filter);
-  }) : meds;
-
-  function renderTable(tableId){
-    const tbody = document.querySelector(`#${tableId} tbody`);
-    if(!tbody) return;
-
-    tbody.innerHTML = '';
-
-    if(filtered.length === 0){
-      const colCount =
-        tableId === 'med-table' ? 10 :
-        tableId === 'med-table-edit' ? 8 :
-        tableId === 'med-table-delete' ? 7 :
-        tableId === 'med-table-use' ? 7 : 10;
-
-      tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-msg">Aucun médicament trouvé</td></tr>`;
-      return;
-    }
-
-    filtered.forEach(m=>{
-      const idx = meds.indexOf(m);
-      const expCls = expClass(m.expiry);
-      const stkCls = stockClass(Number(m.quantity));
-      const q = Number(m.quantity) || 0;
-      const p = Number(m.price) || 0;
-
-      // Calcul des alertes
-      let alertMsgs = [];
-      if (q < 5) alertMsgs.push('<span style="color:#d32f2f;font-weight:bold;">stock < 5</span>');
-      
-      const today = new Date(); today.setHours(0,0,0,0);
-      const exp = new Date(m.expiry); exp.setHours(0,0,0,0);
-      const diffDays = Math.ceil((exp - today) / (1000*60*60*24));
-      if (diffDays <= 30) alertMsgs.push('<span style="color:#f57c00;font-weight:bold;">date < 1mois</span>');
-
-      let alertHtml = alertMsgs.length > 0 ? alertMsgs.join('<br>') : '-';
-
-      let row = `
-        <tr class="${stkCls}">
-          <td style="color:#1976d2;font-weight:bold;">${escapeHtml(m.name)}</td>
-          <td>${escapeHtml(m.genre || '-')}</td>
-          <td>${escapeHtml(m.dosage)}</td>
-          <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${q}</td>
-          <td>${Number(m.initialStock) || 0}</td>
-          <td>${p.toFixed(2)} DH</td>
-          <td class="${expCls}">${fmtMMAA(m.expiry)}</td>
-          <td>${alertHtml}</td>
-      `;
-
-      if(tableId === 'med-table'){
-        row += `
-          <td class="notes-cell" title="${escapeAttr(m.notes || '')}">${escapeHtml(m.notes || '-')}</td>
-          <td>
-            <button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">✏️</button>
-            <button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">🗑️</button>
-            <button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">💊</button>
-          </td>
-        `;
-      } else if(tableId === 'med-table-edit'){
-        row += `
-          <td class="notes-cell" title="${escapeAttr(m.notes || '')}">${escapeHtml(m.notes || '-')}</td>
-          <td><button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">✏️</button></td>
-        `;
-      } else if(tableId === 'med-table-delete'){
-        row += `
-          <td><button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">🗑️</button></td>
-        `;
-      } else if(tableId === 'med-table-use'){
-        row += `
-          <td><button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">💊</button></td>
-        `;
-      }
-
-      row += `</tr>`;
-      tbody.insertAdjacentHTML('beforeend', row);
-    });
-  }
-
-  renderTable('med-table');
-  renderTable('med-table-edit');
-  renderTable('med-table-delete');
-  renderTable('med-table-use');
-
-  const total = filtered.reduce((sum, m) => {
-    const p = Number(m.price) || 0;
-    const nb = Number(m.nbBoxes) || 1;
-    return sum + (p * nb);
-  }, 0);
-
-  const totalEl = document.getElementById('total-value');
-  if (totalEl) totalEl.textContent = total.toFixed(2) + " DH";
-}
-
-/* =========================
-   AJOUT (avec alerte + cumul)
-========================= */
-document.getElementById('add-form').addEventListener('submit', function(e){
-  e.preventDefault();
-
-  const name = normalizeName(document.getElementById('name').value);
-  const dosage = normalizeName(document.getElementById('dosage').value);
-  const genre = document.getElementById('genre').value;
-
-  const initialStock = parseInt(document.getElementById('initial-stock').value, 10) || 0;
-  const quantity = parseInt(document.getElementById('quantity').value, 10) || 0;
-
-  const priceVal = parseFloat(document.getElementById('price').value);
-  const price = Number.isFinite(priceVal) ? priceVal : 0;
-
-  const nbBoxes = parseInt(document.getElementById('nb-boxes').value, 10) || 1;
-
-  const expiryMMAA = document.getElementById('expiry-mmaa').value;
-  const expiryISO = parseMMAAtoISO(expiryMMAA);
-  if(!expiryISO){
-    alert("❌ Date invalide. Utilise MM/AA (ex : 02/26).");
-    return;
-  }
-
-  const notes = document.getElementById('notes').value.trim();
-
-  const k = keyOf(name, dosage);
-  const existingIndex = meds.findIndex(m => keyOf(m.name, m.dosage) === k);
-
-  if(existingIndex === -1){
-    meds.push({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes });
-    save();
-    e.target.reset();
-    show('inventory');
-    renderAll();
-    updateStats();
-    return;
-  }
-
-  const ex = meds[existingIndex];
-
-  const msg =
-`⚠️ Ce médicament existe déjà :
-- ${ex.name} (${ex.dosage})
-
-Stock actuel :
-- Quantité actuelle : ${ex.quantity}
-- Stock initial : ${ex.initialStock}
-- Prix : ${Number(ex.price||0).toFixed(2)} DH
-- Péremption : ${fmtMMAA(ex.expiry)}
-
-Nouvelle saisie :
-- +Qté : ${quantity}
-- +Stock init. : ${initialStock}
-- Nouveau prix : ${price.toFixed(2)} DH (remplace l'ancien)
-- Péremption : ${fmtMMAA(expiryISO)}
-
-✅ Voulez-vous ACTUALISER (cumuler les stocks) ?`;
-
-  if(!confirm(msg)) return;
-
-  ex.quantity = (Number(ex.quantity)||0) + quantity;
-  ex.initialStock = (Number(ex.initialStock)||0) + initialStock;
-  ex.price = price; // dernier prix remplace
-  ex.nbBoxes = nbBoxes;
-  ex.genre = genre;
-  ex.expiry = earliestExpiry(ex.expiry, expiryISO);
-  ex.notes = mergeNotes(ex.notes, notes);
-
-  meds[existingIndex] = ex;
-  save();
-  e.target.reset();
-  show('inventory');
-  renderAll();
-  updateStats();
-});
-
-/* =========================
-   EDITION (MM/AA)
-========================= */
-function openEdit(idx){
-  const m = meds[idx];
-  if(!m) return;
-
-  document.getElementById('edit-index').value = idx;
-  document.getElementById('edit-name').value = m.name || '';
-  document.getElementById('edit-dosage').value = m.dosage || '';
-  document.getElementById('edit-genre').value = m.genre || '';
-  document.getElementById('edit-quantity').value = Number(m.quantity) || 0;
-  document.getElementById('edit-initial').value = Number(m.initialStock) || 0;
-  document.getElementById('edit-price').value = Number(m.price) || 0;
-  document.getElementById('edit-nb-boxes').value = Number(m.nbBoxes) || 1;
-  document.getElementById('edit-expiry-mmaa').value = fmtMMAA(m.expiry);
-  document.getElementById('edit-notes').value = m.notes || '';
-
-  document.getElementById('edit-modal').style.display = 'flex';
-}
-function closeEdit(){ document.getElementById('edit-modal').style.display = 'none'; }
-document.getElementById('edit-cancel').addEventListener('click', closeEdit);
-
-document.getElementById('edit-form').addEventListener('submit', function(e){
-  e.preventDefault();
-
-  const idx = parseInt(document.getElementById('edit-index').value, 10);
-  if(Number.isNaN(idx) || !meds[idx]) return;
-
-  const name = normalizeName(document.getElementById('edit-name').value);
-  const dosage = normalizeName(document.getElementById('edit-dosage').value);
-  const genre = document.getElementById('edit-genre').value;
-
-  const initialStock = parseInt(document.getElementById('edit-initial').value, 10) || 0;
-  const quantity = parseInt(document.getElementById('edit-quantity').value, 10) || 0;
-
-  const priceVal = parseFloat(document.getElementById('edit-price').value);
-  const price = Number.isFinite(priceVal) ? priceVal : 0;
-
-  const nbBoxes = parseInt(document.getElementById('edit-nb-boxes').value, 10) || 1;
-
-  const expiryMMAA = document.getElementById('edit-expiry-mmaa').value;
-  const expiryISO = parseMMAAtoISO(expiryMMAA);
-  if(!expiryISO){
-    alert("❌ Date invalide. Utilise MM/AA (ex : 02/26).");
-    return;
-  }
-
-  const notes = document.getElementById('edit-notes').value.trim();
-
-  // si modifie vers un existant => proposer fusion
-  const newKey = keyOf(name, dosage);
-  const otherIndex = meds.findIndex((m, i) => i !== idx && keyOf(m.name, m.dosage) === newKey);
-
-  if(otherIndex !== -1){
-    const target = meds[otherIndex];
-    const msg =
-`⚠️ Un autre médicament existe déjà avec le même Nom+Dosage :
-- ${target.name} (${target.dosage})
-
-Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
-
-    if(confirm(msg)){
-      target.quantity = (Number(target.quantity)||0) + quantity;
-      target.initialStock = (Number(target.initialStock)||0) + initialStock;
-      target.price = price; // dernier prix remplace
-      target.nbBoxes = nbBoxes;
-      target.genre = genre;
-      target.expiry = earliestExpiry(target.expiry, expiryISO);
-      target.notes = mergeNotes(target.notes, notes);
-
-      meds[otherIndex] = target;
-      meds.splice(idx, 1);
-
-      save();
-      closeEdit();
-      renderAll();
-      updateStats();
-      return;
-    }
-  }
-
-  meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes };
-  save();
-  closeEdit();
-  renderAll();
-  updateStats();
-});
-
-/* =========================
-   SUPPRESSION / UTILISATION
-========================= */
-function removeMed(idx){
-  const m = meds[idx];
-  if(!m) return;
-  if(confirm(`Supprimer "${m.name} (${m.dosage})" ?`)){
-    meds.splice(idx, 1);
-    save();
-    renderAll();
-    updateStats();
-  }
-}
-
-function useMed(idx){
-  const m = meds[idx];
-  if(!m) return;
-
-  const qty = parseInt(document.getElementById('use-qty').value, 10) || 1;
-  if(qty <= 0){ alert("❌ Quantité invalide."); return; }
-
-  if(Number(m.quantity) >= qty){
-    m.quantity = Number(m.quantity) - qty;
-    save();
-    renderAll();
-    updateStats();
-
-    if(m.quantity === 0){
-      alert(`ℹ️ Dernière unité de ${m.name} utilisée – stock épuisé.`);
-    } else if(m.quantity <= 5){
-      alert(`⚠️ Stock faible : il ne reste plus que ${m.quantity} unité(s) de ${m.name}.`);
-    }
-  } else {
-    alert(`❌ Stock insuffisant ! ${m.name} possède seulement ${m.quantity} unité(s).`);
-  }
-}
-
-/* =========================
-   À ACHETER (Liste de courses)
-========================= */
-function renderToBuy(){
-  const tbody = document.querySelector('#tobuy-table tbody');
-  if(!tbody) return;
-  
-  tbody.innerHTML = '';
-  
-  if(toBuyList.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucun médicament dans la liste</td></tr>';
-    return;
-  }
-  
-  toBuyList.forEach((item, idx)=>{
-    tbody.innerHTML += `
-      <tr>
-        <td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td>
-        <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td>
-        <td>${escapeHtml(item.notes || '-')}</td>
-        <td><button class="action-btn delete" onclick="removeToBuy(${idx})">🗑️</button></td>
-      </tr>
-    `;
-  });
-}
-
-function removeToBuy(idx){
-  if(confirm('Supprimer ce médicament de la liste ?')){
-    toBuyList.splice(idx, 1);
-    localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-    renderToBuy();
-  }
-}
-
-document.getElementById('tobuy-form').addEventListener('submit', function(e){
-  e.preventDefault();
-  
-  const name = normalizeName(document.getElementById('tobuy-name').value);
-  const qty = parseInt(document.getElementById('tobuy-qty').value, 10) || 1;
-  const notes = document.getElementById('tobuy-notes').value.trim();
-  
-  if(!name) return;
-  
-  toBuyList.push({ name, qty, notes });
-  localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-  
-  e.target.reset();
-  document.getElementById('tobuy-qty').value = 1;
-  renderToBuy();
-});
-
-/* =========================
-   SAUVEGARDE / RESTAURATION / VIDAGE
-========================= */
-function downloadJSON(filename, dataObj){
-  const json = JSON.stringify(dataObj, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function saveBackup(){
-  if(!auth) return;
-  const payload = {
-    app: "pharmacie_domicile",
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    medicines: meds
-  };
-  downloadJSON("pharmacie-stock.json", payload);
-  alert("✅ Sauvegarde téléchargée : pharmacie-stock.json");
-}
-
-function restoreBackupFromFile(file){
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const obj = JSON.parse(reader.result);
-
-      // accepter 2 formats:
-      // - { medicines: [...] }
-      // - [...] (liste directe)
-      const list = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.medicines) ? obj.medicines : null);
-      if(!list) throw new Error("Format invalide");
-
-      // validation minimale
-      const cleaned = list.map(x => ({
-        name: normalizeName(x.name),
-        dosage: normalizeName(x.dosage),
-        genre: x.genre || '',
-        quantity: Number(x.quantity)||0,
-        initialStock: Number(x.initialStock)||0,
-        price: Number(x.price)||0,
-        nbBoxes: Number(x.nbBoxes)||1,
-        expiry: x.expiry,
-        notes: (x.notes||"").toString()
-      }));
-
-      meds = cleaned;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-      localStorage.setItem(SEEDED_KEY, "1");
-
-      renderAll();
-      updateStats();
-      alert("✅ Restauration terminée !");
-    }catch(err){
-      alert("❌ Impossible de restaurer : fichier JSON invalide.");
-    }
-  };
-  reader.readAsText(file);
-}
-
-function restoreBackup(){
-  if(!auth) return;
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "application/json,.json";
-  input.onchange = () => {
-    if(input.files && input.files[0]){
-      const ok = confirm("⚠️ Restaurer va remplacer ton stock actuel. Continuer ?");
-      if(!ok) return;
-      restoreBackupFromFile(input.files[0]);
-    }
-  };
-  input.click();
-}
-
-function clearAllStock(){
-  if(!auth) return;
-  const ok = confirm("🧹 Voulez-vous VRAIMENT vider tout le stock ? Cette action est irréversible.");
-  if(!ok) return;
-
-  meds = [];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-  localStorage.setItem(SEEDED_KEY, "1");
-
-  renderAll();
-  updateStats();
-  alert("✅ Stock vidé.");
-}
-
-/* =========================
-   ÉVÉNEMENTS UI
-========================= */
-document.getElementById('pwd-btn').addEventListener('click', checkPwd);
-document.getElementById('logout-link').addEventListener('click', (e)=>{ e.preventDefault(); logout(); });
-
-document.querySelectorAll('nav a[data-target]').forEach(a=>{
-  a.addEventListener('click', (e)=>{
-    e.preventDefault();
-    show(a.getAttribute('data-target'));
-  });
-});
-
-// actions backup
-document.getElementById('btn-save').addEventListener('click', (e)=>{ e.preventDefault(); saveBackup(); });
-document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preventDefault(); restoreBackup(); });
-document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventDefault(); clearAllStock(); });
-
-// recherches live
-['search','search-edit','search-delete','search-use'].forEach(id=>{
-  const el = document.getElementById(id);
-  if(el) el.addEventListener('input', renderAll);
-});
-
-// auto-format MM/AA
-function attachMMAAFormatter(inputId){
-  const el = document.getElementById(inputId);
-  if(!el) return;
-  el.addEventListener('input', ()=>{
-    let v = el.value.replaceAll("/","").replace(/\D/g,'').slice(0,4);
-    if(v.length >= 3) v = v.slice(0,2) + "/" + v.slice(2);
-    el.value = v;
-  });
-}
-attachMMAAFormatter('expiry-mmaa');
-attachMMAAFormatter('edit-expiry-mmaa');
-
-// clavier : Enter login, Escape edit
-document.addEventListener('keydown', e=>{
-  if(e.key === "Enter" && document.getElementById('pwd-modal').style.display !== 'none'){
-    checkPwd();
-  }
-  if(e.key === "Escape" && document.getElementById('edit-modal').style.display === 'flex'){
-    closeEdit();
-  }
-});
-
-/* =========================
-   INITIALISATION
-========================= */
-document.addEventListener('DOMContentLoaded', ()=>{
-  renderToBuy();
-});
+/* INIT */
+document.addEventListener('DOMContentLoaded',()=>{renderBuy();if(!isCloudConfigured()){setTimeout(()=>document.getElementById('cloud-modal').classList.remove('hidden'),500);}});
 </script>
-
 </body>
 </html>
