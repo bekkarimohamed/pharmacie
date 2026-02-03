@@ -1266,14 +1266,30 @@ async function syncToCloud(){
   if(!cloudId) return;
   let data = { meds: meds, toBuyList: toBuyList, timestamp: Date.now() };
   try{
+    // D'abord essayer de mettre a jour
     let res = await fetch(CLOUD_URL + cloudId, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
       body: JSON.stringify(data)
     });
-    if(res.ok){
+    if(res.ok || res.status === 200 || res.status === 201){
       console.log('Sync: OK');
-      showCloudStatus('Synchronise!');
+      showCloudStatus('Sauvegarde OK!');
+    }else if(res.status === 404){
+      // Le bin n'existe pas, le creer avec POST
+      showCloudStatus('Creation du cloud...');
+      let createRes = await fetch('https://api.jsonbin.io/v3/b', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
+        body: JSON.stringify(data)
+      });
+      if(createRes.ok){
+        let created = await createRes.json();
+        // Mettre a jour l'ID avec le vrai bin ID
+        cloudId = created.metadata.id;
+        localStorage.setItem(CLOUD_KEY, cloudId);
+        showCloudStatus('Cloud cree: ' + cloudId);
+      }
     }else{
       showCloudStatus('Erreur sync: ' + res.status);
     }
@@ -1305,10 +1321,12 @@ async function syncFromCloud(){
         renderMeds();
         renderToBuy();
         updateStats();
-        showCloudStatus('Donnees reçues!');
+        showCloudStatus('Donnees recues!');
       }else{
         showCloudStatus('Pas de donnees cloud');
       }
+    }else if(res.status === 404){
+      showCloudStatus('Cloud pas encore cree');
     }else{
       showCloudStatus('Erreur: ' + res.status);
     }
