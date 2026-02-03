@@ -1372,10 +1372,13 @@ async function syncFromCloud(){
   }
 }
 
-// Auto-sync toutes les 30 secondes
+// Auto-sync toutes les 60 secondes (lecture + ecriture)
 setInterval(() => {
-  if(cloudId) syncToCloud();
-}, 30000);
+  if(cloudId){
+    syncFromCloud(); // Lire du cloud d'abord
+    setTimeout(() => syncToCloud(), 2000); // Puis ecrire
+  }
+}, 60000);
 
 // Event listeners pour Cloud
 document.getElementById('btn-cloud').onclick = showCloudModal;
@@ -1387,13 +1390,14 @@ function syncNow(){
     showCloudStatus('Pas de Cloud ID!');
     return;
   }
-  showCloudStatus('Synchronisation...');
-  syncToCloud();
+  showCloudStatus('Sync...');
+  // D'abord lire du cloud (pour ne pas ecraser les donnees du PC)
+  syncFromCloud();
+  // Ensuite envoyer vers cloud apres un delai
   setTimeout(() => {
-    syncFromCloud();
+    syncToCloud();
     showCloudStatus('Termine!');
-    alert('Synchronisation terminee!');
-  }, 1000);
+  }, 2000);
 }
 
 // Si deja connecte, sync au demarrage
