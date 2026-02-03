@@ -264,11 +264,15 @@
       <input type="text" id="cloud-id" placeholder="ex: pharmaciefamille2024"
              style="width:100%;padding:.75rem;margin:1rem 0;border:1px solid #ddd;border-radius:var(--radius);font-size:1.1rem;" />
       <button id="cloud-btn"
-              style="background:#4caf50;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;">
-        Connecter
+              style="background:#4caf50;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;width:100%;margin-bottom:.5rem;">
+        Connecter / Sync
       </button>
-      <p style="margin-top:1rem;font-size:.9rem;color:#666;">Utilisez le meme ID sur tous vos appareils</p>
-      <p id="cloud-status" style="margin-top:.5rem;font-size:.85rem;"></p>
+      <button id="cloud-sync-btn" onclick="syncNow()"
+              style="background:#2196f3;color:#fff;border:none;padding:.5rem 1rem;border-radius:var(--radius);cursor:pointer;font-size:.9rem;width:100%;margin-bottom:.5rem;">
+        🔄 Synchroniser maintenant
+      </button>
+      <p id="cloud-status" style="margin-top:.5rem;font-size:.85rem;color:#666;"></p>
+      <p style="margin-top:1rem;font-size:.8rem;color:#999;">Laissez le champ vide pour voir l'ID actuel</p>
     </div>
   </div>
 
@@ -1235,7 +1239,8 @@ let cloudId = localStorage.getItem(CLOUD_KEY);
 
 function showCloudModal(){
   document.getElementById('cloud-modal').style.display = 'flex';
-  document.getElementById('cloud-status').textContent = cloudId ? 'Connecte: ' + cloudId : '';
+  document.getElementById('cloud-id').value = cloudId || '';
+  document.getElementById('cloud-status').textContent = cloudId ? 'Connecte: ' + cloudId : 'Pas de cloud configure';
 }
 
 function hideCloudModal(){
@@ -1248,10 +1253,11 @@ async function connectCloud(){
     document.getElementById('cloud-status').textContent = 'Entrez un ID!';
     return;
   }
+  document.getElementById('cloud-status').textContent = 'Connexion...';
   cloudId = id;
   localStorage.setItem(CLOUD_KEY, id);
-  document.getElementById('cloud-status').textContent = 'Connecte: ' + id;
   await syncToCloud();
+  document.getElementById('cloud-status').textContent = 'Connecte: ' + id;
   alert('Connecte avec succes! Utilisez le meme ID sur vos autres appareils.');
   hideCloudModal();
 }
@@ -1267,15 +1273,25 @@ async function syncToCloud(){
     });
     if(res.ok){
       console.log('Sync: OK');
+      showCloudStatus('Synchronise!');
+    }else{
+      showCloudStatus('Erreur sync: ' + res.status);
     }
   }catch(e){
-    console.log('Sync: Erreur');
+    console.log('Sync: Erreur', e);
+    showCloudStatus('Erreur de connexion');
   }
+}
+
+function showCloudStatus(msg){
+  let el = document.getElementById('cloud-status');
+  if(el) el.textContent = msg;
 }
 
 async function syncFromCloud(){
   if(!cloudId) return;
   try{
+    showCloudStatus('Rapatriement...');
     let res = await fetch(CLOUD_URL + cloudId + '/latest', {
       headers: { 'X-Master-Key': CLOUD_API_KEY }
     });
@@ -1289,10 +1305,16 @@ async function syncFromCloud(){
         renderMeds();
         renderToBuy();
         updateStats();
+        showCloudStatus('Donnees reçues!');
+      }else{
+        showCloudStatus('Pas de donnees cloud');
       }
+    }else{
+      showCloudStatus('Erreur: ' + res.status);
     }
   }catch(e){
-    console.log('Sync from cloud: Erreur');
+    console.log('Sync from cloud: Erreur', e);
+    showCloudStatus('Erreur de connexion');
   }
 }
 
@@ -1305,6 +1327,20 @@ setInterval(() => {
 document.getElementById('btn-cloud').onclick = showCloudModal;
 document.getElementById('cloud-btn').onclick = connectCloud;
 document.getElementById('cloud-id').onkeyup = e => { if(e.key === 'Enter') connectCloud(); };
+
+function syncNow(){
+  if(!cloudId){
+    showCloudStatus('Pas de Cloud ID!');
+    return;
+  }
+  showCloudStatus('Synchronisation...');
+  syncToCloud();
+  setTimeout(() => {
+    syncFromCloud();
+    showCloudStatus('Termine!');
+    alert('Synchronisation terminee!');
+  }, 1000);
+}
 
 // Si deja connecte, sync au demarrage
 if(cloudId){
