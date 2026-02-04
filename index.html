@@ -1068,6 +1068,16 @@ function removeToBuy(idx){
   if(confirm('Supprimer ce médicament de la liste ?')){
     toBuyList.splice(idx, 1);
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+    
+    // Sync vers cloud - re-synchroniser toute la liste
+    if(window.clearAchats && window.addAchat){
+      clearAchats().then(function(){
+        toBuyList.forEach(function(item){
+          addAchat(item);
+        });
+      });
+    }
+    
     renderToBuy();
   }
 }
@@ -1083,6 +1093,11 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   
   toBuyList.push({ name, qty, notes });
   localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+  
+  // Sync vers cloud
+  if(window.addAchat){
+    addAchat({ name, qty, notes });
+  }
   
   e.target.reset();
   document.getElementById('tobuy-qty').value = 1;
@@ -1305,6 +1320,54 @@ async function autoSyncFromCloud(){
       
       if(typeof renderAll === 'function') renderAll();
       if(typeof updateStats === 'function') updateStats();
+    }
+    
+    // Sync aussi les achats (À acheter)
+    if(window.getAchats){
+      try {
+        var achatsResult = await getAchats();
+        if(!achatsResult.error && achatsResult.data && achatsResult.data.length > 0){
+          var cloudAchats = achatsResult.data.map(function(a){
+            return {
+              id: a.id,
+              name: a.nom,
+              qty: a.quantite,
+              notes: a.notes || ''
+            };
+          });
+          
+          // Si le cloud a des achats, fusionner avec local
+          if(cloudAchats.length > 0){
+            console.log('Sync auto achats: fusion avec cloud');
+            
+            // Créer map des achats cloud par nom
+            var cloudMap = {};
+            cloudAchats.forEach(function(a){
+              var key = a.name.toLowerCase();
+              cloudMap[key] = a;
+            });
+            
+            // Ajouter les achats cloud qui n'existent pas localement
+            cloudAchats.forEach(function(ca){
+              var exists = toBuyList.some(function(lc){
+                return lc.name.toLowerCase() === ca.name.toLowerCase();
+              });
+              if(!exists){
+                toBuyList.push({
+                  name: ca.name,
+                  qty: ca.qty,
+                  notes: ca.notes
+                });
+              }
+            });
+            
+            localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+            if(typeof renderToBuy === 'function') renderToBuy();
+          }
+        }
+      } catch(e) {
+        console.warn('Sync achats échoué:', e);
+      }
     }
     
     window.cloudReady = true;
