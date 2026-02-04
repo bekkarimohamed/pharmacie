@@ -1070,7 +1070,7 @@ function removeToBuy(idx){
     toBuyList.splice(idx, 1);
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
     
-    // Marquer comme supprimé pour éviter re-sync
+    // Marquer comme supprimé pour éviter re-sync (30 secondes)
     var deletedItems = JSON.parse(localStorage.getItem('deleted_achats') || '{}');
     deletedItems[deletedItem.name.toLowerCase()] = Date.now();
     localStorage.setItem('deleted_achats', JSON.stringify(deletedItems));
@@ -1082,10 +1082,10 @@ function removeToBuy(idx){
         toBuyList.forEach(function(item){
           addAchat(item);
         });
-        // Nettoyer les vieux marqueurs de suppression (plus vieux que 10 secondes)
+        // Nettoyer les vieux marqueurs de suppression (plus vieux que 60 secondes)
         var now = Date.now();
         Object.keys(deletedItems).forEach(function(key){
-          if(now - deletedItems[key] > 10000){
+          if(now - deletedItems[key] > 60000){
             delete deletedItems[key];
           }
         });
@@ -1370,13 +1370,13 @@ async function autoSyncFromCloud(){
           var now = Date.now();
           
           // 1️⃣ SUPPRIMER du local les items qui n'existent plus dans cloud
-          // (sauf si supprimés localement il y a moins de 10 secondes)
+          // (sauf si supprimé localement il y a moins de 30 secondes)
           var localDeleted = false;
           for(var i = toBuyList.length - 1; i >= 0; i--){
             var localKey = toBuyList[i].name.toLowerCase();
             var existsInCloud = cloudAchats.some(function(c){ return c === localKey; });
             
-            if(!existsInCloud && !(deletedItems[localKey] && (now - deletedItems[localKey] < 10000))){
+            if(!existsInCloud && !(deletedItems[localKey] && (now - deletedItems[localKey] < 30000))){
               console.log('🗑️ Supprimer du local:', toBuyList[i].name);
               toBuyList.splice(i, 1);
               localDeleted = true;
@@ -1388,9 +1388,13 @@ async function autoSyncFromCloud(){
             achatsResult.data.forEach(function(a){
               var key = a.nom.toLowerCase();
               
-              // Skip si supprimé localement il y a moins de 10 secondes
-              if(deletedItems[key] && (now - deletedItems[key] < 10000)){
-                console.log('⏭️ Ignorer', a.nom, '- supprimé localement');
+              // Skip si:
+              // 1. L'item existe localement - ne pas ajouter de doublon
+              // 2. L'item a été supprimé localement il y a moins de 30 secondes
+              //    (pour éviter que l'auto-sync ne le réajoute immédiatement)
+              var deletedAt = deletedItems[key];
+              if(deletedAt && (now - deletedAt < 30000)){
+                console.log('⏭️ Ignorer', a.nom, '- supprimé localement il y a ' + Math.round((now - deletedAt)/1000) + 's');
                 return;
               }
               
