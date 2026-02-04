@@ -1203,9 +1203,10 @@ document.getElementById('btn-save').addEventListener('click', (e)=>{ e.preventDe
 document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preventDefault(); restoreBackup(); });
 document.getElementById('btn-sync').addEventListener('click', (e)=>{ 
   e.preventDefault(); 
-  if(window.refreshFromCloud){
-    refreshFromCloud();
-    alert('🔄 Synchronisation terminée !');
+  if(window.saveAllToCloud){
+    saveAllToCloud(function(){
+      alert('🔄 Sync terminée ! Données sauvegardées vers cloud.');
+    });
   } else {
     alert('⚠️ Cloud non activé');
   }
@@ -1335,6 +1336,64 @@ function loadFromCloud(){
       updateStats();
       console.log('Données importées depuis cloud');
     }
+  });
+}
+
+// Sauvegarder TOUTES les données locales vers cloud
+function saveAllToCloud(callback){
+  if(!window.addMedicament || !window.deleteMedicament || !window.getMedicaments) {
+    if(callback) callback();
+    return;
+  }
+  
+  // D'abord récupérer les IDs cloud existants
+  getMedicaments().then(function(result){
+    var cloudIds = [];
+    if(result.data){
+      cloudIds = result.data.map(function(m){ return m.id; });
+    }
+    
+    // IDs locaux
+    var localIds = meds.filter(function(m){ return m.id; }).map(function(m){ return m.id; });
+    
+    // Supprimer du cloud les médicaments qui n'existent plus en local
+    var idsToDelete = cloudIds.filter(function(id){ return localIds.indexOf(id) === -1; });
+    
+    var deletePromises = idsToDelete.map(function(id){
+      return deleteMedicament(id);
+    });
+    
+    // Ajouter/Mettre à jour chaque médicament local vers cloud
+    var savePromises = meds.map(function(m){
+      var medData = {
+        name: m.name,
+        dosage: m.dosage,
+        genre: m.genre,
+        quantity: m.quantity,
+        initialStock: m.initialStock,
+        price: m.price,
+        nbBoxes: m.nbBoxes,
+        expiry: m.expiry,
+        notes: m.notes || ''
+      };
+      
+      if(m.id){
+        // Existe déjà, mettre à jour
+        return updateMedicament(m.id, medData);
+      } else {
+        // Nouveau, créer
+        return addMedicament(medData);
+      }
+    });
+    
+    // Attendre toutes les opérations
+    Promise.all(deletePromises.concat(savePromises)).then(function(){
+      console.log('Toutes les données sauvegardées vers cloud');
+      if(callback) callback();
+    }).catch(function(err){
+      console.warn('Erreur sync cloud:', err);
+      if(callback) callback();
+    });
   });
 }
 </script>
