@@ -845,9 +845,15 @@ document.getElementById('add-form').addEventListener('submit', function(e){
     meds.push({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes });
     save();
     
-    // Sauvegarder vers cloud
+    // Sauvegarder vers cloud IMMÉDIATEMENT
     if(window.addMedicament){
-      addMedicament({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes });
+      addMedicament({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes }).then(result => {
+        if(result.error){
+          console.error('Erreur ajout cloud:', result.error);
+        } else {
+          console.log('✅ Ajout cloud réussi');
+        }
+      });
     }
     
     e.target.reset();
@@ -889,6 +895,18 @@ Nouvelle saisie :
 
   meds[existingIndex] = ex;
   save();
+  
+  // Mettre à jour le cloud IMMÉDIATEMENT
+  if(window.updateMedicament && ex.id){
+    updateMedicament(ex.id, ex).then(result => {
+      if(result.error){
+        console.error('Erreur update cloud:', result.error);
+      } else {
+        console.log('✅ Update cloud réussi');
+      }
+    });
+  }
+  
   e.target.reset();
   show('inventory');
   renderAll();
@@ -970,6 +988,18 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
       meds.splice(idx, 1);
 
       save();
+      
+      // Mettre à jour le cloud IMMÉDIATEMENT
+      if(window.updateMedicament && target.id){
+        updateMedicament(target.id, target).then(result => {
+          if(result.error){
+            console.error('Erreur update cloud:', result.error);
+          } else {
+            console.log('✅ Update cloud réussi (fusion)');
+          }
+        });
+      }
+      
       closeEdit();
       renderAll();
       updateStats();
@@ -980,9 +1010,15 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
   meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes };
   save();
   
-  // Mettre à jour le cloud
+  // Mettre à jour le cloud IMMÉDIATEMENT
   if(window.updateMedicament && meds[idx].id){
-    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes });
+    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes }).then(result => {
+      if(result.error){
+        console.error('Erreur update cloud:', result.error);
+      } else {
+        console.log('✅ Update cloud réussi');
+      }
+    });
   }
   
   closeEdit();
@@ -1289,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
           console.log('✅ Cloud Supabase ACTIVÉ');
           window.cloudReady = true;
           autoSyncFromCloud();
-          setInterval(autoSyncFromCloud, 10000); // Sync toutes les 10 secondes
+          setInterval(autoSyncFromCloud, 3000); // Sync toutes les 3 secondes
         } else {
           console.log('❌ Cloud Supabase NON activé - connexion refusée');
         }
