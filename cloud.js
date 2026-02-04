@@ -11,7 +11,7 @@ var isCloudEnabled = false;
 // Test connection à Supabase
 async function initCloud() {
     try {
-        console.log('Test connexion Supabase...');
+        console.log('🔄 Test connexion Supabase...');
         const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?select=count`, {
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -19,11 +19,11 @@ async function initCloud() {
             }
         });
         
-        console.log('Réponse:', response.status);
+        console.log('📡 Réponse Supabase:', response.status);
         
         if (response.ok || response.status === 200 || response.status === 406) {
             isCloudEnabled = true;
-            console.log('✅ Cloud Supabase connecté');
+            console.log('✅ Cloud Supabase CONNECTÉ avec succès');
             return true;
         } else {
             console.warn('❌ Connection failed:', response.status);
@@ -150,7 +150,12 @@ function getCloudStatus() {
 
 // Récupérer tous les achats
 async function getAchats() {
-    if (!isCloudEnabled) return { data: [], error: null };
+    if (!isCloudEnabled) {
+        console.warn('⚠️ Cloud non activé pour getAchats');
+        return { data: [], error: null };
+    }
+    
+    console.log('📥 Récupération achats depuis cloud...');
     
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?select=*&order=id.desc`, {
@@ -163,22 +168,25 @@ async function getAchats() {
         
         if (!response.ok) {
             const err = await response.text();
-            console.error('Erreur getAchats:', response.status, err);
+            console.error('❌ Erreur getAchats:', response.status, err);
             return { data: null, error: err };
         }
         
         const data = await response.json();
-        console.log('Achats reçus:', data.length);
+        console.log('✅ Achats reçus du cloud:', data.length);
         return { data: data || [], error: null };
     } catch (e) {
-        console.error('Erreur getAchats:', e);
+        console.error('❌ Erreur getAchats:', e);
         return { data: null, error: e.message };
     }
 }
 
 // Ajouter un achat
 async function addAchat(item) {
-    if (!isCloudEnabled) return { error: 'Cloud not enabled' };
+    if (!isCloudEnabled) {
+        console.warn('⚠️ Cloud non activé pour addAchat');
+        return { error: 'Cloud not enabled' };
+    }
     
     const data = {
         nom: item.name,
@@ -187,7 +195,7 @@ async function addAchat(item) {
         date_achat: new Date().toISOString()
     };
     
-    console.log('Insertion achat:', data);
+    console.log('📤 Envoi addAchat vers cloud:', data);
     
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/achats`, {
@@ -201,16 +209,18 @@ async function addAchat(item) {
             body: JSON.stringify(data)
         });
         
+        console.log('📥 Réponse addAchat:', response.status);
+        
         if (response.ok || response.status === 201) {
-            console.log('Achat inséré');
+            console.log('✅ Achat inséré dans cloud');
             return { error: null };
         } else {
             const err = await response.text();
-            console.error('Erreur addAchat:', err);
+            console.error('❌ Erreur addAchat:', err);
             return { error: err };
         }
     } catch (e) {
-        console.error('Erreur addAchat:', e);
+        console.error('❌ Erreur addAchat:', e);
         return { error: e.message };
     }
 }
