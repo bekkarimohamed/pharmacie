@@ -191,8 +191,7 @@ async function addAchat(item) {
     const data = {
         nom: item.name,
         quantite: item.qty,
-        genre: item.notes || '',
-        date_achat: new Date().toISOString()
+        notes: item.notes || ''
     };
     
     console.log('📤 Envoi addAchat vers cloud:', data);
