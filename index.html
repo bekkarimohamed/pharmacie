@@ -852,6 +852,12 @@ document.getElementById('add-form').addEventListener('submit', function(e){
           console.error('Erreur ajout cloud:', result.error);
         } else {
           console.log('✅ Ajout cloud réussi');
+          // Assigner l'ID retourné au médicament local
+          if(result.data && result.data[0] && result.data[0].id){
+            meds[meds.length - 1].id = result.data[0].id;
+            save();
+            console.log('ID cloud assigné:', result.data[0].id);
+          }
         }
       });
     }
@@ -1033,9 +1039,9 @@ function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
   if(confirm(`Supprimer "${m.name} (${m.dosage})" ?`)){
-    // Supprimer du cloud IMMÉDIATEMENT
-    if(window.deleteMedicament && m.id){
-      deleteMedicament(m.id).then(result => {
+    // Supprimer du cloud IMMÉDIATEMENT (avec fallback nom+dosage)
+    if(window.deleteMedicament){
+      deleteMedicament(m.id, m.name, m.dosage).then(result => {
         if(result.error){
           console.error('❌ Erreur suppression cloud:', result.error);
         } else {
