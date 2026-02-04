@@ -286,9 +286,10 @@
       <li><a href="#" data-target="use-mode">💊 Utiliser</a></li>
       <li><a href="#" data-target="to-buy">🛒 À acheter</a></li>
 
-      <!-- NOUVEAU : Sauvegarder / Restaurer / Vider -->
+      <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
       <li><a href="#" id="btn-save" class="nav-btn">💾 Sauvegarder</a></li>
       <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
+      <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync Cloud</a></li>
       <li><a href="#" id="btn-clear" class="nav-btn">🧹 Vider tout</a></li>
 
       <li><a href="#" id="logout-link">🚪 Quitter</a></li>
@@ -1200,6 +1201,15 @@ document.querySelectorAll('nav a[data-target]').forEach(a=>{
 // actions backup
 document.getElementById('btn-save').addEventListener('click', (e)=>{ e.preventDefault(); saveBackup(); });
 document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preventDefault(); restoreBackup(); });
+document.getElementById('btn-sync').addEventListener('click', (e)=>{ 
+  e.preventDefault(); 
+  if(window.refreshFromCloud){
+    refreshFromCloud();
+    alert('🔄 Synchronisation terminée !');
+  } else {
+    alert('⚠️ Cloud non activé');
+  }
+});
 document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventDefault(); clearAllStock(); });
 
 // recherches live
@@ -1244,7 +1254,54 @@ if(window.initCloud){
     if(enabled){
       console.log('Cloud Supabase activé');
       loadFromCloud();
+      subscribeToCloudChanges();
     }
+  });
+}
+
+// Subscription temps réel - écouter les changements cloud
+function subscribeToCloudChanges(){
+  if(!window.subscribeToMedicaments) return;
+  
+  subscribeToMedicaments(function(payload){
+    console.log('Cloud change detected:', payload);
+    
+    // Recharger depuis cloud quand un changement est détecté
+    refreshFromCloud();
+  });
+}
+
+// Rafraîchir depuis cloud (pour sync temps réel)
+function refreshFromCloud(){
+  if(!window.getMedicaments) return;
+  
+  getMedicaments().then(function(result){
+    if(result.error || !result.data) return;
+    
+    const cloudMeds = result.data.map(function(m){
+      return {
+        id: m.id,
+        name: m.nom,
+        dosage: m.dosage,
+        genre: m.genre,
+        quantity: m.quantite,
+        initialStock: m.stock_initial,
+        price: m.prix,
+        nbBoxes: m.nb_boites,
+        expiry: m.date_peremption,
+        notes: m.notes || ''
+      };
+    });
+    
+    // Mettre à jour meds et localStorage
+    meds = cloudMeds;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+    localStorage.setItem(SEEDED_KEY, "1");
+    
+    if(typeof renderAll === 'function') renderAll();
+    if(typeof updateStats === 'function') updateStats();
+    
+    console.log('Sync temps réel: données mises à jour');
   });
 }
 
