@@ -1237,16 +1237,48 @@ async function connectCloud(){
   document.getElementById('cloud-status').textContent = 'Connexion...';
   cloudId = id;
   localStorage.setItem(CLOUD_KEY, id);
-  await syncToCloud();
-  document.getElementById('cloud-status').textContent = 'Connecte: ' + id;
-  alert('Connecte avec succes! Utilisez le meme ID sur vos autres appareils.');
+  // Effacer l'ancien cloud et creer nouveau
+  localStorage.removeItem(CLOUD_KEY);
+  cloudId = null;
+  alert('ID enregistre! Maintenant klik sur "Sync maintenant" pour demarrer.');
   hideCloudModal();
 }
 
 async function syncToCloud(){
   if(!cloudId) return;
-  // Fusionner avec donnees cloud pour ne pas perdre les donnees de lautre appareil
-  let cloudMeds = meds;
+  // Si pas de cloudId, creer un nouveau
+  let useNewBin = false;
+  try{
+    let res = await fetch(CLOUD_URL + cloudId + '/latest', {
+      headers: { 'X-Master-Key': CLOUD_API_KEY }
+    });
+    if(!res.ok){
+      useNewBin = true;
+    }
+  }catch(e){
+    useNewBin = true;
+  }
+  
+  if(useNewBin){
+    // Creer un nouveau bin
+    let data = { meds: meds, toBuyList: toBuyList, timestamp: Date.now() };
+    let createRes = await fetch('https://api.jsonbin.io/v3/b', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
+      body: JSON.stringify(data)
+    });
+    if(createRes.ok){
+      let created = await createRes.json();
+      cloudId = created.metadata.id;
+      localStorage.setItem(CLOUD_KEY, cloudId);
+      document.getElementById('cloud-id').value = cloudId;
+      showCloudStatus('Cloud cree: ' + cloudId);
+      console.log('Nouveau bin cree: ' + cloudId);
+    }
+    return;
+  }
+  
+  // Fusionner avec donnees cloud
   try{
     let res = await fetch(CLOUD_URL + cloudId + '/latest', {
       headers: { 'X-Master-Key': CLOUD_API_KEY }
@@ -1257,39 +1289,30 @@ async function syncToCloud(){
         let data = JSON.parse(text);
         let cloudRecord = data.record || data;
         if(cloudRecord && cloudRecord.meds){
-          // Fusionner: ajouter les medicaments qui nexistent pas localement
           let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
           for(let m of cloudRecord.meds){
             if(!localKeys.has(keyOf(m.name, m.dosage))){
               meds.push(m);
             }
           }
-          console.log('Sync: fusionne avec cloud, total: ' + meds.length);
         }
       }catch(e){}
     }
   }catch(e){}
   
   let data = { meds: meds, toBuyList: toBuyList, timestamp: Date.now() };
-  console.log('Sync: Envoi vers cloud, total meds: ' + meds.length);
-  try{
-    showCloudStatus('Sync... (' + meds.length + ' meds)');
-    let res = await fetch(CLOUD_URL + cloudId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
-      body: JSON.stringify(data)
-    });
-    console.log('Sync PUT: status=' + res.status);
-    if(res.ok || res.status === 200 || res.status === 201){
-      showCloudStatus('Sync OK (' + meds.length + ' meds)');
-      renderAll();
-      updateStats();
-    }else{
-      showCloudStatus('Erreur sync: ' + res.status);
-    }
-  }catch(e){
-    console.log('Sync: Erreur', e);
-    showCloudStatus('Erreur: ' + e.message);
+  showCloudStatus('Envoi... (' + meds.length + ' meds)');
+  let res = await fetch(CLOUD_URL + cloudId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
+    body: JSON.stringify(data)
+  });
+  if(res.ok || res.status === 200){
+    showCloudStatus('Sync OK (' + meds.length + ' meds)');
+    renderAll();
+    updateStats();
+  }else{
+    showCloudStatus('Erreur: ' + res.status);
   }
 }
 
@@ -1301,102 +1324,67 @@ function showCloudStatus(msg){
 async function syncFromCloud(){
   if(!cloudId) return;
   try{
-    showCloudStatus('Lecture cloud...');
-    let url = CLOUD_URL + cloudId + '/latest';
-    console.log('SyncFrom: fetching ' + url);
-    let res = await fetch(url, {
+    let res = await fetch(CLOUD_URL + cloudId + '/latest', {
       headers: { 'X-Master-Key': CLOUD_API_KEY }
     });
-    console.log('SyncFrom: status=' + res.status);
-    if(res.status === 404){
-      showCloudStatus('Pas encore de cloud. Lancez sync sur PC.');
-      return;
-    }
     if(!res.ok){
-      showCloudStatus('Erreur lecture: ' + res.status);
+      showCloudStatus('Pas de cloud ou erreur: ' + res.status);
       return;
     }
     let text = await res.text();
-    if(text.length < 10){
+    let data = JSON.parse(text);
+    let cloudRecord = data.record || data;
+    if(!cloudRecord || !cloudRecord.meds){
       showCloudStatus('Cloud vide');
       return;
     }
-    try{
-      let data = JSON.parse(text);
-      let cloudRecord = data.record || data;
-      showCloudStatus('Cloud: ' + (cloudRecord?.meds?.length || 0) + ' meds, Local: ' + meds.length);
-      if(cloudRecord && cloudRecord.meds && Array.isArray(cloudRecord.meds)){
-        // Fusionner: ajouter les medicaments cloud qui nexistent pas localement
-        let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
-        let added = 0;
-        for(let m of cloudRecord.meds){
-          let k = keyOf(m.name, m.dosage);
-          if(!localKeys.has(k)){
-            meds.push(m);
-            added++;
-            console.log('Ajoute: ' + m.name);
-          }else{
-            console.log('Existe deja: ' + m.name);
-          }
-        }
-        // Mettre a jour toBuyList aussi
-        if(cloudRecord.toBuyList && Array.isArray(cloudRecord.toBuyList)){
-          toBuyList = cloudRecord.toBuyList;
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-        localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-        renderAll();
-        updateStats();
-        showCloudStatus('Recu: ' + cloudRecord.meds.length + ' cloud, ' + added + ' ajoutes, total: ' + meds.length);
-      }else{
-        showCloudStatus('Pas de donnees valides dans cloud');
+    // Fusionner
+    let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
+    let added = 0;
+    for(let m of cloudRecord.meds){
+      if(!localKeys.has(keyOf(m.name, m.dosage))){
+        meds.push(m);
+        added++;
       }
-    }catch(e){
-      console.log('SyncFrom: parse error', e.message);
-      showCloudStatus('Erreur lecture: ' + e.message);
     }
+    toBuyList = cloudRecord.toBuyList || [];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+    localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+    renderAll();
+    updateStats();
+    showCloudStatus('Recu: ' + cloudRecord.meds.length + ' cloud, ' + added + ' ajoutes, total: ' + meds.length);
   }catch(e){
-    console.log('SyncFrom: erreur', e.name, e.message);
     showCloudStatus('Erreur connexion');
   }
 }
-
-// Auto-sync toutes les 60 secondes (lecture + ecriture)
-setInterval(() => {
-  if(cloudId){
-    syncFromCloud(); // Lire du cloud d'abord
-    setTimeout(() => syncToCloud(), 2000); // Puis ecrire
-  }
-}, 60000);
-
-// Event listeners pour Cloud
-document.getElementById('btn-cloud').onclick = showCloudModal;
-document.getElementById('cloud-btn').onclick = connectCloud;
-document.getElementById('cloud-id').onkeyup = e => { if(e.key === 'Enter') connectCloud(); };
 
 function syncNow(){
   if(!cloudId){
     showCloudStatus('Pas de Cloud ID!');
     return;
   }
-  showCloudStatus('=== SYNC DEBUT (local: ' + meds.length + ' meds) ===');
-  // D'abord lire du cloud
-  syncFromCloud();
-  // Ensuite envoyer vers cloud apres un delai
+  showCloudStatus('Sync en cours...');
+  syncToCloud();
+  setTimeout(() => syncFromCloud(), 3000);
   setTimeout(() => {
-    showCloudStatus('=== ENVOI CLOUD (total: ' + meds.length + ' meds) ===');
-    syncToCloud();
-    setTimeout(() => {
-      showCloudStatus('=== TERMINE (total: ' + meds.length + ' meds) ===');
-      alert('Sync terminee! Total: ' + meds.length + ' medicaments');
-    }, 2000);
-  }, 3000);
+    showCloudStatus('Termine: ' + meds.length + ' medicaments');
+    alert('Sync terminee! Total: ' + meds.length + ' medicaments');
+  }, 6000);
 }
 
-// Si deja connecte, sync au demarrage
-if(cloudId){
-  syncFromCloud();
-}
+// Event listeners pour Cloud
+try{
+  if(document.getElementById('btn-cloud')) document.getElementById('btn-cloud').onclick = showCloudModal;
+  if(document.getElementById('cloud-btn')) document.getElementById('cloud-btn').onclick = connectCloud;
+  if(document.getElementById('cloud-id')) document.getElementById('cloud-id').onkeyup = e => { if(e.key === 'Enter') connectCloud(); };
+}catch(e){console.log('Cloud event error', e)}
+
+// Auto-sync toutes les 60 secondes
+try{
+  if(cloudId){
+    setTimeout(() => syncFromCloud(), 5000);
+  }
+}catch(e){}
 
 /* =========================
    INITIALISATION
