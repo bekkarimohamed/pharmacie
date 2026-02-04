@@ -1201,21 +1201,26 @@ document.querySelectorAll('nav a[data-target]').forEach(a=>{
 // actions backup
 document.getElementById('btn-save').addEventListener('click', (e)=>{ e.preventDefault(); saveBackup(); });
 document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preventDefault(); restoreBackup(); });
-document.getElementById('btn-sync').addEventListener('click', (e)=>{ 
+document.getElementById('btn-sync').addEventListener('click', async (e)=>{ 
   e.preventDefault(); 
+  
+  // Initialiser cloud si pas encore fait
+  if(typeof initCloud === 'function' && !window.cloudInitialized){
+    window.cloudInitialized = true;
+  }
   
   // Vérifier si local est vide et cloud a des données
   if(meds.length === 0){
     // Charger depuis cloud
     if(window.loadAndShowFromCloud){
-      loadAndShowFromCloud();
+      await loadAndShowFromCloud();
     } else {
       alert('⚠️ Cloud non activé');
     }
   } else {
     // Sauvegarder vers cloud
     if(window.saveAllToCloud){
-      saveAllToCloud(function(){
+      await saveAllToCloud(function(){
         alert('🔄 Sync terminée ! Données sauvegardées vers cloud.');
       });
     } else {
@@ -1356,55 +1361,55 @@ function loadFromCloud(){
 }
 
 // Charger depuis cloud ET afficher un message
-function loadAndShowFromCloud(){
-  if(!window.getMedicaments) {
+async function loadAndShowFromCloud(){
+  if(typeof getMedicaments !== 'function') {
     alert('⚠️ Cloud non activé');
     return;
   }
   
-  getMedicaments().then(function(result){
-    if(result.error){
-      alert('❌ Erreur cloud: ' + result.error);
-      return;
-    }
-    
-    if(!result.data || result.data.length === 0){
-      alert('⚠️ Aucune donnée dans le cloud');
-      return;
-    }
-    
-    const cloudMeds = result.data.map(function(m){
-      return {
-        id: m.id,
-        name: m.nom,
-        dosage: m.dosage,
-        genre: m.genre,
-        quantity: m.quantite,
-        initialStock: m.stock_initial,
-        price: m.prix,
-        nbBoxes: m.nb_boites,
-        expiry: m.date_peremption,
-        notes: m.notes || ''
-      };
-    });
-    
-    // Charger dans localStorage
-    meds = cloudMeds;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-    localStorage.setItem(SEEDED_KEY, "1");
-    
-    renderAll();
-    updateStats();
-    
-    console.log('Données chargées depuis cloud:', cloudMeds.length, 'médicaments');
-    alert('✅ ' + cloudMeds.length + ' médicaments chargés depuis cloud !');
+  var result = await getMedicaments();
+  
+  if(result.error){
+    alert('❌ Erreur cloud: ' + result.error);
+    return;
+  }
+  
+  if(!result.data || result.data.length === 0){
+    alert('⚠️ Aucune donnée dans le cloud');
+    return;
+  }
+  
+  var cloudMeds = result.data.map(function(m){
+    return {
+      id: m.id,
+      name: m.nom,
+      dosage: m.dosage,
+      genre: m.genre,
+      quantity: m.quantite,
+      initialStock: m.stock_initial,
+      price: m.prix,
+      nbBoxes: m.nb_boites,
+      expiry: m.date_peremption,
+      notes: m.notes || ''
+    };
   });
+  
+  // Charger dans localStorage
+  meds = cloudMeds;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+  localStorage.setItem(SEEDED_KEY, "1");
+  
+  renderAll();
+  updateStats();
+  
+  console.log('Données chargées depuis cloud:', cloudMeds.length, 'médicaments');
+  alert('✅ ' + cloudMeds.length + ' médicaments chargés depuis cloud !');
 }
 
 // Sauvegarder TOUTES les données locales vers cloud
-function saveAllToCloud(callback){
-  if(!window.addMedicament || !window.deleteMedicament || !window.getMedicaments) {
-    console.warn('Fonctions cloud non disponibles');
+async function saveAllToCloud(callback){
+  if(typeof addMedicament !== 'function') {
+    console.warn('addMedicament non disponible');
     if(callback) callback();
     return;
   }
@@ -1412,74 +1417,56 @@ function saveAllToCloud(callback){
   console.log('Début sync vers cloud, meds count:', meds.length);
   
   // D'abord récupérer les IDs cloud existants
-  getMedicaments().then(function(result){
-    console.log('IDs cloud actuels:', result);
+  var cloudData = await getMedicaments();
+  console.log('IDs cloud actuels:', cloudData);
+  
+  var cloudIds = [];
+  if(cloudData.data){
+    cloudIds = cloudData.data.map(function(m){ return m.id; });
+  }
+  
+  // IDs locaux
+  var localIds = meds.filter(function(m){ return m.id; }).map(function(m){ return m.id; });
+  
+  console.log('Cloud IDs:', cloudIds, 'Local IDs:', localIds);
+  
+  // Supprimer du cloud les médicaments qui n'existent plus en local
+  var idsToDelete = cloudIds.filter(function(id){ return localIds.indexOf(id) === -1; });
+  
+  console.log('IDs à supprimer:', idsToDelete);
+  
+  // Supprimer
+  for(var i = 0; i < idsToDelete.length; i++){
+    await deleteMedicament(idsToDelete[i]);
+  }
+  
+  // Sauvegarder chaque médicament
+  for(var j = 0; j < meds.length; j++){
+    var m = meds[j];
+    var medData = {
+      name: m.name,
+      dosage: m.dosage,
+      genre: m.genre,
+      quantity: m.quantity,
+      initialStock: m.initialStock,
+      price: m.price,
+      nbBoxes: m.nbBoxes,
+      expiry: m.expiry,
+      notes: m.notes || ''
+    };
     
-    var cloudIds = [];
-    if(result.data){
-      cloudIds = result.data.map(function(m){ return m.id; });
-    }
+    console.log('Sauvegarding:', medData.name);
     
-    // IDs locaux
-    var localIds = meds.filter(function(m){ return m.id; }).map(function(m){ return m.id; });
-    
-    console.log('Cloud IDs:', cloudIds, 'Local IDs:', localIds);
-    
-    // Supprimer du cloud les médicaments qui n'existent plus en local
-    var idsToDelete = cloudIds.filter(function(id){ return localIds.indexOf(id) === -1; });
-    
-    console.log('IDs à supprimer:', idsToDelete);
-    
-    var deletePromises = idsToDelete.map(function(id){
-      return deleteMedicament(id);
-    });
-    
-    // Ajouter/Mettre à jour chaque médicament local vers cloud
-    var savePromises = meds.map(function(m, index){
-      var medData = {
-        name: m.name,
-        dosage: m.dosage,
-        genre: m.genre,
-        quantity: m.quantity,
-        initialStock: m.initialStock,
-        price: m.price,
-        nbBoxes: m.nbBoxes,
-        expiry: m.expiry,
-        notes: m.notes || ''
-      };
-      
-      console.log('Sauvegarding:', medData.name);
-      
-      if(m.id){
-        // Existe déjà, mettre à jour
-        return updateMedicament(m.id, medData);
-      } else {
-        // Nouveau, créer
-        return addMedicament(medData);
-      }
-    });
-    
-    console.log('Opérations en cours:', deletePromises.length + savePromises.length);
-    
-    // Attendre toutes les opérations
-    Promise.all(deletePromises.concat(savePromises)).then(function(results){
-      console.log('Sync terminée, résultats:', results);
-      console.log('Toutes les données sauvegardées vers cloud');
-      if(callback) callback();
-    }).catch(function(err){
-      console.error('Erreur sync cloud:', err);
-      if(callback) callback();
-    });
-  }).catch(function(err){
-    console.error('Erreur récupération IDs cloud:', err);
-    if(callback) callback();
-  });
+    var result = await addMedicament(medData);
+    console.log('Result:', result);
+  }
+  
+  console.log('Sync terminée');
+  if(callback) callback();
 }
 </script>
 
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Cloud Integration -->
+<!-- Cloud Integration (REST API) -->
 <script src="cloud.js"></script>
 
 </body>
