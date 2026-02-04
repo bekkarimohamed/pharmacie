@@ -1324,14 +1324,19 @@ async function syncFromCloud(){
     try{
       let data = JSON.parse(text);
       let cloudRecord = data.record || data;
+      showCloudStatus('Cloud: ' + (cloudRecord?.meds?.length || 0) + ' meds, Local: ' + meds.length);
       if(cloudRecord && cloudRecord.meds && Array.isArray(cloudRecord.meds)){
         // Fusionner: ajouter les medicaments cloud qui nexistent pas localement
         let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
         let added = 0;
         for(let m of cloudRecord.meds){
-          if(!localKeys.has(keyOf(m.name, m.dosage))){
+          let k = keyOf(m.name, m.dosage);
+          if(!localKeys.has(k)){
             meds.push(m);
             added++;
+            console.log('Ajoute: ' + m.name);
+          }else{
+            console.log('Existe deja: ' + m.name);
           }
         }
         // Mettre a jour toBuyList aussi
@@ -1342,14 +1347,13 @@ async function syncFromCloud(){
         localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
         renderAll();
         updateStats();
-        showCloudStatus('Recu: ' + cloudRecord.meds.length + ' meds (' + added + ' nouveaux)');
-        console.log('SyncFrom: total meds=' + meds.length + ', added=' + added);
+        showCloudStatus('Recu: ' + cloudRecord.meds.length + ' cloud, ' + added + ' ajoutes, total: ' + meds.length);
       }else{
         showCloudStatus('Pas de donnees valides dans cloud');
       }
     }catch(e){
       console.log('SyncFrom: parse error', e.message);
-      showCloudStatus('Erreur lecture');
+      showCloudStatus('Erreur lecture: ' + e.message);
     }
   }catch(e){
     console.log('SyncFrom: erreur', e.name, e.message);
