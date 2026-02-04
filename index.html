@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -290,7 +290,6 @@
       <li><a href="#" id="btn-save" class="nav-btn">💾 Sauvegarder</a></li>
       <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
       <li><a href="#" id="btn-clear" class="nav-btn">🧹 Vider tout</a></li>
-      <li><a href="#" id="btn-cloud" class="nav-btn">☁️ Cloud</a></li>
 
       <li><a href="#" id="logout-link">🚪 Quitter</a></li>
     </ul>
@@ -519,6 +518,11 @@
   </div>
 
 <script>
+/* =========================
+   VERSION ORIGINAL 1.00
+   Gestion de la Pharmacie a Domicile
+   Date: 2024
+ ========================= */
 /* =========================
    CONFIG / STOCKAGE
 ========================= */
@@ -1210,183 +1214,6 @@ document.addEventListener('keydown', e=>{
 });
 
 /* =========================
-   CLOUD SYNC (JSONBin.io)
-========================= */
-const CLOUD_KEY = 'pharmacie_cloud_id';
-const CLOUD_URL = 'https://api.jsonbin.io/v3/b/';
-const CLOUD_API_KEY = '$2a$10$yn0pJFQNZ.FUA7ozos/WtO19llV8crfyi5vBSx5xBKrcxCVe5Z2TW';
-
-let cloudId = localStorage.getItem(CLOUD_KEY);
-
-function showCloudModal(){
-  document.getElementById('cloud-modal').style.display = 'flex';
-  document.getElementById('cloud-id').value = cloudId || '';
-  document.getElementById('cloud-status').textContent = cloudId ? 'Connecte: ' + cloudId : 'Pas de cloud configure';
-}
-
-function hideCloudModal(){
-  document.getElementById('cloud-modal').style.display = 'none';
-}
-
-async function connectCloud(){
-  let id = document.getElementById('cloud-id').value.trim();
-  if(!id){
-    document.getElementById('cloud-status').textContent = 'Entrez un ID!';
-    return;
-  }
-  document.getElementById('cloud-status').textContent = 'Connexion...';
-  cloudId = id;
-  localStorage.setItem(CLOUD_KEY, id);
-  showCloudStatus('Connecte: ' + id);
-  alert('Connecte avec succes! Maintenant klik sur "Sync maintenant".');
-  hideCloudModal();
-  // Faire un sync immediatement
-  setTimeout(() => syncNow(), 500);
-}
-
-async function syncToCloud(){
-  if(!cloudId) return;
-  // Si pas de cloudId, creer un nouveau
-  let useNewBin = false;
-  try{
-    let res = await fetch(CLOUD_URL + cloudId + '/latest', {
-      headers: { 'X-Master-Key': CLOUD_API_KEY }
-    });
-    if(!res.ok){
-      useNewBin = true;
-    }
-  }catch(e){
-    useNewBin = true;
-  }
-  
-  if(useNewBin){
-    // Creer un nouveau bin
-    let data = { meds: meds, toBuyList: toBuyList, timestamp: Date.now() };
-    let createRes = await fetch('https://api.jsonbin.io/v3/b', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
-      body: JSON.stringify(data)
-    });
-    if(createRes.ok){
-      let created = await createRes.json();
-      cloudId = created.metadata.id;
-      localStorage.setItem(CLOUD_KEY, cloudId);
-      document.getElementById('cloud-id').value = cloudId;
-      showCloudStatus('Cloud cree: ' + cloudId);
-      console.log('Nouveau bin cree: ' + cloudId);
-    }
-    return;
-  }
-  
-  // Fusionner avec donnees cloud
-  try{
-    let res = await fetch(CLOUD_URL + cloudId + '/latest', {
-      headers: { 'X-Master-Key': CLOUD_API_KEY }
-    });
-    if(res.ok){
-      let text = await res.text();
-      try{
-        let data = JSON.parse(text);
-        let cloudRecord = data.record || data;
-        if(cloudRecord && cloudRecord.meds){
-          let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
-          for(let m of cloudRecord.meds){
-            if(!localKeys.has(keyOf(m.name, m.dosage))){
-              meds.push(m);
-            }
-          }
-        }
-      }catch(e){}
-    }
-  }catch(e){}
-  
-  let data = { meds: meds, toBuyList: toBuyList, timestamp: Date.now() };
-  showCloudStatus('Envoi... (' + meds.length + ' meds)');
-  let res = await fetch(CLOUD_URL + cloudId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
-    body: JSON.stringify(data)
-  });
-  if(res.ok || res.status === 200){
-    showCloudStatus('Sync OK (' + meds.length + ' meds)');
-    renderAll();
-    updateStats();
-  }else{
-    showCloudStatus('Erreur: ' + res.status);
-  }
-}
-
-function showCloudStatus(msg){
-  let el = document.getElementById('cloud-status');
-  if(el) el.textContent = msg;
-}
-
-async function syncFromCloud(){
-  if(!cloudId) return;
-  try{
-    let res = await fetch(CLOUD_URL + cloudId + '/latest', {
-      headers: { 'X-Master-Key': CLOUD_API_KEY }
-    });
-    if(!res.ok){
-      showCloudStatus('Pas de cloud ou erreur: ' + res.status);
-      return;
-    }
-    let text = await res.text();
-    let data = JSON.parse(text);
-    let cloudRecord = data.record || data;
-    if(!cloudRecord || !cloudRecord.meds){
-      showCloudStatus('Cloud vide');
-      return;
-    }
-    // Fusionner
-    let localKeys = new Set(meds.map(m => keyOf(m.name, m.dosage)));
-    let added = 0;
-    for(let m of cloudRecord.meds){
-      if(!localKeys.has(keyOf(m.name, m.dosage))){
-        meds.push(m);
-        added++;
-      }
-    }
-    toBuyList = cloudRecord.toBuyList || [];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-    localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-    renderAll();
-    updateStats();
-    showCloudStatus('Recu: ' + cloudRecord.meds.length + ' cloud, ' + added + ' ajoutes, total: ' + meds.length);
-  }catch(e){
-    showCloudStatus('Erreur connexion');
-  }
-}
-
-function syncNow(){
-  if(!cloudId){
-    showCloudStatus('Pas de Cloud ID!');
-    return;
-  }
-  showCloudStatus('Sync en cours...');
-  syncToCloud();
-  setTimeout(() => syncFromCloud(), 3000);
-  setTimeout(() => {
-    showCloudStatus('Termine: ' + meds.length + ' medicaments');
-    alert('Sync terminee! Total: ' + meds.length + ' medicaments');
-  }, 6000);
-}
-
-// Event listeners pour Cloud
-try{
-  if(document.getElementById('btn-cloud')) document.getElementById('btn-cloud').onclick = showCloudModal;
-  if(document.getElementById('cloud-btn')) document.getElementById('cloud-btn').onclick = connectCloud;
-  if(document.getElementById('cloud-id')) document.getElementById('cloud-id').onkeyup = e => { if(e.key === 'Enter') connectCloud(); };
-}catch(e){console.log('Cloud event error', e)}
-
-// Auto-sync toutes les 60 secondes
-try{
-  if(cloudId){
-    setTimeout(() => syncFromCloud(), 5000);
-  }
-}catch(e){}
-
-/* =========================
    INITIALISATION
 ========================= */
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -1394,20 +1221,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
 });
 </script>
 
-  <!-- Cloud Sync Modal -->
-  <div id="cloud-modal" class="password-modal" style="display:none;">
-    <div class="password-content">
-      <h2 style="margin-bottom:1rem;">☁️ Synchronisation Cloud</h2>
-      <p style="margin-bottom:1rem;color:#666;">Entrez un ID unique pour synchroniser entre PC et telephone</p>
-      <input type="text" id="cloud-id" placeholder="ID unique (ex: pharmacie1)" style="margin-bottom:1rem;">
-      <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
-        <button id="cloud-btn" style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;flex:1;">Connecter / Sync</button>
-        <button onclick="syncNow()" style="background:var(--accent);color:#fff;border:none;padding:.75rem 1rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;">Sync maintenant</button>
-      </div>
-      <p id="cloud-status" style="padding:.5rem;background:#f0f0f0;border-radius:var(--radius);margin-bottom:1rem;"></p>
-      <button onclick="hideCloudModal()" style="background:#ddd;color:#333;border:none;padding:.5rem 1rem;border-radius:var(--radius);cursor:pointer;">Fermer</button>
-    </div>
-  </div>
-
 </body>
 </html>
+
