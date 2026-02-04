@@ -1375,14 +1375,18 @@ function syncNow(){
     showCloudStatus('Pas de Cloud ID!');
     return;
   }
-  showCloudStatus('Sync...');
-  // D'abord lire du cloud (pour ne pas ecraser les donnees du PC)
+  showCloudStatus('=== SYNC DEBUT (local: ' + meds.length + ' meds) ===');
+  // D'abord lire du cloud
   syncFromCloud();
   // Ensuite envoyer vers cloud apres un delai
   setTimeout(() => {
+    showCloudStatus('=== ENVOI CLOUD (total: ' + meds.length + ' meds) ===');
     syncToCloud();
-    showCloudStatus('Termine!');
-  }, 2000);
+    setTimeout(() => {
+      showCloudStatus('=== TERMINE (total: ' + meds.length + ' meds) ===');
+      alert('Sync terminee! Total: ' + meds.length + ' medicaments');
+    }, 2000);
+  }, 3000);
 }
 
 // Si deja connecte, sync au demarrage
