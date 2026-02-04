@@ -997,9 +997,15 @@ function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
   if(confirm(`Supprimer "${m.name} (${m.dosage})" ?`)){
-    // Supprimer du cloud
+    // Supprimer du cloud IMMÉDIATEMENT
     if(window.deleteMedicament && m.id){
-      deleteMedicament(m.id);
+      deleteMedicament(m.id).then(result => {
+        if(result.error){
+          console.error('❌ Erreur suppression cloud:', result.error);
+        } else {
+          console.log('✅ Suppression cloud réussie');
+        }
+      });
     }
     
     meds.splice(idx, 1);
@@ -1020,9 +1026,17 @@ function useMed(idx){
     m.quantity = Number(m.quantity) - qty;
     save();
     
-    // Mettre à jour le cloud
+    // Mettre à jour le cloud IMMÉDIATEMENT
     if(window.updateMedicament && m.id){
-      updateMedicament(m.id, m);
+      updateMedicament(m.id, m).then(result => {
+        if(result.error){
+          console.error('❌ Erreur sync cloud:', result.error);
+          // Recharger depuis cloud pour synchroniser
+          setTimeout(() => autoSyncFromCloud(), 1000);
+        } else {
+          console.log('✅ Sync cloud: quantité mise à jour');
+        }
+      });
     }
     
     renderAll();
@@ -1275,7 +1289,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
           console.log('✅ Cloud Supabase ACTIVÉ');
           window.cloudReady = true;
           autoSyncFromCloud();
-          setInterval(autoSyncFromCloud, 30000);
+          setInterval(autoSyncFromCloud, 10000); // Sync toutes les 10 secondes
         } else {
           console.log('❌ Cloud Supabase NON activé - connexion refusée');
         }
@@ -1326,14 +1340,20 @@ async function autoSyncFromCloud(){
       };
     });
     
+    // Sync bidirectionnel
     if(cloudMeds.length > meds.length){
-      console.log('Sync auto: mise à jour depuis cloud');
+      // Cloud a plus d'items -> prendre du cloud
+      console.log('Sync auto: cloud→local (plus d\'items)');
       meds = cloudMeds;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
       localStorage.setItem(SEEDED_KEY, "1");
       
       if(typeof renderAll === 'function') renderAll();
       if(typeof updateStats === 'function') updateStats();
+    } else if(cloudMeds.length < meds.length && meds.length > 0){
+      // Local a plus d'items -> sync vers cloud
+      console.log('Sync auto: local→cloud (plus d\'items)');
+      syncLocalToCloud();
     }
     
     // Sync aussi les achats (À acheter) - SYNC SIMPLIFIÉ
