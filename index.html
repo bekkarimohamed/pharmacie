@@ -1082,10 +1082,10 @@ function removeToBuy(idx){
         toBuyList.forEach(function(item){
           addAchat(item);
         });
-        // Nettoyer les vieux marqueurs de suppression (plus vieux que 60 secondes)
+        // Nettoyer les vieux marqueurs de suppression (plus vieux que 5 minutes)
         var now = Date.now();
         Object.keys(deletedItems).forEach(function(key){
-          if(now - deletedItems[key] > 60000){
+          if(now - deletedItems[key] > 300000){
             delete deletedItems[key];
           }
         });
@@ -1370,13 +1370,14 @@ async function autoSyncFromCloud(){
           var now = Date.now();
           
           // 1️⃣ SUPPRIMER du local les items qui n'existent plus dans cloud
-          // (sauf si supprimé localement il y a moins de 30 secondes)
+          // (sauf si supprimé localement il y a moins de 60 secondes)
           var localDeleted = false;
           for(var i = toBuyList.length - 1; i >= 0; i--){
             var localKey = toBuyList[i].name.toLowerCase();
             var existsInCloud = cloudAchats.some(function(c){ return c === localKey; });
+            var deletedAt = deletedItems[localKey];
             
-            if(!existsInCloud && !(deletedItems[localKey] && (now - deletedItems[localKey] < 30000))){
+            if(!existsInCloud && !(deletedAt && (now - deletedAt < 60000))){
               console.log('🗑️ Supprimer du local:', toBuyList[i].name);
               toBuyList.splice(i, 1);
               localDeleted = true;
@@ -1390,12 +1391,20 @@ async function autoSyncFromCloud(){
               
               // Skip si:
               // 1. L'item existe localement - ne pas ajouter de doublon
-              // 2. L'item a été supprimé localement il y a moins de 30 secondes
-              //    (pour éviter que l'auto-sync ne le réajoute immédiatement)
+              // 2. L'item a été supprimé localement et existe TOUJOURS dans cloud
+              //    (ça veut dire que qqun d'autre l'a rajouté - on ne veut pas le restaurer)
               var deletedAt = deletedItems[key];
-              if(deletedAt && (now - deletedAt < 30000)){
-                console.log('⏭️ Ignorer', a.nom, '- supprimé localement il y a ' + Math.round((now - deletedAt)/1000) + 's');
-                return;
+              if(deletedAt && (now - deletedAt < 60000)){
+                // L'item a été supprimé localement - vérifier s'il existe dans cloud
+                var existsInCloud = cloudAchats.some(function(c){ return c === key; });
+                if(existsInCloud){
+                  console.log('⏭️ Ignorer', a.nom, '- supprimé localement mais existe dans cloud');
+                  return; // Ne pas restaurer
+                }
+                // L'item n'existe plus dans cloud - c'est nous qui l'avons supprimé avec succès
+                // On peut effacer le marqueur
+                delete deletedItems[key];
+                localStorage.setItem('deleted_achats', JSON.stringify(deletedItems));
               }
               
               var exists = toBuyList.some(function(lc){
