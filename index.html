@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -519,11 +519,6 @@
 
 <script>
 /* =========================
-   VERSION ORIGINAL 1.00
-   Gestion de la Pharmacie a Domicile
-   Date: 2024
- ========================= */
-/* =========================
    CONFIG / STOCKAGE
 ========================= */
 const PASSWORD = "mohamed1964";
@@ -848,6 +843,12 @@ document.getElementById('add-form').addEventListener('submit', function(e){
   if(existingIndex === -1){
     meds.push({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes });
     save();
+    
+    // Sauvegarder vers cloud
+    if(window.addMedicament){
+      addMedicament({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes });
+    }
+    
     e.target.reset();
     show('inventory');
     renderAll();
@@ -977,6 +978,12 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
 
   meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes };
   save();
+  
+  // Mettre à jour le cloud
+  if(window.updateMedicament && meds[idx].id){
+    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes });
+  }
+  
   closeEdit();
   renderAll();
   updateStats();
@@ -989,6 +996,11 @@ function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
   if(confirm(`Supprimer "${m.name} (${m.dosage})" ?`)){
+    // Supprimer du cloud
+    if(window.deleteMedicament && m.id){
+      deleteMedicament(m.id);
+    }
+    
     meds.splice(idx, 1);
     save();
     renderAll();
@@ -1006,6 +1018,12 @@ function useMed(idx){
   if(Number(m.quantity) >= qty){
     m.quantity = Number(m.quantity) - qty;
     save();
+    
+    // Mettre à jour le cloud
+    if(window.updateMedicament && m.id){
+      updateMedicament(m.id, m);
+    }
+    
     renderAll();
     updateStats();
 
@@ -1219,8 +1237,55 @@ document.addEventListener('keydown', e=>{
 document.addEventListener('DOMContentLoaded', ()=>{
   renderToBuy();
 });
+
+// Initialiser le cloud (silencieux)
+if(window.initCloud){
+  initCloud().then(function(enabled){
+    if(enabled){
+      console.log('Cloud Supabase activé');
+      loadFromCloud();
+    }
+  });
+}
+
+// Charger depuis cloud vers local
+function loadFromCloud(){
+  if(!window.getMedicaments) return;
+  
+  getMedicaments().then(function(result){
+    if(result.error || !result.data) return;
+    
+    const cloudMeds = result.data.map(function(m){
+      return {
+        id: m.id,
+        name: m.nom,
+        dosage: m.dosage,
+        genre: m.genre,
+        quantity: m.quantite,
+        initialStock: m.stock_initial,
+        price: m.prix,
+        nbBoxes: m.nb_boites,
+        expiry: m.date_peremption,
+        notes: m.notes || ''
+      };
+    });
+    
+    if(cloudMeds.length > 0 && meds.length === 0){
+      meds = cloudMeds;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+      localStorage.setItem(SEEDED_KEY, "1");
+      renderAll();
+      updateStats();
+      console.log('Données importées depuis cloud');
+    }
+  });
+}
 </script>
+
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Cloud Integration -->
+<script src="cloud.js"></script>
 
 </body>
 </html>
-
