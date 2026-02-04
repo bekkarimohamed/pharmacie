@@ -1071,11 +1071,14 @@ function removeToBuy(idx){
     
     // Sync vers cloud - re-synchroniser toute la liste
     if(window.clearAchats && window.addAchat){
+      console.log('☁️ Sync suppression achat vers cloud...');
       clearAchats().then(function(){
         toBuyList.forEach(function(item){
           addAchat(item);
         });
       });
+    } else {
+      console.warn('⚠️ Fonctions cloud non disponibles pour sync suppressions');
     }
     
     renderToBuy();
@@ -1096,7 +1099,10 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   
   // Sync vers cloud
   if(window.addAchat){
+    console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
     addAchat({ name, qty, notes });
+  } else {
+    console.warn('⚠️ addAchat non disponible');
   }
   
   e.target.reset();
@@ -1267,14 +1273,21 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Initialiser le cloud
   function tryInitCloud(){
     if(typeof initCloud === 'function'){
+      console.log('🔄 Tentative de connexion cloud...');
       initCloud().then(function(enabled){
         if(enabled){
-          console.log('Cloud Supabase activé');
+          console.log('✅ Cloud Supabase ACTIVÉ');
+          window.cloudReady = true;
           autoSyncFromCloud();
           setInterval(autoSyncFromCloud, 30000);
+        } else {
+          console.log('❌ Cloud Supabase NON activé - connexion refusée');
         }
+      }).catch(function(e){
+        console.error('❌ Erreur initCloud:', e);
       });
     } else {
+      console.warn('⏳ Attente de cloud.js...');
       setTimeout(tryInitCloud, 100);
     }
   }
@@ -1290,7 +1303,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 // Sync automatique depuis cloud
 async function autoSyncFromCloud(){
-  if(!window.getMedicaments) return;
+  if(!window.getMedicaments) {
+    console.warn('⏳ getMedicaments non disponible - sync retardé');
+    return;
+  }
+  
+  console.log('🔄 Démarrage autoSyncFromCloud...');
   
   try {
     var result = await getMedicaments();
