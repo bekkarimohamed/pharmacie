@@ -1237,11 +1237,11 @@ async function connectCloud(){
   document.getElementById('cloud-status').textContent = 'Connexion...';
   cloudId = id;
   localStorage.setItem(CLOUD_KEY, id);
-  // Effacer l'ancien cloud et creer nouveau
-  localStorage.removeItem(CLOUD_KEY);
-  cloudId = null;
-  alert('ID enregistre! Maintenant klik sur "Sync maintenant" pour demarrer.');
+  showCloudStatus('Connecte: ' + id);
+  alert('Connecte avec succes! Maintenant klik sur "Sync maintenant".');
   hideCloudModal();
+  // Faire un sync immediatement
+  setTimeout(() => syncNow(), 500);
 }
 
 async function syncToCloud(){
