@@ -1067,35 +1067,17 @@ function renderToBuy(){
 function removeToBuy(idx){
   if(confirm('Supprimer ce médicament de la liste ?')){
     var deletedItem = toBuyList[idx];
+    var deletedName = deletedItem.name;
+    
     toBuyList.splice(idx, 1);
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-    
-    // Marquer comme supprimé pour éviter re-sync (30 secondes)
-    var deletedItems = JSON.parse(localStorage.getItem('deleted_achats') || '{}');
-    deletedItems[deletedItem.name.toLowerCase()] = Date.now();
-    localStorage.setItem('deleted_achats', JSON.stringify(deletedItems));
-    
-    // Sync vers cloud - re-synchroniser toute la liste
-    if(window.clearAchats && window.addAchat){
-      console.log('☁️ Sync suppression achat vers cloud...');
-      clearAchats().then(function(){
-        toBuyList.forEach(function(item){
-          addAchat(item);
-        });
-        // Nettoyer les vieux marqueurs de suppression (plus vieux que 5 minutes)
-        var now = Date.now();
-        Object.keys(deletedItems).forEach(function(key){
-          if(now - deletedItems[key] > 300000){
-            delete deletedItems[key];
-          }
-        });
-        localStorage.setItem('deleted_achats', JSON.stringify(deletedItems));
-      });
-    } else {
-      console.warn('⚠️ Fonctions cloud non disponibles pour sync suppressions');
-    }
-    
     renderToBuy();
+    
+    // Sync IMMÉDIAT vers cloud - suppression directe
+    if(window.deleteAchatByName){
+      console.log('☁️ Suppression immédiate de', deletedName, 'du cloud');
+      deleteAchatByName(deletedName);
+    }
   }
 }
 
@@ -1354,76 +1336,42 @@ async function autoSyncFromCloud(){
       if(typeof updateStats === 'function') updateStats();
     }
     
-    // Sync aussi les achats (À acheter) - SYNC BIDIRECTIONNEL
+    // Sync aussi les achats (À acheter) - SYNC SIMPLIFIÉ
     if(window.getAchats){
       try {
         var achatsResult = await getAchats();
         if(!achatsResult.error && achatsResult.data){
-          var cloudAchats = achatsResult.data.map(function(a){
-            return a.nom.toLowerCase();
-          });
+          var cloudNames = achatsResult.data.map(function(a){ return a.nom.toLowerCase(); });
           
-          console.log('🔄 Sync achats: cloud=' + cloudAchats.length + ', local=' + toBuyList.length);
+          console.log('🔄 Sync achats: cloud=' + achatsResult.data.length + ', local=' + toBuyList.length);
           
-          // Récupérer les items supprimés localement (moins de 10 secondes)
-          var deletedItems = JSON.parse(localStorage.getItem('deleted_achats') || '{}');
-          var now = Date.now();
-          
-          // 1️⃣ SUPPRIMER du local les items qui n'existent plus dans cloud
-          // (sauf si supprimé localement il y a moins de 60 secondes)
-          var localDeleted = false;
+          // SUPPRIMER du local les items qui n'existent plus dans cloud
+          var changed = false;
           for(var i = toBuyList.length - 1; i >= 0; i--){
-            var localKey = toBuyList[i].name.toLowerCase();
-            var existsInCloud = cloudAchats.some(function(c){ return c === localKey; });
-            var deletedAt = deletedItems[localKey];
-            
-            if(!existsInCloud && !(deletedAt && (now - deletedAt < 60000))){
+            var key = toBuyList[i].name.toLowerCase();
+            if(!cloudNames.includes(key)){
               console.log('🗑️ Supprimer du local:', toBuyList[i].name);
               toBuyList.splice(i, 1);
-              localDeleted = true;
+              changed = true;
             }
           }
           
-          // 2️⃣ AJOUTER au local les items du cloud qui n'existent pas localement
-          if(achatsResult.data.length > 0){
-            achatsResult.data.forEach(function(a){
-              var key = a.nom.toLowerCase();
-              
-              // Skip si:
-              // 1. L'item existe localement - ne pas ajouter de doublon
-              // 2. L'item a été supprimé localement et existe TOUJOURS dans cloud
-              //    (ça veut dire que qqun d'autre l'a rajouté - on ne veut pas le restaurer)
-              var deletedAt = deletedItems[key];
-              if(deletedAt && (now - deletedAt < 60000)){
-                // L'item a été supprimé localement - vérifier s'il existe dans cloud
-                var existsInCloud = cloudAchats.some(function(c){ return c === key; });
-                if(existsInCloud){
-                  console.log('⏭️ Ignorer', a.nom, '- supprimé localement mais existe dans cloud');
-                  return; // Ne pas restaurer
-                }
-                // L'item n'existe plus dans cloud - c'est nous qui l'avons supprimé avec succès
-                // On peut effacer le marqueur
-                delete deletedItems[key];
-                localStorage.setItem('deleted_achats', JSON.stringify(deletedItems));
-              }
-              
-              var exists = toBuyList.some(function(lc){
-                return lc.name.toLowerCase() === key;
+          // AJOUTER au local les items du cloud qui n'existent pas
+          achatsResult.data.forEach(function(a){
+            var key = a.nom.toLowerCase();
+            var exists = toBuyList.some(function(lc){ return lc.name.toLowerCase() === key; });
+            if(!exists){
+              toBuyList.push({
+                name: a.nom,
+                qty: a.quantite,
+                notes: a.notes || ''
               });
-              if(!exists){
-                toBuyList.push({
-                  name: a.nom,
-                  qty: a.quantite,
-                  notes: a.notes || ''
-                });
-                console.log('➕ Ajouté depuis cloud:', a.nom);
-                localDeleted = true;
-              }
-            });
-          }
+              console.log('➕ Ajouté depuis cloud:', a.nom);
+              changed = true;
+            }
+          });
           
-          // Sauvegarder et rafraichir seulement si changements
-          if(localDeleted || achatsResult.data.length === 0){
+          if(changed){
             localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
             if(typeof renderToBuy === 'function') renderToBuy();
           }
