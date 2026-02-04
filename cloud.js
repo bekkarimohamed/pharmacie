@@ -272,12 +272,12 @@ async function addAchat(item) {
     }
 }
 
-// Supprimer un achat
-async function deleteAchat(id) {
+// Supprimer un achat par nom
+async function deleteAchatByName(name) {
     if (!isCloudEnabled) return { error: 'Cloud not enabled' };
     
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${id}`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?nom=eq.${encodeURIComponent(name)}`, {
             method: 'DELETE',
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -286,12 +286,15 @@ async function deleteAchat(id) {
         });
         
         if (response.ok) {
+            console.log('✅ Achat', name, 'supprimé du cloud');
             return { error: null };
         } else {
             const err = await response.text();
+            console.error('❌ Erreur deleteAchatByName:', err);
             return { error: err };
         }
     } catch (e) {
+        console.error('❌ Erreur deleteAchatByName:', e);
         return { error: e.message };
     }
 }
