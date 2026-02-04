@@ -1247,18 +1247,22 @@ document.addEventListener('keydown', e=>{
 ========================= */
 document.addEventListener('DOMContentLoaded', ()=>{
   renderToBuy();
-});
-
-// Initialiser le cloud (silencieux)
-if(window.initCloud){
-  initCloud().then(function(enabled){
-    if(enabled){
-      console.log('Cloud Supabase activé');
-      loadFromCloud();
-      subscribeToCloudChanges();
+  
+  // Initialiser le cloud après le chargement des scripts
+  function tryInitCloud(){
+    if(typeof initCloud === 'function'){
+      initCloud().then(function(enabled){
+        if(enabled){
+          console.log('Cloud Supabase activé');
+          subscribeToCloudChanges();
+        }
+      });
+    } else {
+      setTimeout(tryInitCloud, 100);
     }
-  });
-}
+  }
+  tryInitCloud();
+});
 
 // Subscription temps réel - écouter les changements cloud
 function subscribeToCloudChanges(){
@@ -1342,12 +1346,17 @@ function loadFromCloud(){
 // Sauvegarder TOUTES les données locales vers cloud
 function saveAllToCloud(callback){
   if(!window.addMedicament || !window.deleteMedicament || !window.getMedicaments) {
+    console.warn('Fonctions cloud non disponibles');
     if(callback) callback();
     return;
   }
   
+  console.log('Début sync vers cloud, meds count:', meds.length);
+  
   // D'abord récupérer les IDs cloud existants
   getMedicaments().then(function(result){
+    console.log('IDs cloud actuels:', result);
+    
     var cloudIds = [];
     if(result.data){
       cloudIds = result.data.map(function(m){ return m.id; });
@@ -1356,15 +1365,19 @@ function saveAllToCloud(callback){
     // IDs locaux
     var localIds = meds.filter(function(m){ return m.id; }).map(function(m){ return m.id; });
     
+    console.log('Cloud IDs:', cloudIds, 'Local IDs:', localIds);
+    
     // Supprimer du cloud les médicaments qui n'existent plus en local
     var idsToDelete = cloudIds.filter(function(id){ return localIds.indexOf(id) === -1; });
+    
+    console.log('IDs à supprimer:', idsToDelete);
     
     var deletePromises = idsToDelete.map(function(id){
       return deleteMedicament(id);
     });
     
     // Ajouter/Mettre à jour chaque médicament local vers cloud
-    var savePromises = meds.map(function(m){
+    var savePromises = meds.map(function(m, index){
       var medData = {
         name: m.name,
         dosage: m.dosage,
@@ -1377,6 +1390,8 @@ function saveAllToCloud(callback){
         notes: m.notes || ''
       };
       
+      console.log('Sauvegarding:', medData.name);
+      
       if(m.id){
         // Existe déjà, mettre à jour
         return updateMedicament(m.id, medData);
@@ -1386,14 +1401,20 @@ function saveAllToCloud(callback){
       }
     });
     
+    console.log('Opérations en cours:', deletePromises.length + savePromises.length);
+    
     // Attendre toutes les opérations
-    Promise.all(deletePromises.concat(savePromises)).then(function(){
+    Promise.all(deletePromises.concat(savePromises)).then(function(results){
+      console.log('Sync terminée, résultats:', results);
       console.log('Toutes les données sauvegardées vers cloud');
       if(callback) callback();
     }).catch(function(err){
-      console.warn('Erreur sync cloud:', err);
+      console.error('Erreur sync cloud:', err);
       if(callback) callback();
     });
+  }).catch(function(err){
+    console.error('Erreur récupération IDs cloud:', err);
+    if(callback) callback();
   });
 }
 </script>
