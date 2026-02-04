@@ -1066,8 +1066,14 @@ function renderToBuy(){
 
 function removeToBuy(idx){
   if(confirm('Supprimer ce médicament de la liste ?')){
+    var deletedItem = toBuyList[idx];
     toBuyList.splice(idx, 1);
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+    
+    // Marquer comme supprimé pour éviter re-sync
+    var deletedItems = JSON.parse(localStorage.getItem('deleted_achats') || '{}');
+    deletedItems[deletedItem.name.toLowerCase()] = Date.now();
+    localStorage.setItem('deleted_achats', JSON.stringify(deletedItems));
     
     // Sync vers cloud - re-synchroniser toute la liste
     if(window.clearAchats && window.addAchat){
@@ -1076,6 +1082,14 @@ function removeToBuy(idx){
         toBuyList.forEach(function(item){
           addAchat(item);
         });
+        // Nettoyer les vieux marqueurs de suppression (plus vieux que 10 secondes)
+        var now = Date.now();
+        Object.keys(deletedItems).forEach(function(key){
+          if(now - deletedItems[key] > 10000){
+            delete deletedItems[key];
+          }
+        });
+        localStorage.setItem('deleted_achats', JSON.stringify(deletedItems));
       });
     } else {
       console.warn('⚠️ Fonctions cloud non disponibles pour sync suppressions');
@@ -1358,17 +1372,23 @@ async function autoSyncFromCloud(){
           if(cloudAchats.length > 0){
             console.log('Sync auto achats: fusion avec cloud');
             
-            // Créer map des achats cloud par nom
-            var cloudMap = {};
-            cloudAchats.forEach(function(a){
-              var key = a.name.toLowerCase();
-              cloudMap[key] = a;
-            });
+            // Récupérer les items supprimés localement (moins de 10 secondes)
+            var deletedItems = JSON.parse(localStorage.getItem('deleted_achats') || '{}');
+            var now = Date.now();
             
             // Ajouter les achats cloud qui n'existent pas localement
+            // ET qui n'ont pas été supprimés récemment
             cloudAchats.forEach(function(ca){
+              var key = ca.name.toLowerCase();
+              
+              // Skip si supprimé localement il y a moins de 10 secondes
+              if(deletedItems[key] && (now - deletedItems[key] < 10000)){
+                console.log('⏭️ Ignorer', ca.name, '- supprimé localement');
+                return;
+              }
+              
               var exists = toBuyList.some(function(lc){
-                return lc.name.toLowerCase() === ca.name.toLowerCase();
+                return lc.name.toLowerCase() === key;
               });
               if(!exists){
                 toBuyList.push({
@@ -1376,6 +1396,7 @@ async function autoSyncFromCloud(){
                   qty: ca.qty,
                   notes: ca.notes
                 });
+                console.log('➕ Ajouté depuis cloud:', ca.name);
               }
             });
             
