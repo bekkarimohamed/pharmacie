@@ -96,16 +96,17 @@ async function addMedicament(med) {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
                 'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
+                'Prefer': 'return=representation'
             },
             body: JSON.stringify(data)
         });
         
         console.log('Réponse insert:', response.status);
         
-        if (response.ok || response.status === 201 || response.status === 400) {
-            // Même 400 peut être OK si les données sont insérées
-            return { error: null };
+        if (response.ok || response.status === 201) {
+            const result = await response.json();
+            console.log('ID créé:', result[0]?.id);
+            return { error: null, data: result };
         } else {
             const err = await response.text();
             console.error('Erreur insert:', err);
@@ -117,12 +118,28 @@ async function addMedicament(med) {
     }
 }
 
-// Supprimer un médicament
-async function deleteMedicament(id) {
+// Supprimer un médicament par ID ou par nom+dosage
+async function deleteMedicament(id, name, dosage) {
     if (!isCloudEnabled) return { error: 'Cloud not enabled' };
     
+    let url = `${SUPABASE_URL}/rest/v1/medicaments`;
+    
+    if (id) {
+        // Supprimer par ID
+        url += `?id=eq.${id}`;
+    } else if (name && dosage) {
+        // Supprimer par nom+dosage (fallback)
+        const encodedName = encodeURIComponent(name);
+        const encodedDosage = encodeURIComponent(dosage);
+        url += `?nom=eq.${encodedName}&dosage=eq.${encodedDosage}`;
+    } else {
+        return { error: 'Pas d\'ID ni de nom+dosage pour la suppression' };
+    }
+    
+    console.log('🗑️ Suppression cloud, URL:', url);
+    
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?id=eq.${id}`, {
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -130,13 +147,17 @@ async function deleteMedicament(id) {
             }
         });
         
+        console.log('Réponse delete:', response.status);
+        
         if (response.ok) {
             return { error: null };
         } else {
             const err = await response.text();
+            console.error('Erreur delete:', err);
             return { error: err };
         }
     } catch (e) {
+        console.error('Exception delete:', e);
         return { error: e.message };
     }
 }

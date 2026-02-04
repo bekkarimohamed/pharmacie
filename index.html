@@ -289,7 +289,7 @@
       <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
       <li><a href="#" id="btn-save" class="nav-btn">💾 Sauvegarder</a></li>
       <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
-      <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync Cloud</a></li>
+      <!-- <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync Cloud</a></li> -->
       <li><a href="#" id="btn-clear" class="nav-btn">🧹 Vider tout</a></li>
 
       <li><a href="#" id="logout-link">🚪 Quitter</a></li>
@@ -1382,65 +1382,38 @@ async function autoSyncFromCloud(){
       };
     });
     
-    // Sync bidirectionnel
-    if(cloudMeds.length > meds.length){
-      // Cloud a plus d'items -> prendre du cloud
-      console.log('Sync auto: cloud→local (plus d\'items)');
+    // Créer une map cloud par nom+dosage (pour assigner les IDs)
+    var cloudByKey = {};
+    cloudMeds.forEach(function(m){
+      var key = (m.name + '_' + m.dosage).toLowerCase();
+      cloudByKey[key] = m;
+    });
+    
+    // Assigner les IDs cloud aux médicaments locaux qui n'en ont pas
+    var idsAssigned = false;
+    meds.forEach(function(m){
+      var key = (m.name + '_' + m.dosage).toLowerCase();
+      if(!m.id && cloudByKey[key]){
+        m.id = cloudByKey[key].id;
+        idsAssigned = true;
+        console.log('✅ ID assigné:', m.name, m.id);
+      }
+    });
+    
+    if(idsAssigned){
+      save();
+      console.log('💾 IDs locaux mis à jour');
+    }
+    
+    // Si cloud a des données différentes, les prendre
+    if(cloudMeds.length > 0){
+      console.log('Sync: mise à jour depuis cloud');
       meds = cloudMeds;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
       localStorage.setItem(SEEDED_KEY, "1");
       
       if(typeof renderAll === 'function') renderAll();
       if(typeof updateStats === 'function') updateStats();
-    } else if(cloudMeds.length < meds.length && meds.length > 0){
-      // Local a plus d'items -> sync vers cloud
-      console.log('Sync auto: local→cloud (plus d\'items)');
-      syncLocalToCloud();
-    }
-    
-    // Sync aussi les achats (À acheter) - SYNC SIMPLIFIÉ
-    if(window.getAchats){
-      try {
-        var achatsResult = await getAchats();
-        if(!achatsResult.error && achatsResult.data){
-          var cloudNames = achatsResult.data.map(function(a){ return a.nom.toLowerCase(); });
-          
-          console.log('🔄 Sync achats: cloud=' + achatsResult.data.length + ', local=' + toBuyList.length);
-          
-          // SUPPRIMER du local les items qui n'existent plus dans cloud
-          var changed = false;
-          for(var i = toBuyList.length - 1; i >= 0; i--){
-            var key = toBuyList[i].name.toLowerCase();
-            if(!cloudNames.includes(key)){
-              console.log('🗑️ Supprimer du local:', toBuyList[i].name);
-              toBuyList.splice(i, 1);
-              changed = true;
-            }
-          }
-          
-          // AJOUTER au local les items du cloud qui n'existent pas
-          achatsResult.data.forEach(function(a){
-            var key = a.nom.toLowerCase();
-            var exists = toBuyList.some(function(lc){ return lc.name.toLowerCase() === key; });
-            if(!exists){
-              toBuyList.push({
-                name: a.nom,
-                qty: a.quantite,
-                notes: a.notes || ''
-              });
-              console.log('➕ Ajouté depuis cloud:', a.nom);
-              changed = true;
-            }
-          });
-          
-          if(changed){
-            localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-            if(typeof renderToBuy === 'function') renderToBuy();
-          }
-        }
-      } catch(e) {
-        console.warn('Sync achats échoué:', e);
-      }
     }
     
     window.cloudReady = true;
