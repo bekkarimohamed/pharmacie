@@ -289,7 +289,7 @@
       <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
       <li><a href="#" id="btn-save" class="nav-btn">💾 Sauvegarder</a></li>
       <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
-      <!-- <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync Cloud</a></li> -->
+      <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync Cloud</a></li>
       <li><a href="#" id="btn-clear" class="nav-btn">🧹 Vider tout</a></li>
 
       <li><a href="#" id="logout-link">🚪 Quitter</a></li>
@@ -1414,6 +1414,49 @@ async function autoSyncFromCloud(){
       
       if(typeof renderAll === 'function') renderAll();
       if(typeof updateStats === 'function') updateStats();
+    }
+    
+    // Sync aussi les achats (À acheter)
+    if(window.getAchats){
+      try {
+        var achatsResult = await getAchats();
+        if(!achatsResult.error && achatsResult.data){
+          var cloudNames = achatsResult.data.map(function(a){ return a.nom.toLowerCase(); });
+          
+          console.log('🔄 Sync achats: cloud=' + achatsResult.data.length + ', local=' + toBuyList.length);
+          
+          var changed = false;
+          for(var i = toBuyList.length - 1; i >= 0; i--){
+            var key = toBuyList[i].name.toLowerCase();
+            if(!cloudNames.includes(key)){
+              console.log('🗑️ Supprimer du local:', toBuyList[i].name);
+              toBuyList.splice(i, 1);
+              changed = true;
+            }
+          }
+          
+          achatsResult.data.forEach(function(a){
+            var key = a.nom.toLowerCase();
+            var exists = toBuyList.some(function(lc){ return lc.name.toLowerCase() === key; });
+            if(!exists){
+              toBuyList.push({
+                name: a.nom,
+                qty: a.quantite,
+                notes: a.notes || ''
+              });
+              console.log('➕ Ajouté depuis cloud:', a.nom);
+              changed = true;
+            }
+          });
+          
+          if(changed){
+            localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+            if(typeof renderToBuy === 'function') renderToBuy();
+          }
+        }
+      } catch(e) {
+        console.warn('Sync achats échoué:', e);
+      }
     }
     
     window.cloudReady = true;
