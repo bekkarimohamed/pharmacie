@@ -141,6 +141,54 @@ async function deleteMedicament(id) {
     }
 }
 
+// Mettre à jour un médicament
+async function updateMedicament(id, med) {
+    if (!isCloudEnabled) {
+        console.warn('⚠️ Cloud non activé pour updateMedicament');
+        return { error: 'Cloud not enabled' };
+    }
+    
+    const data = {
+        nom: med.name,
+        dosage: med.dosage,
+        genre: med.genre,
+        quantite: med.quantity,
+        stock_initial: med.initialStock,
+        prix: med.price,
+        nb_boites: med.nbBoxes,
+        date_peremption: med.expiry,
+        notes: med.notes || ''
+    };
+    
+    console.log('📤 Mise à jour medicament cloud:', data);
+    
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        console.log('📥 Réponse updateMedicament:', response.status);
+        
+        if (response.ok) {
+            console.log('✅ Médicament mis à jour dans cloud');
+            return { error: null };
+        } else {
+            const err = await response.text();
+            console.error('❌ Erreur updateMedicament:', err);
+            return { error: err };
+        }
+    } catch (e) {
+        console.error('❌ Erreur updateMedicament:', e);
+        return { error: e.message };
+    }
+}
+
 // Status
 function getCloudStatus() {
     return { enabled: isCloudEnabled };
