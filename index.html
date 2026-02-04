@@ -1203,12 +1203,24 @@ document.getElementById('btn-save').addEventListener('click', (e)=>{ e.preventDe
 document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preventDefault(); restoreBackup(); });
 document.getElementById('btn-sync').addEventListener('click', (e)=>{ 
   e.preventDefault(); 
-  if(window.saveAllToCloud){
-    saveAllToCloud(function(){
-      alert('🔄 Sync terminée ! Données sauvegardées vers cloud.');
-    });
+  
+  // Vérifier si local est vide et cloud a des données
+  if(meds.length === 0){
+    // Charger depuis cloud
+    if(window.loadAndShowFromCloud){
+      loadAndShowFromCloud();
+    } else {
+      alert('⚠️ Cloud non activé');
+    }
   } else {
-    alert('⚠️ Cloud non activé');
+    // Sauvegarder vers cloud
+    if(window.saveAllToCloud){
+      saveAllToCloud(function(){
+        alert('🔄 Sync terminée ! Données sauvegardées vers cloud.');
+      });
+    } else {
+      alert('⚠️ Cloud non activé');
+    }
   }
 });
 document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventDefault(); clearAllStock(); });
@@ -1340,6 +1352,52 @@ function loadFromCloud(){
       updateStats();
       console.log('Données importées depuis cloud');
     }
+  });
+}
+
+// Charger depuis cloud ET afficher un message
+function loadAndShowFromCloud(){
+  if(!window.getMedicaments) {
+    alert('⚠️ Cloud non activé');
+    return;
+  }
+  
+  getMedicaments().then(function(result){
+    if(result.error){
+      alert('❌ Erreur cloud: ' + result.error);
+      return;
+    }
+    
+    if(!result.data || result.data.length === 0){
+      alert('⚠️ Aucune donnée dans le cloud');
+      return;
+    }
+    
+    const cloudMeds = result.data.map(function(m){
+      return {
+        id: m.id,
+        name: m.nom,
+        dosage: m.dosage,
+        genre: m.genre,
+        quantity: m.quantite,
+        initialStock: m.stock_initial,
+        price: m.prix,
+        nbBoxes: m.nb_boites,
+        expiry: m.date_peremption,
+        notes: m.notes || ''
+      };
+    });
+    
+    // Charger dans localStorage
+    meds = cloudMeds;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+    localStorage.setItem(SEEDED_KEY, "1");
+    
+    renderAll();
+    updateStats();
+    
+    console.log('Données chargées depuis cloud:', cloudMeds.length, 'médicaments');
+    alert('✅ ' + cloudMeds.length + ' médicaments chargés depuis cloud !');
   });
 }
 
