@@ -1354,36 +1354,43 @@ async function autoSyncFromCloud(){
       if(typeof updateStats === 'function') updateStats();
     }
     
-    // Sync aussi les achats (À acheter)
+    // Sync aussi les achats (À acheter) - SYNC BIDIRECTIONNEL
     if(window.getAchats){
       try {
         var achatsResult = await getAchats();
-        if(!achatsResult.error && achatsResult.data && achatsResult.data.length > 0){
+        if(!achatsResult.error && achatsResult.data){
           var cloudAchats = achatsResult.data.map(function(a){
-            return {
-              id: a.id,
-              name: a.nom,
-              qty: a.quantite,
-              notes: a.notes || ''
-            };
+            return a.nom.toLowerCase();
           });
           
-          // Si le cloud a des achats, fusionner avec local
-          if(cloudAchats.length > 0){
-            console.log('Sync auto achats: fusion avec cloud');
+          console.log('🔄 Sync achats: cloud=' + cloudAchats.length + ', local=' + toBuyList.length);
+          
+          // Récupérer les items supprimés localement (moins de 10 secondes)
+          var deletedItems = JSON.parse(localStorage.getItem('deleted_achats') || '{}');
+          var now = Date.now();
+          
+          // 1️⃣ SUPPRIMER du local les items qui n'existent plus dans cloud
+          // (sauf si supprimés localement il y a moins de 10 secondes)
+          var localDeleted = false;
+          for(var i = toBuyList.length - 1; i >= 0; i--){
+            var localKey = toBuyList[i].name.toLowerCase();
+            var existsInCloud = cloudAchats.some(function(c){ return c === localKey; });
             
-            // Récupérer les items supprimés localement (moins de 10 secondes)
-            var deletedItems = JSON.parse(localStorage.getItem('deleted_achats') || '{}');
-            var now = Date.now();
-            
-            // Ajouter les achats cloud qui n'existent pas localement
-            // ET qui n'ont pas été supprimés récemment
-            cloudAchats.forEach(function(ca){
-              var key = ca.name.toLowerCase();
+            if(!existsInCloud && !(deletedItems[localKey] && (now - deletedItems[localKey] < 10000))){
+              console.log('🗑️ Supprimer du local:', toBuyList[i].name);
+              toBuyList.splice(i, 1);
+              localDeleted = true;
+            }
+          }
+          
+          // 2️⃣ AJOUTER au local les items du cloud qui n'existent pas localement
+          if(achatsResult.data.length > 0){
+            achatsResult.data.forEach(function(a){
+              var key = a.nom.toLowerCase();
               
               // Skip si supprimé localement il y a moins de 10 secondes
               if(deletedItems[key] && (now - deletedItems[key] < 10000)){
-                console.log('⏭️ Ignorer', ca.name, '- supprimé localement');
+                console.log('⏭️ Ignorer', a.nom, '- supprimé localement');
                 return;
               }
               
@@ -1392,14 +1399,18 @@ async function autoSyncFromCloud(){
               });
               if(!exists){
                 toBuyList.push({
-                  name: ca.name,
-                  qty: ca.qty,
-                  notes: ca.notes
+                  name: a.nom,
+                  qty: a.quantite,
+                  notes: a.notes || ''
                 });
-                console.log('➕ Ajouté depuis cloud:', ca.name);
+                console.log('➕ Ajouté depuis cloud:', a.nom);
+                localDeleted = true;
               }
             });
-            
+          }
+          
+          // Sauvegarder et rafraichir seulement si changements
+          if(localDeleted || achatsResult.data.length === 0){
             localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
             if(typeof renderToBuy === 'function') renderToBuy();
           }
