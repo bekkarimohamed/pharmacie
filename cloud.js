@@ -145,3 +145,120 @@ async function deleteMedicament(id) {
 function getCloudStatus() {
     return { enabled: isCloudEnabled };
 }
+
+// ========== ACHATS (À ACHETER) ==========
+
+// Récupérer tous les achats
+async function getAchats() {
+    if (!isCloudEnabled) return { data: [], error: null };
+    
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?select=*&order=id.desc`, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const err = await response.text();
+            console.error('Erreur getAchats:', response.status, err);
+            return { data: null, error: err };
+        }
+        
+        const data = await response.json();
+        console.log('Achats reçus:', data.length);
+        return { data: data || [], error: null };
+    } catch (e) {
+        console.error('Erreur getAchats:', e);
+        return { data: null, error: e.message };
+    }
+}
+
+// Ajouter un achat
+async function addAchat(item) {
+    if (!isCloudEnabled) return { error: 'Cloud not enabled' };
+    
+    const data = {
+        nom: item.name,
+        quantite: item.qty,
+        genre: item.notes || '',
+        date_achat: new Date().toISOString()
+    };
+    
+    console.log('Insertion achat:', data);
+    
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok || response.status === 201) {
+            console.log('Achat inséré');
+            return { error: null };
+        } else {
+            const err = await response.text();
+            console.error('Erreur addAchat:', err);
+            return { error: err };
+        }
+    } catch (e) {
+        console.error('Erreur addAchat:', e);
+        return { error: e.message };
+    }
+}
+
+// Supprimer un achat
+async function deleteAchat(id) {
+    if (!isCloudEnabled) return { error: 'Cloud not enabled' };
+    
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+        
+        if (response.ok) {
+            return { error: null };
+        } else {
+            const err = await response.text();
+            return { error: err };
+        }
+    } catch (e) {
+        return { error: e.message };
+    }
+}
+
+// Vider tous les achats
+async function clearAchats() {
+    if (!isCloudEnabled) return { error: 'Cloud not enabled' };
+    
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats`, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+        
+        if (response.ok) {
+            return { error: null };
+        } else {
+            const err = await response.text();
+            return { error: err };
+        }
+    } catch (e) {
+        return { error: e.message };
+    }
+}
