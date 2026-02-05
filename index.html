@@ -1483,23 +1483,8 @@ async function autoSyncFromCloud(){
         cloudHasChanges = true;
       }
       
-      // Supprimer les médicaments locaux qui n'existent plus dans cloud
-      var medsDeleted = false;
-      for(var i = meds.length - 1; i >= 0; i--){
-        var m = meds[i];
-        var key = (m.name + '_' + m.dosage).toLowerCase();
-        var existsInCloud = cloudMeds.some(function(cm){
-          return (cm.nom + '_' + cm.dosage).toLowerCase() === key;
-        });
-        
-        if(!cloudByKey[key] && !m._localModified){
-          // Supprimer du local (n'existe plus dans cloud et pas de modif locale)
-          console.log('🗑️ Supprimer du local:', m.name);
-          meds.splice(i, 1);
-          cloudHasChanges = true;
-          medsDeleted = true;
-        }
-      }
+      // Ne PAS supprimer les médicaments locaux (éviter les conflits)
+      // Les suppressions doivent être synchronisées manuellement
       
       if(cloudHasChanges){
         save();
