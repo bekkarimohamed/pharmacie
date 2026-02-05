@@ -191,12 +191,14 @@
       /* Masquer les boutons secondaires sur très petit écran */
       #btn-save,
       #btn-restore,
+      #btn-sync,
+      #btn-load-cloud,
       #btn-clear{
         display:none
       }
       
       /* Garder les boutons essentiels */
-      nav ul li:nth-child(-n+7){
+      nav ul li:nth-child(-n+8){
         display:block
       }
       
@@ -300,6 +302,7 @@
       <li><a href="#" id="btn-save" class="nav-btn">💾 Sauvegarder</a></li>
       <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
       <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync Cloud</a></li>
+      <li><a href="#" id="btn-load-cloud" class="nav-btn">📥 Charger Cloud</a></li>
       <li><a href="#" id="btn-clear" class="nav-btn">🧹 Vider tout</a></li>
 
       <li><a href="#" id="logout-link">🚪 Quitter</a></li>
@@ -1408,6 +1411,18 @@ document.getElementById('btn-sync').addEventListener('click', async (e)=>{
     alert('❌ Erreur lors du sync: ' + e.message);
   }
 });
+
+// Bouton charger depuis cloud
+document.getElementById('btn-load-cloud').addEventListener('click', (e)=>{ 
+  e.preventDefault();
+  if(!window.getMedicaments){
+    alert('Cloud non activé');
+    return;
+  }
+  logInfo('📥 Chargement données cloud...');
+  loadFromCloud();
+});
+
 document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventDefault(); clearAllStock(); });
 
 // recherches live
@@ -1763,15 +1778,17 @@ function refreshFromCloud(){
   });
 }
 
-// Charger depuis cloud vers local
+// Charger depuis cloud vers local (toujours sur téléphone)
 function loadFromCloud(){
   if(!window.getMedicaments) return;
   
   console.log('🔄 loadFromCloud: récupération données cloud...');
+  logInfo('📥 Chargement médicaments depuis cloud...');
   
   getMedicaments().then(function(result){
     if(result.error || !result.data || result.data.length === 0){
       console.log('ℹ️ Aucune donnée cloud ou erreur');
+      logInfo('⚠️ Aucune donnée cloud');
       return;
     }
     
@@ -1793,16 +1810,53 @@ function loadFromCloud(){
     console.log('📥 Cloud meds:', cloudMeds.length);
     
     if(cloudMeds.length > 0){
-      // Utiliser les données cloud
+      // ALWAYS use cloud data on phone (replace local)
       meds = cloudMeds;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-      localStorage.setItem(SEEDED_KEY, "1");
       
       renderAll();
       updateStats();
       
+      logSuccess('✅ ' + meds.length + ' médicaments chargés depuis cloud');
       console.log('✅ Données cloud chargées et affichées:', meds.length, 'médicaments');
     }
+    
+    // Charger aussi la liste à acheter
+    loadToBuyFromCloud();
+  });
+}
+
+// Charger liste à acheter depuis cloud
+function loadToBuyFromCloud(){
+  if(!window.getAchats) return;
+  
+  console.log('🔄 loadToBuyFromCloud...');
+  
+  getAchats().then(function(result){
+    if(result.error || !result.data || result.data.length === 0){
+      console.log('ℹ️ Aucune donnée achats cloud');
+      return;
+    }
+    
+    const cloudAchats = result.data.map(function(a){
+      return {
+        id: a.id,
+        name: a.nom,
+        qty: a.quantite,
+        notes: a.notes || ''
+      };
+    });
+    
+    console.log('📥 Cloud achats:', cloudAchats.length);
+    
+    // Fusionner avec liste locale (priorité cloud)
+    toBuyList = cloudAchats;
+    localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+    
+    renderToBuy();
+    
+    logSuccess('✅ ' + toBuyList.length + ' articles à acheter chargés');
+    console.log('✅ Achats cloud chargés:', toBuyList.length);
   });
 }
 
