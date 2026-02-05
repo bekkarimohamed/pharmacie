@@ -851,7 +851,7 @@ document.getElementById('add-form').addEventListener('submit', function(e){
   const existingIndex = meds.findIndex(m => keyOf(m.name, m.dosage) === k);
 
   if(existingIndex === -1){
-    meds.push({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes });
+    meds.push({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes, _localModified: true });
     save();
     
     // Sauvegarder vers cloud IMMÉDIATEMENT
@@ -907,6 +907,7 @@ Nouvelle saisie :
   ex.genre = genre;
   ex.expiry = earliestExpiry(ex.expiry, expiryISO);
   ex.notes = mergeNotes(ex.notes, notes);
+  ex._localModified = true; // Marquer comme modifié localement
 
   meds[existingIndex] = ex;
   save();
@@ -998,6 +999,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
       target.genre = genre;
       target.expiry = earliestExpiry(target.expiry, expiryISO);
       target.notes = mergeNotes(target.notes, notes);
+      target._localModified = true; // Marquer comme modifié localement
 
       meds[otherIndex] = target;
       meds.splice(idx, 1);
@@ -1023,6 +1025,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
   }
 
   meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes };
+  meds[idx]._localModified = true; // Marquer comme modifié localement
   save();
   
   // Mettre à jour le cloud IMMÉDIATEMENT
@@ -1075,6 +1078,7 @@ function useMed(idx){
 
   if(Number(m.quantity) >= qty){
     m.quantity = Number(m.quantity) - qty;
+    m._localModified = true; // Marquer comme modifié localement
     save();
     
     // Mettre à jour le cloud IMMÉDIATEMENT
@@ -1414,16 +1418,93 @@ async function autoSyncFromCloud(){
       console.log('💾 IDs locaux mis à jour');
     }
     
-    // TOUJOURS prendre les données cloud (pour sync modifications et suppressions)
+    // Sync cloud → local (SMART - ne pas écraser modifications locales récentes)
     if(cloudMeds.length > 0){
-      console.log('Sync: cloud→local (remplacement complet)');
-      meds = cloudMeds;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-      localStorage.setItem(SEEDED_KEY, "1");
+      console.log('Sync: cloud→local (smart merge)');
       
-      if(typeof renderAll === 'function') renderAll();
-      if(typeof updateStats === 'function') updateStats();
+      // Créer map local par nom+dosage
+      var localByKey = {};
+      meds.forEach(function(m){
+        var key = (m.name + '_' + m.dosage).toLowerCase();
+        localByKey[key] = m;
+      });
+      
+      // Vérifier chaque med cloud
+      var cloudHasChanges = false;
+      var newMeds = [];
+      
+      cloudMeds.forEach(function(cm){
+        var key = (cm.nom + '_' + cm.dosage).toLowerCase();
+        var localMed = localByKey[key];
+        
+        if(!localMed){
+          // Nouveau dans cloud, ajouter au local
+          newMeds.push({
+            id: cm.id,
+            name: cm.nom,
+            dosage: cm.dosage,
+            genre: cm.genre,
+            quantity: cm.quantite,
+            initialStock: cm.stock_initial,
+            price: cm.prix,
+            nbBoxes: cm.nb_boites,
+            expiry: cm.date_peremption,
+            notes: cm.notes || ''
+          });
+          cloudHasChanges = true;
+        } else {
+          // Existe déjà, vérifier si modification locale
+          if(localMed._localModified && !cm._localModified){
+            // Local modifié plus récemment, garder local
+            console.log('⏭️ Skip (local plus récent):', cm.nom);
+          } else {
+            // Cloud plus récent ou égal, prendre cloud
+            console.log('✅ Update depuis cloud:', cm.nom);
+            localMed.id = cm.id;
+            localMed.quantity = cm.quantite;
+            localMed.price = cm.prix;
+            localMed.nbBoxes = cm.nb_boites;
+            localMed.expiry = cm.date_peremption;
+            localMed.notes = cm.notes;
+            cloudHasChanges = true;
+          }
+        }
+      });
+      
+      // Ajouter les nouveaux
+      if(newMeds.length > 0){
+        meds = meds.concat(newMeds);
+        cloudHasChanges = true;
+      }
+      
+      // Supprimer les médicaments locaux qui n'existent plus dans cloud
+      var medsDeleted = false;
+      for(var i = meds.length - 1; i >= 0; i--){
+        var m = meds[i];
+        var key = (m.name + '_' + m.dosage).toLowerCase();
+        var existsInCloud = cloudMeds.some(function(cm){
+          return (cm.nom + '_' + cm.dosage).toLowerCase() === key;
+        });
+        
+        if(!existsInCloud && !m._localModified){
+          // Supprimer du local (n'existe plus dans cloud et pas de modif locale)
+          console.log('🗑️ Supprimer du local:', m.name);
+          meds.splice(i, 1);
+          cloudHasChanges = true;
+          medsDeleted = true;
+        }
+      }
+      
+      if(cloudHasChanges){
+        save();
+        console.log('💾 Sync cloud→local terminé');
+        if(typeof renderAll === 'function') renderAll();
+        if(typeof updateStats === 'function') updateStats();
+      }
     }
+    
+    // Marquer comme non modifié après sync
+    meds.forEach(function(m){ delete m._localModified; });
     
     // Sync local → cloud (si local a des médicaments pas dans cloud)
     console.log('🔄 Sync local→cloud: meds.length=' + meds.length);
