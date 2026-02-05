@@ -1358,14 +1358,14 @@ document.getElementById('btn-sync').addEventListener('click', async (e)=>{
     try {
       // Récupérer les données cloud actuelles
       var cloudResult = await getMedicaments();
-      var cloudMeds = cloudResult.data || [];
+      var cloudMeds = cloudResult || [];
       
       console.log('Cloud a:', cloudMeds.length, 'médicaments');
       
       // Créer une map pour les médicaments cloud par nom+dosage
       var cloudMap = {};
       cloudMeds.forEach(function(m){
-        var key = keyOf(m.nom, m.dosage);
+        var key = keyOf(m.name, m.dosage);
         cloudMap[key] = m;
       });
       
@@ -1538,9 +1538,9 @@ async function autoSyncFromCloud(){
   try {
     var result = await getMedicaments();
     
-    if(result.error || !result.data || result.data.length === 0) return;
+    if(!result || result.length === 0) return;
     
-    var cloudMeds = result.data.map(function(m){
+    var cloudMeds = result.map(function(m){
       return {
         id: m.id,
         name: m.nom,
@@ -1558,7 +1558,7 @@ async function autoSyncFromCloud(){
     // Créer une map cloud par nom+dosage (pour assigner les IDs)
     var cloudByKey = {};
     cloudMeds.forEach(function(m){
-      var key = keyOf(m.nom, m.dosage);
+      var key = keyOf(m.name, m.dosage);
       cloudByKey[key] = m;
     });
     
@@ -1571,7 +1571,7 @@ async function autoSyncFromCloud(){
     // Assigner les IDs cloud aux médicaments locaux qui n'en ont pas
     var idsAssigned = false;
     meds.forEach(function(m){
-      var key = (m.name + '_' + m.dosage).toLowerCase();
+      var key = keyOf(m.name, m.dosage);
       if(!m.id && cloudByKey[key]){
         m.id = cloudByKey[key].id;
         idsAssigned = true;
@@ -1591,7 +1591,7 @@ async function autoSyncFromCloud(){
       // Créer map local par nom+dosage
       var localByKey = {};
       meds.forEach(function(m){
-        var key = (m.name + '_' + m.dosage).toLowerCase();
+        var key = keyOf(m.name, m.dosage);
         localByKey[key] = m;
       });
       
@@ -1600,7 +1600,7 @@ async function autoSyncFromCloud(){
       var newMeds = [];
       
       cloudMeds.forEach(function(cm){
-        var key = keyOf(cm.nom, cm.dosage);
+        var key = keyOf(cm.name, cm.dosage);
         var localMed = localByKey[key];
         
         if(!localMed){
@@ -1622,10 +1622,10 @@ async function autoSyncFromCloud(){
           // Existe déjà, vérifier si modification locale
           if(localMed._localModified && !cm._localModified){
             // Local modifié plus récemment, garder local
-            console.log('⏭️ Skip (local plus récent):', cm.nom);
+            console.log('⏭️ Skip (local plus récent):', cm.name);
           } else {
             // Cloud plus récent ou égal, prendre cloud
-            console.log('✅ Update depuis cloud:', cm.nom);
+            console.log('✅ Update depuis cloud:', cm.name);
             localMed.id = cm.id;
             localMed.quantity = cm.quantite;
             localMed.price = cm.prix;
@@ -1662,12 +1662,12 @@ async function autoSyncFromCloud(){
     if(meds.length > 0){
       try {
         var cloudResult = await getMedicaments();
-        var cloudMedsArr = cloudResult.data || [];
+        var cloudMedsArr = cloudResult || [];
         console.log('🔄 Cloud meds count:', cloudMedsArr.length);
         
         var cloudByKey = {};
         cloudMedsArr.forEach(function(m){
-          var key = (m.nom + '_' + m.dosage).toLowerCase();
+          var key = keyOf(m.name, m.dosage);
           cloudByKey[key] = m;
         });
         
@@ -1692,10 +1692,10 @@ async function autoSyncFromCloud(){
     if(window.getAchats){
       try {
         var achatsResult = await getAchats();
-        if(!achatsResult.error && achatsResult.data){
-          var cloudNames = achatsResult.data.map(function(a){ return a.nom.toLowerCase(); });
+        if(achatsResult && achatsResult.length > 0){
+          var cloudNames = achatsResult.map(function(a){ return a.nom.toLowerCase(); });
           
-          console.log('🔄 Sync achats: cloud=' + achatsResult.data.length + ', local=' + toBuyList.length);
+          console.log('🔄 Sync achats: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
           
           var changed = false;
           for(var i = toBuyList.length - 1; i >= 0; i--){
@@ -1707,7 +1707,7 @@ async function autoSyncFromCloud(){
             }
           }
           
-          achatsResult.data.forEach(function(a){
+          achatsResult.forEach(function(a){
             var key = a.nom.toLowerCase();
             var exists = toBuyList.some(function(lc){ return lc.name.toLowerCase() === key; });
             if(!exists){
@@ -1754,9 +1754,9 @@ function refreshFromCloud(){
   if(!window.getMedicaments) return;
   
   getMedicaments().then(function(result){
-    if(result.error || !result.data) return;
+    if(!result || result.length === 0) return;
     
-    const cloudMeds = result.data.map(function(m){
+    const cloudMeds = result.map(function(m){
       return {
         id: m.id,
         name: m.nom,
@@ -1771,8 +1771,14 @@ function refreshFromCloud(){
       };
     });
     
-    // Mettre à jour meds et localStorage
-    meds = cloudMeds;
+    // Fusion cloud + local (sans écraser)
+    meds = meds.concat(
+      cloudMeds.filter(function(cm){
+        return !meds.some(function(lm){
+          return keyOf(lm.name,lm.dosage) === keyOf(cm.name,cm.dosage);
+        });
+      })
+    );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
     localStorage.setItem(SEEDED_KEY, "1");
     
@@ -1783,28 +1789,20 @@ function refreshFromCloud(){
   });
 }
 
-// Charger depuis cloud vers local (seulement si local vide - pour préservar données PC)
+// Charger depuis cloud vers local (FUSION intelligente)
 function loadFromCloud(){
   if(!window.getMedicaments) return;
   
   console.log('🔄 loadFromCloud: récupération données cloud...');
-  logInfo('📥 Chargement médicaments depuis cloud...');
-  
-  // Ne pas écraser les données locales (préserver données PC)
-  if(meds.length > 0) {
-    console.log('ℹ️ Données locales existent déjà, pas de overwrite');
-    logInfo('ℹ️ Données locales préservées');
-    return;
-  }
   
   getMedicaments().then(function(result){
-    if(result.error || !result.data || result.data.length === 0){
+    if(!result || result.length === 0){
       console.log('ℹ️ Aucune donnée cloud ou erreur');
-      logInfo('⚠️ Aucune donnée cloud');
       return;
     }
     
-    const cloudMeds = result.data.map(function(m){
+    // Convertir cloud meds vers format local (avec 'name' au lieu de 'nom')
+    var cloudMeds = result.map(function(m){
       return {
         id: m.id,
         name: m.nom,
@@ -1822,14 +1820,30 @@ function loadFromCloud(){
     console.log('📥 Cloud meds:', cloudMeds.length);
     
     if(cloudMeds.length > 0){
-      meds = cloudMeds;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+      // FUSION intelligente : ajouter nouveaux meds du cloud
+      var localByKey = {};
+      meds.forEach(function(m){
+        localByKey[keyOf(m.name, m.dosage)] = m;
+      });
       
-      renderAll();
-      updateStats();
+      // Ajouter les meds du cloud qui n'existent pas en local
+      var addedCount = 0;
+      cloudMeds.forEach(function(cm){
+        var key = keyOf(cm.name, cm.dosage);
+        if(!localByKey[key]){
+          meds.push(cm);
+          addedCount++;
+        }
+      });
       
-      logSuccess('✅ ' + meds.length + ' médicaments chargés depuis cloud');
-      console.log('✅ Données cloud chargées et affichées:', meds.length, 'médicaments');
+      if(addedCount > 0){
+        save();
+        renderAll();
+        updateStats();
+        console.log('✅ Fusion cloud: ' + addedCount + ' nouveaux médicaments ajoutés');
+      } else {
+        console.log('ℹ️ Aucune nouvelle donnée cloud');
+      }
     }
     
     // Charger aussi la liste à acheter
@@ -1850,12 +1864,12 @@ function loadToBuyFromCloud(){
   console.log('🔄 loadToBuyFromCloud...');
   
   getAchats().then(function(result){
-    if(result.error || !result.data || result.data.length === 0){
+    if(!result || result.length === 0){
       console.log('ℹ️ Aucune donnée achats cloud');
       return;
     }
     
-    const cloudAchats = result.data.map(function(a){
+    const cloudAchats = result.map(function(a){
       return {
         id: a.id,
         name: a.nom,
@@ -1891,12 +1905,12 @@ async function loadAndShowFromCloud(){
     return;
   }
   
-  if(!result.data || result.data.length === 0){
+  if(!result || result.length === 0){
     alert('⚠️ Aucune donnée dans le cloud');
     return;
   }
   
-  var cloudMeds = result.data.map(function(m){
+  var cloudMeds = result.map(function(m){
     return {
       id: m.id,
       name: m.nom,
@@ -1949,14 +1963,14 @@ async function saveAllToCloud(callback){
   
   // Récupérer les données cloud actuelles
   var cloudData = await getMedicaments();
-  var cloudMeds = cloudData.data || [];
+  var cloudMeds = cloudData || [];
   
   console.log('Cloud a:', cloudMeds.length, 'médicaments');
   
   // Créer une map pour les médicaments cloud par nom+dosage
   var cloudMap = {};
   cloudMeds.forEach(function(m){
-    var key = (m.nom + '_' + m.dosage).toLowerCase();
+    var key = keyOf(m.name, m.dosage);
     cloudMap[key] = m;
   });
   
@@ -2000,7 +2014,7 @@ async function forceDebugSync(){
   if(!window.getMedicaments) return;
   try {
     var result = await getMedicaments();
-    var cloudCount = result.data ? result.data.length : 0;
+    var cloudCount = result ? result.length : 0;
     document.getElementById('debug-cloud-count').textContent = cloudCount;
     if(cloudCount === 0 && localCount > 0){
       document.getElementById('debug-status').textContent = 'Sync...';
