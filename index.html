@@ -1301,12 +1301,70 @@ document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preven
 document.getElementById('btn-sync').addEventListener('click', async (e)=>{ 
   e.preventDefault();
   
-  if(window.saveAllToCloud){
-    await saveAllToCloud();
-    alert('✅ Sync terminé ! Tous les médicaments ont été envoyés vers cloud.');
-    autoSyncFromCloud();
-  } else {
-    alert('⚠️ Cloud non activé');
+  if(meds.length === 0){
+    alert('Aucun médicament local à sync');
+    return;
+  }
+  
+  if(!window.addMedicament || !window.getMedicaments){
+    alert('Cloud non activé');
+    return;
+  }
+  
+  console.log('🔄 Début sync local→cloud, meds count:', meds.length);
+  
+  try {
+    // Récupérer les données cloud actuelles
+    var cloudResult = await getMedicaments();
+    var cloudMeds = cloudResult.data || [];
+    
+    console.log('Cloud a:', cloudMeds.length, 'médicaments');
+    
+    // Créer une map pour les médicaments cloud par nom+dosage
+    var cloudMap = {};
+    cloudMeds.forEach(function(m){
+      var key = keyOf(m.nom, m.dosage);
+      cloudMap[key] = m;
+    });
+    
+    var synced = 0;
+    
+    // Pour chaque médicament local, sync vers cloud
+    for(var j = 0; j < meds.length; j++){
+      var m = meds[j];
+      var key = keyOf(m.name, m.dosage);
+      
+      var medData = {
+        name: m.name,
+        dosage: m.dosage,
+        genre: m.genre,
+        quantity: m.quantity,
+        initialStock: m.initialStock,
+        price: m.price,
+        nbBoxes: m.nbBoxes,
+        expiry: m.expiry,
+        notes: m.notes || ''
+      };
+      
+      if(cloudMap[key]){
+        // Existe déjà dans cloud, mettre à jour
+        console.log('Mise à jour:', medData.name);
+        await updateMedicament(cloudMap[key].id, medData);
+        synced++;
+      } else {
+        // N'existe pas, créer
+        console.log('Création:', medData.name);
+        await addMedicament(medData);
+        synced++;
+      }
+    }
+    
+    console.log('Sync terminé:', synced, 'médicaments syncés');
+    alert('✅ Sync terminé ! ' + synced + ' médicaments syncés vers cloud.');
+    
+  } catch(e) {
+    console.error('Erreur sync:', e);
+    alert('❌ Erreur lors du sync: ' + e.message);
   }
 });
 document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventDefault(); clearAllStock(); });
