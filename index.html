@@ -1398,8 +1398,14 @@ async function autoSyncFromCloud(){
     // Créer une map cloud par nom+dosage (pour assigner les IDs)
     var cloudByKey = {};
     cloudMeds.forEach(function(m){
-      var key = (m.name + '_' + m.dosage).toLowerCase();
+      var key = keyOf(m.nom, m.dosage);
       cloudByKey[key] = m;
+    });
+    
+    var localByKey = {};
+    meds.forEach(function(m){
+      var key = keyOf(m.name, m.dosage);
+      localByKey[key] = m;
     });
     
     // Assigner les IDs cloud aux médicaments locaux qui n'en ont pas
@@ -1434,7 +1440,7 @@ async function autoSyncFromCloud(){
       var newMeds = [];
       
       cloudMeds.forEach(function(cm){
-        var key = (cm.nom + '_' + cm.dosage).toLowerCase();
+        var key = keyOf(cm.nom, cm.dosage);
         var localMed = localByKey[key];
         
         if(!localMed){
@@ -1486,7 +1492,7 @@ async function autoSyncFromCloud(){
           return (cm.nom + '_' + cm.dosage).toLowerCase() === key;
         });
         
-        if(!existsInCloud && !m._localModified){
+        if(!cloudByKey[key] && !m._localModified){
           // Supprimer du local (n'existe plus dans cloud et pas de modif locale)
           console.log('🗑️ Supprimer du local:', m.name);
           meds.splice(i, 1);
