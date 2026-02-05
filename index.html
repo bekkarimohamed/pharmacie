@@ -1189,17 +1189,7 @@ function removeToBuy(idx){
     // Sync IMMÉDIAT vers cloud - suppression directe
     if(window.deleteAchatByName){
       console.log('☁️ Suppression immédiate de', deletedName, 'du cloud');
-      logInfo('🗑️ Suppression cloud: ' + deletedName);
-      deleteAchatByName(deletedName).then(result => {
-        if(result.error){
-          logError('❌ Erreur suppression: ' + result.error);
-        } else {
-          logSuccess('✅ ' + deletedName + ' supprimé du cloud');
-        }
-      });
-    } else {
-      logError('⚠️ deleteAchatByName non disponible');
-      console.warn('⚠️ deleteAchatByName non disponible');
+      deleteAchatByName(deletedName);
     }
   }
 }
@@ -1219,16 +1209,8 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   // Sync vers cloud
   if(window.addAchat){
     console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
-    logInfo('📤 Ajout cloud: ' + name);
-    addAchat({ name, qty, notes }).then(result => {
-      if(result.error){
-        logError('❌ Erreur ajout: ' + result.error);
-      } else {
-        logSuccess('✅ ' + name + ' ajouté au cloud');
-      }
-    });
+    addAchat({ name, qty, notes });
   } else {
-    logError('⚠️ addAchat non disponible');
     console.warn('⚠️ addAchat non disponible');
   }
   
@@ -1801,12 +1783,19 @@ function refreshFromCloud(){
   });
 }
 
-// Charger depuis cloud vers local (toujours sur téléphone)
+// Charger depuis cloud vers local (seulement si local vide - pour préservar données PC)
 function loadFromCloud(){
   if(!window.getMedicaments) return;
   
   console.log('🔄 loadFromCloud: récupération données cloud...');
   logInfo('📥 Chargement médicaments depuis cloud...');
+  
+  // Ne pas écraser les données locales (préserver données PC)
+  if(meds.length > 0) {
+    console.log('ℹ️ Données locales existent déjà, pas de overwrite');
+    logInfo('ℹ️ Données locales préservées');
+    return;
+  }
   
   getMedicaments().then(function(result){
     if(result.error || !result.data || result.data.length === 0){
@@ -1833,7 +1822,6 @@ function loadFromCloud(){
     console.log('📥 Cloud meds:', cloudMeds.length);
     
     if(cloudMeds.length > 0){
-      // ALWAYS use cloud data on phone (replace local)
       meds = cloudMeds;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
       
@@ -1849,9 +1837,15 @@ function loadFromCloud(){
   });
 }
 
-// Charger liste à acheter depuis cloud
+// Charger liste à acheter depuis cloud (seulement si local vide)
 function loadToBuyFromCloud(){
   if(!window.getAchats) return;
+  
+  // Ne pas écraser les données locales
+  if(toBuyList.length > 0) {
+    console.log('ℹ️ Données locales existent déjà, pas de overwrite');
+    return;
+  }
   
   console.log('🔄 loadToBuyFromCloud...');
   
@@ -1872,14 +1866,14 @@ function loadToBuyFromCloud(){
     
     console.log('📥 Cloud achats:', cloudAchats.length);
     
-    // Fusionner avec liste locale (priorité cloud)
-    toBuyList = cloudAchats;
-    localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-    
-    renderToBuy();
-    
-    logSuccess('✅ ' + toBuyList.length + ' articles à acheter chargés');
-    console.log('✅ Achats cloud chargés:', toBuyList.length);
+    if(cloudAchats.length > 0){
+      toBuyList = cloudAchats;
+      localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+      
+      renderToBuy();
+      
+      console.log('✅ Achats cloud chargés:', toBuyList.length);
+    }
   });
 }
 
