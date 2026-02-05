@@ -1266,9 +1266,20 @@ function clearAllStock(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
   localStorage.setItem(SEEDED_KEY, "1");
 
+  // Effacer aussi le cloud
+  if(window.clearAllCloudMeds){
+    clearAllCloudMeds().then(() => {
+      alert('✅ Stock local ET cloud effacés.');
+    }).catch(e => {
+      console.error('Erreur effacement cloud:', e);
+      alert('✅ Stock local effacé. Le cloud n\'a pas pu être effacé.');
+    });
+  } else {
+    alert('✅ Stock local effacé.');
+  }
+
   renderAll();
   updateStats();
-  alert("✅ Stock vidé.");
 }
 
 /* =========================
@@ -1343,10 +1354,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
         if(enabled){
           console.log('✅ Cloud Supabase ACTIVÉ');
           window.cloudReady = true;
-          autoSyncFromCloud();
-          setInterval(autoSyncFromCloud, 3000); // Sync toutes les 3 secondes
+          // Pas d'auto-sync pour éviter les conflits
         } else {
-          console.log('❌ Cloud Supabase NON activé - connexion refusée');
+          console.log('❌ Cloud Supabase NON activé');
         }
       }).catch(function(e){
         console.error('❌ Erreur initCloud:', e);
@@ -1357,14 +1367,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
   }
   tryInitCloud();
-  
-  // Réessayer sync quand l'app devient visible
-  document.addEventListener('visibilitychange', ()=>{
-    if(!document.hidden && window.cloudReady){
-      autoSyncFromCloud();
-    }
-  });
 });
+
+// Pas d'auto-sync - sync manuel uniquement
+// Les modifications sont syncées immédiatement vers le cloud
+
+// Sync manuel via bouton
 
 // Sync automatique depuis cloud
 async function autoSyncFromCloud(){
