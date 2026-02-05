@@ -1,6 +1,6 @@
 /**
  * Supabase Cloud Integration for Pharmacie Domicile
- * VERSION 5.0 - API REST directe
+ * VERSION 6.0 - API REST directe - CORRIGÉ
  */
 
 const SUPABASE_URL = 'https://oywsadhtcvzhesnmevdg.supabase.co';
@@ -37,11 +37,11 @@ async function initCloud() {
     }
 }
 
-// Récupérer tous les médicaments
+// Récupérer tous les médicaments - retourne un tableau simple
 async function getMedicaments() {
     if (!isCloudEnabled) {
         console.warn('Cloud non activé pour getMedicaments');
-        return { data: [], error: null };
+        return [];
     }
     
     try {
@@ -56,15 +56,15 @@ async function getMedicaments() {
         if (!response.ok) {
             const err = await response.text();
             console.error('Erreur get:', response.status, err);
-            return { data: null, error: err };
+            return [];
         }
         
         const data = await response.json();
-        console.log('Données reçues:', data.length, 'médicaments');
-        return { data: data || [], error: null };
+        console.log('✅ Médicaments cloud:', data.length);
+        return data || [];
     } catch (e) {
         console.error('Erreur get:', e);
-        return { data: null, error: e.message };
+        return [];
     }
 }
 
@@ -217,14 +217,12 @@ function getCloudStatus() {
 
 // ========== ACHATS (À ACHETER) ==========
 
-// Récupérer tous les achats
+// Récupérer tous les achats - retourne un tableau simple
 async function getAchats() {
     if (!isCloudEnabled) {
         console.warn('⚠️ Cloud non activé pour getAchats');
-        return { data: [], error: null };
+        return [];
     }
-    
-    console.log('📥 Récupération achats depuis cloud...');
     
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?select=*&order=id.desc`, {
@@ -237,16 +235,16 @@ async function getAchats() {
         
         if (!response.ok) {
             const err = await response.text();
-            console.error('❌ Erreur getAchats:', response.status, err);
-            return { data: null, error: err };
+            console.error('❌ Erreur getAchats:', err);
+            return [];
         }
         
         const data = await response.json();
-        console.log('✅ Achats reçus du cloud:', data.length);
-        return { data: data || [], error: null };
+        console.log('✅ Achats reçus:', data.length);
+        return data || [];
     } catch (e) {
         console.error('❌ Erreur getAchats:', e);
-        return { data: null, error: e.message };
+        return [];
     }
 }
 
@@ -343,3 +341,14 @@ async function clearAchats() {
         return { error: e.message };
     }
 }
+
+// ========== EXPOSER GLOBALEMENT POUR MOBILE ==========
+window.initCloud = initCloud;
+window.getMedicaments = getMedicaments;
+window.addMedicament = addMedicament;
+window.updateMedicament = updateMedicament;
+window.deleteMedicament = deleteMedicament;
+window.getAchats = getAchats;
+window.addAchat = addAchat;
+window.deleteAchatByName = deleteAchatByName;
+window.clearAchats = clearAchats;
