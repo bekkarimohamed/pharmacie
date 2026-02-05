@@ -311,6 +311,15 @@
 
       <h3>📋 Médicaments nécessitant une attention</h3>
       <div id="attention-list" style="margin-top:.75rem;"></div>
+      
+      <!-- Debug sync status -->
+      <div style="background:#f0f0f0;padding:1rem;margin-top:1rem;border-radius:8px;font-size:0.9rem;">
+        <h4>🔄 État Sync Cloud</h4>
+        <p>📱 Locaux: <strong id="debug-local-count">0</strong></p>
+        <p>☁️ Cloud: <strong id="debug-cloud-count">0</strong></p>
+        <p>🔗 Statut: <strong id="debug-status">En attente...</strong></p>
+        <button onclick="forceDebugSync()" style="margin-top:0.5rem;padding:0.5rem 1rem;background:#2196F3;color:#fff;border:none;border-radius:4px;cursor:pointer;">🔄 Tester Sync</button>
+      </div>
     </section>
 
     <!-- Inventaire -->
@@ -1275,12 +1284,12 @@ document.querySelectorAll('nav a[data-target]').forEach(a=>{
 document.getElementById('btn-save').addEventListener('click', (e)=>{ e.preventDefault(); saveBackup(); });
 document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preventDefault(); restoreBackup(); });
 document.getElementById('btn-sync').addEventListener('click', async (e)=>{ 
-  e.preventDefault(); 
+  e.preventDefault();
   
-  // Sync manuel si besoin
-  if(window.autoSyncFromCloud){
-    await autoSyncFromCloud();
-    alert('🔄 Sync terminé !');
+  if(window.saveAllToCloud){
+    await saveAllToCloud();
+    alert('✅ Sync terminé ! Tous les médicaments ont été envoyés vers cloud.');
+    autoSyncFromCloud();
   } else {
     alert('⚠️ Cloud non activé');
   }
@@ -1405,15 +1414,46 @@ async function autoSyncFromCloud(){
       console.log('💾 IDs locaux mis à jour');
     }
     
-    // Si cloud a des données différentes, les prendre
+    // TOUJOURS prendre les données cloud (pour sync modifications et suppressions)
     if(cloudMeds.length > 0){
-      console.log('Sync: mise à jour depuis cloud');
+      console.log('Sync: cloud→local (remplacement complet)');
       meds = cloudMeds;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
       localStorage.setItem(SEEDED_KEY, "1");
       
       if(typeof renderAll === 'function') renderAll();
       if(typeof updateStats === 'function') updateStats();
+    }
+    
+    // Sync local → cloud (si local a des médicaments pas dans cloud)
+    console.log('🔄 Sync local→cloud: meds.length=' + meds.length);
+    if(meds.length > 0){
+      try {
+        var cloudResult = await getMedicaments();
+        var cloudMedsArr = cloudResult.data || [];
+        console.log('🔄 Cloud meds count:', cloudMedsArr.length);
+        
+        var cloudByKey = {};
+        cloudMedsArr.forEach(function(m){
+          var key = (m.nom + '_' + m.dosage).toLowerCase();
+          cloudByKey[key] = m;
+        });
+        
+        var synced = 0;
+        for(var m of meds){
+          var key = (m.name + '_' + m.dosage).toLowerCase();
+          console.log('🔄 Check:', m.name, 'key:', key, 'exists:', !!cloudByKey[key]);
+          if(!cloudByKey[key]){
+            // Medication n'existe pas dans cloud, le créer
+            await addMedicament(m);
+            console.log('➕ Auto-sync: créé', m.name);
+            synced++;
+          }
+        }
+        console.log('🔄 Sync local→cloud terminé:', synced, 'créés');
+      } catch(e) {
+        console.warn('Erreur sync local→cloud:', e);
+      }
     }
     
     // Sync aussi les achats (À acheter)
@@ -1657,6 +1697,32 @@ async function saveAllToCloud(callback){
   
   console.log('Sync fusion terminée');
   if(callback) callback();
+}
+
+// Debug sync
+async function forceDebugSync(){
+  var localCount = meds.length;
+  document.getElementById('debug-local-count').textContent = localCount;
+  document.getElementById('debug-status').textContent = 'Vérification...';
+  if(!window.getMedicaments) return;
+  try {
+    var result = await getMedicaments();
+    var cloudCount = result.data ? result.data.length : 0;
+    document.getElementById('debug-cloud-count').textContent = cloudCount;
+    if(cloudCount === 0 && localCount > 0){
+      document.getElementById('debug-status').textContent = 'Sync...';
+      var synced = 0;
+      for(var m of meds){
+        var addResult = await addMedicament(m);
+        if(!addResult.error) synced++;
+      }
+      document.getElementById('debug-status').textContent = 'Terminé! ' + synced;
+    } else if(cloudCount > 0){
+      document.getElementById('debug-status').textContent = 'Sync OK';
+    }
+  } catch(e){
+    document.getElementById('debug-status').textContent = 'Erreur';
+  }
 }
 
 </script>
