@@ -48,6 +48,16 @@
       width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem
     }
     .notes-cell{max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    
+    /* Debug sync */
+    #debug-sync{
+      background:#1a1a2e;color:#0f0;padding:.5rem;font-family:monospace;font-size:.75rem;
+      max-height:120px;overflow-y:auto;border-bottom:2px solid #0f0
+    }
+    #debug-sync .log-entry{margin:2px 0}
+    #debug-sync .log-success{color:#0f0}
+    #debug-sync .log-error{color:#f55}
+    #debug-sync .log-info{color:#ff0}
     .notes-cell:hover{white-space:normal;overflow:visible}
     .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:2rem 0}
     .stat-card{background:#fff;padding:1.5rem;border-radius:var(--radius);box-shadow:0 2px 8px var(--shadow);text-align:center}
@@ -295,6 +305,11 @@
       <li><a href="#" id="logout-link">🚪 Quitter</a></li>
     </ul>
   </nav>
+
+  <!-- Debug Sync Status -->
+  <div id="debug-sync" style="display:none;">
+    <div class="log-info">💻 Debug Sync Cloud</div>
+  </div>
 
   <div class="container" id="main" style="display:none;">
 
@@ -1077,30 +1092,56 @@ function useMed(idx){
   if(qty <= 0){ alert("❌ Quantité invalide."); return; }
 
   if(Number(m.quantity) >= qty){
+    const oldQty = Number(m.quantity);
     m.quantity = Number(m.quantity) - qty;
     m._localModified = true; // Marquer comme modifié localement
     save();
     
-    // Mettre à jour le cloud IMMÉDIATEMENT
-    if(window.updateMedicament && m.id){
-      updateMedicament(m.id, m).then(result => {
-        if(result.error){
-          console.error('❌ Erreur sync cloud:', result.error);
-          // Recharger depuis cloud pour synchroniser
-          setTimeout(() => autoSyncFromCloud(), 1000);
-        } else {
-          console.log('✅ Sync cloud: quantité mise à jour');
-        }
-      });
-    }
+    logDebug('💊 UTILISER: ' + m.name + ' -' + qty + ' (était:' + oldQty + ', maintenant:' + m.quantity + ')');
     
-    renderAll();
-    updateStats();
-
+    // Si stock épuisé, supprimer du cloud
     if(m.quantity === 0){
+      logInfo('🗑️ Stock épuisé - suppression cloud de ' + m.name);
+      if(window.deleteMedicament){
+        deleteMedicament(m.id, m.name, m.dosage).then(result => {
+          if(result.error){
+            logError('Erreur suppression cloud: ' + result.error);
+          } else {
+            logSuccess('✅ ' + m.name + ' supprimé du cloud (stock=0)');
+          }
+        });
+      }
+      
+      // Supprimer de la liste locale aussi
+      setTimeout(() => {
+        const medIdx = meds.findIndex(x => x.id === m.id);
+        if(medIdx !== -1){
+          meds.splice(medIdx, 1);
+          save();
+          renderAll();
+          updateStats();
+        }
+      }, 100);
+      
       alert(`ℹ️ Dernière unité de ${m.name} utilisée – stock épuisé.`);
-    } else if(m.quantity <= 5){
-      alert(`⚠️ Stock faible : il ne reste plus que ${m.quantity} unité(s) de ${m.name}.`);
+    } else {
+      // Mettre à jour le cloud IMMÉDIATEMENT avec nouvelle quantité
+      if(window.updateMedicament && m.id){
+        updateMedicament(m.id, m).then(result => {
+          if(result.error){
+            logError('Erreur sync cloud: ' + result.error);
+          } else {
+            logSuccess('✅ Sync: ' + m.name + ' = ' + m.quantity);
+          }
+        });
+      }
+      
+      renderAll();
+      updateStats();
+      
+      if(m.quantity <= 5){
+        alert(`⚠️ Stock faible : il ne reste plus que ${m.quantity} unité(s) de ${m.name}.`);
+      }
     }
   } else {
     alert(`❌ Stock insuffisant ! ${m.name} possède seulement ${m.quantity} unité(s).`);
@@ -1399,6 +1440,33 @@ document.addEventListener('keydown', e=>{
 });
 
 /* =========================
+   DEBUG LOG SYNC
+========================= */
+function logDebug(msg, type){
+  const debugDiv = document.getElementById('debug-sync');
+  if(!debugDiv) return;
+  
+  debugDiv.style.display = 'block';
+  const time = new Date().toLocaleTimeString();
+  const cssClass = type === 'success' ? 'log-success' : (type === 'error' ? 'log-error' : 'log-info');
+  
+  const entry = document.createElement('div');
+  entry.className = 'log-entry ' + cssClass;
+  entry.textContent = '[' + time + '] ' + msg;
+  
+  debugDiv.appendChild(entry);
+  debugDiv.scrollTop = debugDiv.scrollHeight;
+  
+  // Garder que les 20 dernières lignes
+  while(debugDiv.children.length > 20){
+    debugDiv.removeChild(debugDiv.firstChild);
+  }
+}
+function logSuccess(msg){ logDebug(msg, 'success'); }
+function logError(msg){ logDebug(msg, 'error'); }
+function logInfo(msg){ logDebug(msg, 'info'); }
+
+/* =========================
    INITIALISATION
 ========================= */
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -1407,19 +1475,25 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Initialiser le cloud
   function tryInitCloud(){
     if(typeof initCloud === 'function'){
+      logInfo('🔄 Connexion cloud...');
       console.log('🔄 Tentative de connexion cloud...');
       initCloud().then(function(enabled){
         if(enabled){
+          logSuccess('✅ Cloud Supabase ACTIVÉ');
           console.log('✅ Cloud Supabase ACTIVÉ');
           window.cloudReady = true;
-          // Pas d'auto-sync pour éviter les conflits
+          // Charger données cloud sur le téléphone
+          loadFromCloud();
         } else {
+          logInfo('❌ Cloud Supabase NON activé');
           console.log('❌ Cloud Supabase NON activé');
         }
       }).catch(function(e){
+        logError('❌ Erreur initCloud: ' + e);
         console.error('❌ Erreur initCloud:', e);
       });
     } else {
+      logInfo('⏳ Attente de cloud.js...');
       console.warn('⏳ Attente de cloud.js...');
       setTimeout(tryInitCloud, 100);
     }
@@ -1693,8 +1767,13 @@ function refreshFromCloud(){
 function loadFromCloud(){
   if(!window.getMedicaments) return;
   
+  console.log('🔄 loadFromCloud: récupération données cloud...');
+  
   getMedicaments().then(function(result){
-    if(result.error || !result.data) return;
+    if(result.error || !result.data || result.data.length === 0){
+      console.log('ℹ️ Aucune donnée cloud ou erreur');
+      return;
+    }
     
     const cloudMeds = result.data.map(function(m){
       return {
@@ -1711,13 +1790,18 @@ function loadFromCloud(){
       };
     });
     
-    if(cloudMeds.length > 0 && meds.length === 0){
+    console.log('📥 Cloud meds:', cloudMeds.length);
+    
+    if(cloudMeds.length > 0){
+      // Utiliser les données cloud
       meds = cloudMeds;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
       localStorage.setItem(SEEDED_KEY, "1");
+      
       renderAll();
       updateStats();
-      console.log('Données importées depuis cloud');
+      
+      console.log('✅ Données cloud chargées et affichées:', meds.length, 'médicaments');
     }
   });
 }
