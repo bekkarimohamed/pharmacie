@@ -1189,7 +1189,17 @@ function removeToBuy(idx){
     // Sync IMMÉDIAT vers cloud - suppression directe
     if(window.deleteAchatByName){
       console.log('☁️ Suppression immédiate de', deletedName, 'du cloud');
-      deleteAchatByName(deletedName);
+      logInfo('🗑️ Suppression cloud: ' + deletedName);
+      deleteAchatByName(deletedName).then(result => {
+        if(result.error){
+          logError('❌ Erreur suppression: ' + result.error);
+        } else {
+          logSuccess('✅ ' + deletedName + ' supprimé du cloud');
+        }
+      });
+    } else {
+      logError('⚠️ deleteAchatByName non disponible');
+      console.warn('⚠️ deleteAchatByName non disponible');
     }
   }
 }
@@ -1209,8 +1219,16 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   // Sync vers cloud
   if(window.addAchat){
     console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
-    addAchat({ name, qty, notes });
+    logInfo('📤 Ajout cloud: ' + name);
+    addAchat({ name, qty, notes }).then(result => {
+      if(result.error){
+        logError('❌ Erreur ajout: ' + result.error);
+      } else {
+        logSuccess('✅ ' + name + ' ajouté au cloud');
+      }
+    });
   } else {
+    logError('⚠️ addAchat non disponible');
     console.warn('⚠️ addAchat non disponible');
   }
   
