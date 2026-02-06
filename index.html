@@ -1165,16 +1165,46 @@ function renderToBuy(){
     return;
   }
   
-  toBuyList.forEach((item, idx)=>{
+  // Trier par ordre alphabétique
+  const sortedList = [...toBuyList].sort((a, b) => 
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  );
+  
+  sortedList.forEach((item, idx)=>{
     tbody.innerHTML += `
       <tr>
         <td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td>
         <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td>
         <td>${escapeHtml(item.notes || '-')}</td>
-        <td><button class="action-btn delete" onclick="removeToBuy(${idx})">🗑️</button></td>
+        <td><button class="action-btn delete" onclick="removeToBuyByName('${escapeHtml(item.name)}')">🗑️</button></td>
       </tr>
     `;
   });
+}
+
+// Supprimer par nom (pour supporter le tri)
+function removeToBuyByName(name){
+  if(!confirm('Supprimer "' + name + '" de la liste ?')) return;
+  
+  // Trouver l'index
+  const idx = toBuyList.findIndex(item => 
+    item.name.toLowerCase() === name.toLowerCase()
+  );
+  
+  if(idx === -1) {
+    console.log('⚠️ Article non trouvé:', name);
+    return;
+  }
+  
+  toBuyList.splice(idx, 1);
+  localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+  renderToBuy();
+  
+  // Sync vers cloud
+  if(window.deleteAchatByName){
+    console.log('☁️ Suppression cloud:', name);
+    deleteAchatByName(name);
+  }
 }
 
 function removeToBuy(idx){
