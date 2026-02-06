@@ -1864,9 +1864,11 @@ function refreshFromCloud(){
     cloudMeds.forEach(function(cm){
       var key = keyOf(cm.name, cm.dosage);
       var exists = meds.some(function(m){ return keyOf(m.name, m.dosage) === key; });
+      console.log('🔍 Check cloud med:', cm.name, '| key:', key, '| exists:', exists);
       if(!exists){
         meds.push(cm);
         addedCount++;
+        console.log('➕ AJOUTÉ:', cm.name);
       }
     });
     
@@ -1874,8 +1876,11 @@ function refreshFromCloud(){
     renderAll();
     updateStats();
     
+    console.log('📊 Final meds count:', meds.length);
     if(addedCount > 0 || deletedCount > 0 || updatedCount > 0){
       console.log('✅ Sync terminée: +' + addedCount + ' ajoutés, -' + deletedCount + ' supprimés, ~' + updatedCount + ' mis à jour');
+    } else {
+      console.log('ℹ️ Sync: pas de changements');
     }
   });
 }
