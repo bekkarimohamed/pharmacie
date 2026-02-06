@@ -1817,21 +1817,43 @@ function refreshFromCloud(){
       };
     });
     
-    // Fusion cloud + local (sans écraser)
-    meds = meds.concat(
-      cloudMeds.filter(function(cm){
-        return !meds.some(function(lm){
-          return keyOf(lm.name,lm.dosage) === keyOf(cm.name,cm.dosage);
-        });
-      })
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
-    localStorage.setItem(SEEDED_KEY, "1");
+    // Fusion cloud + local (AJOUTER + SUPPRIMER)
+    // Créer map cloud par clé
+    var cloudByKey = {};
+    cloudMeds.forEach(function(cm){
+      var key = keyOf(cm.name, cm.dosage);
+      cloudByKey[key] = cm;
+    });
     
-    if(typeof renderAll === 'function') renderAll();
-    if(typeof updateStats === 'function') updateStats();
+    // Supprimer les meds locaux qui n'existent plus dans cloud
+    var deletedCount = 0;
+    for(var i = meds.length - 1; i >= 0; i--){
+      var key = keyOf(meds[i].name, meds[i].dosage);
+      if(!cloudByKey[key]){
+        console.log('🗑️ Supprimer local (pas dans cloud):', meds[i].name);
+        meds.splice(i, 1);
+        deletedCount++;
+      }
+    }
     
-    console.log('Sync temps réel: données mises à jour');
+    // Ajouter les nouveaux du cloud
+    var addedCount = 0;
+    cloudMeds.forEach(function(cm){
+      var key = keyOf(cm.name, cm.dosage);
+      var exists = meds.some(function(m){ return keyOf(m.name, m.dosage) === key; });
+      if(!exists){
+        meds.push(cm);
+        addedCount++;
+      }
+    });
+    
+    save();
+    renderAll();
+    updateStats();
+    
+    if(addedCount > 0 || deletedCount > 0){
+      console.log('✅ Sync terminée: +' + addedCount + ' ajoutés, -' + deletedCount + ' supprimés');
+    }
   });
 }
 
