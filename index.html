@@ -1522,6 +1522,14 @@ function logInfo(msg){ logDebug(msg, 'info'); }
 document.addEventListener('DOMContentLoaded', ()=>{
   renderToBuy();
   
+  // Rafraîchir automatiquement toutes les 3 secondes
+  setInterval(() => {
+    if(window.cloudReady){
+      // Rafraîchir les achats du cloud
+      loadToBuyFromCloud();
+    }
+  }, 3000);
+  
   // Initialiser le cloud
   function tryInitCloud(){
     if(typeof initCloud === 'function'){
@@ -1532,8 +1540,16 @@ document.addEventListener('DOMContentLoaded', ()=>{
           logSuccess('✅ Cloud Supabase ACTIVÉ');
           console.log('✅ Cloud Supabase ACTIVÉ');
           window.cloudReady = true;
-          // Charger données cloud sur le téléphone
+          
+          // Charger données cloud
           loadFromCloud();
+          
+          // Rafraîchir automatiquement toutes les 3 secondes
+          setInterval(() => {
+            if(window.cloudReady){
+              refreshFromCloud();
+            }
+          }, 3000);
         } else {
           logInfo('❌ Cloud Supabase NON activé');
           console.log('❌ Cloud Supabase NON activé');
