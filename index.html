@@ -1817,7 +1817,7 @@ function refreshFromCloud(){
       };
     });
     
-    // Fusion cloud + local (AJOUTER + SUPPRIMER)
+    // Fusion cloud + local (AJOUTER + METTRE À JOUR + SUPPRIMER)
     // Créer map cloud par clé
     var cloudByKey = {};
     cloudMeds.forEach(function(cm){
@@ -1825,16 +1825,39 @@ function refreshFromCloud(){
       cloudByKey[key] = cm;
     });
     
-    // Supprimer les meds locaux qui n'existent plus dans cloud
     var deletedCount = 0;
-    for(var i = meds.length - 1; i >= 0; i--){
-      var key = keyOf(meds[i].name, meds[i].dosage);
-      if(!cloudByKey[key]){
-        console.log('🗑️ Supprimer local (pas dans cloud):', meds[i].name);
-        meds.splice(i, 1);
+    var updatedCount = 0;
+    
+    // Pour chaque med local, vérifier s'il existe dans cloud
+    meds.forEach(function(lm){
+      var key = keyOf(lm.name, lm.dosage);
+      var cm = cloudByKey[key];
+      
+      if(!cm){
+        // N'existe pas dans cloud → supprimer local
+        console.log('🗑️ Supprimer local (pas dans cloud):', lm.name);
+        lm._toDelete = true;
         deletedCount++;
+      } else {
+        // Existe dans cloud → vérifier si modifié
+        if(lm._localModified && !cm._localModified){
+          // Local modifié plus récemment → garder local
+          console.log('⏭️ Skip update (local plus récent):', lm.name);
+        } else if(lm.quantity !== cm.quantity || lm.price !== cm.price || lm.expiry !== cm.expiry){
+          // Cloud plus récent → prendre les données cloud
+          console.log('✅ Update depuis cloud:', lm.name, 'qty:', lm.quantity, '→', cm.quantity);
+          lm.id = cm.id;
+          lm.quantity = cm.quantity;
+          lm.price = cm.price;
+          lm.expiry = cm.expiry;
+          lm.notes = cm.notes || '';
+          updatedCount++;
+        }
       }
-    }
+    });
+    
+    // Supprimer les meds marqués
+    meds = meds.filter(function(m){ return !m._toDelete; });
     
     // Ajouter les nouveaux du cloud
     var addedCount = 0;
@@ -1851,8 +1874,8 @@ function refreshFromCloud(){
     renderAll();
     updateStats();
     
-    if(addedCount > 0 || deletedCount > 0){
-      console.log('✅ Sync terminée: +' + addedCount + ' ajoutés, -' + deletedCount + ' supprimés');
+    if(addedCount > 0 || deletedCount > 0 || updatedCount > 0){
+      console.log('✅ Sync terminée: +' + addedCount + ' ajoutés, -' + deletedCount + ' supprimés, ~' + updatedCount + ' mis à jour');
     }
   });
 }
