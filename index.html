@@ -72,6 +72,122 @@
       justify-content: center;
     }
 
+    /* Dark mode toggle */
+    .theme-toggle {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.1);
+    }
+
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      --card-bg: rgba(22, 33, 62, 0.95);
+      --text: #ecf0f1;
+      --text-light: #2c3e50;
+    }
+
+    body.dark-mode .stat-card,
+    body.dark-mode .form,
+    body.dark-mode .table,
+    body.dark-mode .hero,
+    body.dark-mode .cta-section {
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    body.dark-mode input,
+    body.dark-mode textarea,
+    body.dark-mode select {
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    body.dark-mode input:focus,
+    body.dark-mode textarea:focus,
+    body.dark-mode select:focus {
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* Dark mode toggle */
+    .theme-toggle {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.1);
+    }
+
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      --background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      --card-bg: rgba(22, 33, 62, 0.95);
+      --text: #ecf0f1;
+      --text-light: #2c3e50;
+    }
+
+    body.dark-mode .stat-card,
+    body.dark-mode .form,
+    body.dark-mode .table,
+    body.dark-mode .hero,
+    body.dark-mode .cta-section {
+      background: var(--card-bg);
+      color: var(--text);
+    }
+
+    body.dark-mode input,
+    body.dark-mode textarea,
+    body.dark-mode select {
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    body.dark-mode input:focus,
+    body.dark-mode textarea:focus,
+    body.dark-mode select:focus {
+      background: rgba(255,255,255,0.15);
+    }
+
     nav a{
       color: var(--text-light);
       text-decoration: none;
@@ -85,6 +201,9 @@
       position: relative;
       overflow: hidden;
     }
+
+    /* SVG Icons */
+    .nav-icon { width: 18px; height: 18px; fill: currentColor; }
 
     nav a::before {
       content: '';
@@ -733,25 +852,25 @@
   <!-- Navigation -->
   <nav id="main-nav" style="display:none;">
     <ul>
-      <li><a href="#" data-target="home">🏠 Accueil</a></li>
-      <li><a href="#" data-target="inventory">📦 Inventaire</a></li>
-      <li><a href="#" data-target="add">➕ Saisie</a></li>
-      <li><a href="#" data-target="edit-mode">✏️ Modifier</a></li>
-      <li><a href="#" data-target="delete-mode">🗑️ Supprimer</a></li>
-      <li><a href="#" data-target="use-mode">💊 Utiliser</a></li>
-      <li><a href="#" data-target="to-buy">🛒 À acheter</a></li>
-      <li><a href="Sposnor.html" target="_blank">🤝 Sponsors</a></li>
+      <li><a href="#" data-target="home"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil</a></li>
+      <li><a href="#" data-target="inventory"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 7h-4V4c0-1.1-.9-2-2-2H10c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4z"/></svg> Inventaire</a></li>
+      <li><a href="#" data-target="add"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Saisie</a></li>
+      <li><a href="#" data-target="edit-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Modifier</a></li>
+      <li><a href="#" data-target="delete-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Supprimer</a></li>
+      <li><a href="#" data-target="use-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Utiliser</a></li>
+      <li><a href="#" data-target="to-buy"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4V2C7 1.45 7.45 1 8 1s1 .45 1 1v2h6V2c0-.55.45-1 1-1s1 .45 1 1v2h5c.55 0 1 .45 1 1s-.45 1-1 1h-1v13c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6H2c-.55 0-1-.45-1-1s.45-1 1-1h5zm2 0V3c0-.55.45-1 1-1s1 .45 1 1v1h4V3c0-.55.45-1 1-1s1 .45 1 1v1h2v2H5V6h4zm-2 4v9h12V8H7z"/></svg> À acheter</a></li>
+      <li><a href="Sposnor.html" target="_blank"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63C19.68 7.55 18.92 7 18.09 7h-.98c-.83 0-1.59.55-1.87 1.37L12.5 16H16v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-2H20zM5.5 7L2.5 16H7v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-6h4.5l-3-9H5.5z"/></svg> Sponsors</a></li>
 
       <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
-      <li><a href="#" id="btn-save" class="nav-btn">💾 Sauvegarder</a></li>
-      <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
-      <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync</a></li>
-      <li><a href="#" id="btn-load-cloud" class="nav-btn">📥 Charger</a></li>
-      <li><a href="#" id="btn-clean-dup" class="nav-btn">🧹 Nettoyer</a></li>
-      <li><a href="#" id="btn-force-sync" class="nav-btn">🔄 Force Sync</a></li>
-      <li><a href="#" id="btn-clear" class="nav-btn">🗑️ Vider</a></li>
+      <li><a href="#" id="btn-save" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/></svg> Sauvegarder</a></li>
+      <li><a href="#" id="btn-restore" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li>
+      <li><a href="#" id="btn-sync" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 14.61 20 13.38 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 9.39 4 10.62 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Sync</a></li>
+      <li><a href="#" id="btn-load-cloud" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> Charger</a></li>
+      <li><a href="#" id="btn-clean-dup" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li>
+      <li><a href="#" id="btn-force-sync" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 14.61 20 13.38 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 9.39 4 10.62 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Force Sync</a></li>
+      <li><a href="#" id="btn-clear" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li>
 
-      <li><a href="#" id="logout-link">🚪 Quitter</a></li>
+      <li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li>
     </ul>
   </nav>
 
