@@ -1491,7 +1491,9 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
   meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes };
   meds[idx]._localModified = true; // Marquer comme modifié localement
   save();
-  
+
+  // Sync désactivé pour les modifications
+  /*
   // Mettre à jour le cloud IMMÉDIATEMENT
   if(window.updateMedicament && meds[idx].id){
     updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes }).then(result => {
@@ -1502,6 +1504,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
       }
     });
   }
+  */
   
   closeEdit();
   renderAll();
@@ -1515,6 +1518,8 @@ function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
   if(confirm(`Supprimer "${m.name} (${m.dosage})" ?`)){
+    // Sync désactivé pour les suppressions
+    /*
     // Supprimer du cloud IMMÉDIATEMENT (avec fallback nom+dosage)
     if(window.deleteMedicament){
       deleteMedicament(m.id, m.name, m.dosage).then(result => {
@@ -1525,7 +1530,8 @@ function removeMed(idx){
         }
       });
     }
-    
+    */
+
     meds.splice(idx, 1);
     save();
     renderAll();
@@ -1548,20 +1554,11 @@ function useMed(idx){
     
     logDebug('💊 UTILISER: ' + m.name + ' -' + qty + ' (était:' + oldQty + ', maintenant:' + m.quantity + ')');
     
-    // Si stock épuisé, supprimer du cloud
+    // Si stock épuisé, supprimer localement seulement (pas de sync)
     if(m.quantity === 0){
-      logInfo('🗑️ Stock épuisé - suppression cloud de ' + m.name);
-      if(window.deleteMedicament){
-        deleteMedicament(m.id, m.name, m.dosage).then(result => {
-          if(result.error){
-            logError('Erreur suppression cloud: ' + result.error);
-          } else {
-            logSuccess('✅ ' + m.name + ' supprimé du cloud (stock=0)');
-          }
-        });
-      }
-      
-      // Supprimer de la liste locale aussi
+      logInfo('🗑️ Stock épuisé - suppression locale de ' + m.name);
+
+      // Supprimer de la liste locale seulement
       setTimeout(() => {
         const medIdx = meds.findIndex(x => x.id === m.id);
         if(medIdx !== -1){
@@ -1571,7 +1568,7 @@ function useMed(idx){
           updateStats();
         }
       }, 100);
-      
+
       alert(`ℹ️ Dernière unité de ${m.name} utilisée – stock épuisé.`);
     } else {
       // Mettre à jour le cloud IMMÉDIATEMENT avec nouvelle quantité
