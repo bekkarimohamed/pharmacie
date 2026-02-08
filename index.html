@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -2203,6 +2203,10 @@ function logInfo(msg){ logDebug(msg, 'info'); }
 /* =========================
    INITIALISATION
 ========================= */
+const FAST_SYNC_INTERVAL_MS = 5000;
+let autoSyncTimer = null;
+let cloudSubUnsubscribe = null;
+let achatsSubUnsubscribe = null;
 document.addEventListener('DOMContentLoaded', ()=>{
   renderToBuy();
 
@@ -2220,12 +2224,20 @@ document.addEventListener('DOMContentLoaded', ()=>{
           // Charger données cloud initiales
           loadFromCloud();
 
-          // Sync automatique toutes les 30 secondes
-          setInterval(() => {
+          // Sync automatique rapide
+          if(autoSyncTimer) clearInterval(autoSyncTimer);
+          autoSyncTimer = setInterval(() => {
             if(window.cloudReady){
               autoSyncFromCloud();
             }
-          }, 30000); // 30 secondes
+          }, FAST_SYNC_INTERVAL_MS);
+
+          // Abonnement (polling) pour détection rapide des changements
+          if(cloudSubUnsubscribe) cloudSubUnsubscribe();
+          cloudSubUnsubscribe = subscribeToCloudChanges();
+
+          if(achatsSubUnsubscribe) achatsSubUnsubscribe();
+          achatsSubUnsubscribe = subscribeToAchatsChanges();
         } else {
           logInfo('❌ Cloud Supabase NON activé');
           console.log('❌ Cloud Supabase NON activé');
@@ -2243,6 +2255,19 @@ document.addEventListener('DOMContentLoaded', ()=>{
   tryInitCloud();
 });
 
+// Sync rapide au retour sur l'onglet
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && window.cloudReady){
+    autoSyncFromCloud();
+  }
+});
+
+window.addEventListener('focus', () => {
+  if(window.cloudReady){
+    autoSyncFromCloud();
+  }
+});
+
 // Pas d'auto-sync - sync manuel uniquement
 // Les modifications sont syncées immédiatement vers le cloud
 
@@ -2250,8 +2275,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 // Sync automatique depuis cloud - VERSION AMÉLIORÉE AVEC CONFLITS
 async function autoSyncFromCloud(){
+  if(autoSyncFromCloud._running) return;
+  autoSyncFromCloud._running = true;
   if(!window.getMedicaments) {
     console.warn('⏳ getMedicaments non disponible - sync retardé');
+    autoSyncFromCloud._running = false;
     return;
   }
 
@@ -2439,19 +2467,30 @@ async function autoSyncFromCloud(){
     console.log('✅ Auto-sync amélioré terminé');
   } catch(e) {
     console.warn('Sync auto échoué:', e);
+  } finally {
+    autoSyncFromCloud._running = false;
   }
 }
 
 // Subscription temps réel - écouter les changements cloud
 function subscribeToCloudChanges(){
-  if(!window.subscribeToMedicaments) return;
+  if(!window.subscribeToMedicaments) return null;
   
-  subscribeToMedicaments(function(payload){
+  return subscribeToMedicaments(function(payload){
     console.log('Cloud change detected:', payload);
     
     // Recharger depuis cloud quand un changement est détecté
     refreshFromCloud();
-  });
+  }, { intervalMs: FAST_SYNC_INTERVAL_MS });
+}
+
+function subscribeToAchatsChanges(){
+  if(!window.subscribeToAchats) return null;
+
+  return subscribeToAchats(function(payload){
+    console.log('Achats change detected:', payload);
+    syncToBuyDeletions();
+  }, { intervalMs: FAST_SYNC_INTERVAL_MS });
 }
 
 // Rafraîchir depuis cloud (pour sync temps réel)
@@ -2897,8 +2936,14 @@ async function syncToBuyDeletions(){
 
 </script>
 
+<!-- Supabase Realtime SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Cloud Integration (REST API) -->
 <script src="cloud.js"></script>
 
 </body>
 </html>
+
+
+
+
