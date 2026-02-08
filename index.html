@@ -501,15 +501,15 @@
         font-size:.75rem;
         text-align:center
       }
-      
+
       /* Container - plus compact */
       .container{padding:.5rem}
-      
+
       /* Titres réduits */
       h1{font-size:1rem}
       h2{font-size:.95rem}
       h3{font-size:.9rem}
-      
+
       /* Stats grid - compact */
       .stats-grid{
         grid-template-columns:repeat(2,1fr);
@@ -520,7 +520,7 @@
         padding:.5rem
       }
       .stat-number{font-size:1.1rem}
-      
+
       /* Forms - compact */
       form{
         padding:.5rem;
@@ -528,19 +528,19 @@
       }
       .form-group{margin-bottom:.5rem}
       label{font-size:.9rem;margin-bottom:.3rem}
-      
+
       /* Inputs plus compacts */
       input,textarea,select{
         padding:.4rem;
         font-size:.85rem
       }
-      
+
       /* Buttons */
       button[type=submit]{
         padding:.4rem .75rem;
         font-size:.85rem
       }
-      
+
       /* Search + value row */
       #inventory>div[style*="display:flex"]{
         flex-direction:column;
@@ -549,43 +549,58 @@
       #inventory>div[style*="display:flex"]>div{
         justify-content:center
       }
-      
+
       /* Use mode quantity */
       #use-mode>div[style*="display:flex"]{
         flex-direction:column;
         gap:.3rem
       }
-      
+
       /* Tables responsive avec scroll horizontal */
       table{
         font-size:.75rem;
         display:block;
         overflow-x:auto;
-        white-space:nowrap
+        white-space:nowrap;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100vw;
+        margin: 0 -0.5rem;
       }
       th,td{
         padding:.3rem .25rem;
         min-width:50px
       }
       .notes-cell{max-width:60px}
-      
+
       /* Modal edit */
       #edit-modal{padding:.2rem}
       #edit-modal>div{
         padding:.5rem;
         max-width:98vw
       }
-      
+
       /* Modal password */
       .password-content{
         padding:.75rem;
         max-width:90vw
       }
-      
+
       /* Buttons row in modal */
       #edit-modal>div>form>div[style*="display:flex"]{
         flex-direction:column;
         gap:.3rem
+      }
+
+      /* Liste d'attention - responsive */
+      .attention-list-item {
+        font-size: 0.85rem;
+        padding: 0.75rem;
+      }
+
+      /* Debug sync - plus compact */
+      #debug-sync {
+        font-size: 0.7rem;
+        padding: 0.5rem;
       }
     }
 
@@ -600,7 +615,7 @@
         font-size:.7rem
       }
       .stats-grid{grid-template-columns:repeat(2,1fr)}
-      
+
       /* Masquer les boutons secondaires sur très petit écran */
       #btn-save,
       #btn-restore,
@@ -609,17 +624,17 @@
       #btn-clear{
         display:none
       }
-      
+
       /* Garder les boutons essentiels - montrer plus sur mobile */
       nav ul li:nth-child(-n+9){
         display:block
       }
-      
+
       /* Always show Quitter button */
       #logout-link{
         display:block !important
       }
-      
+
       /* Cacher la colonne Actions (colonne 10) */
       #med-table th:nth-child(10),
       #med-table td:nth-child(10),
@@ -637,7 +652,7 @@
       #med-table-use td:nth-child(5){
         display:none
       }
-      
+
       /* Colonnes visibles sur mobile */
       #med-table th:nth-child(1),
       #med-table td:nth-child(1){
@@ -674,6 +689,21 @@
       #med-table th:nth-child(9),
       #med-table td:nth-child(9){
         min-width:70px
+      }
+
+      /* Liste attention - très compact */
+      .attention-list-item {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+        margin: 0.25rem 0;
+      }
+
+      /* Table "À acheter" - responsive */
+      #tobuy-table {
+        font-size: 0.7rem;
+      }
+      #tobuy-table th, #tobuy-table td {
+        padding: 0.25rem 0.15rem;
       }
     }
   </style>
@@ -1640,24 +1670,54 @@ function removeToBuy(idx){
 
 document.getElementById('tobuy-form').addEventListener('submit', function(e){
   e.preventDefault();
-  
+
   const name = normalizeName(document.getElementById('tobuy-name').value);
   const qty = parseInt(document.getElementById('tobuy-qty').value, 10) || 1;
   const notes = document.getElementById('tobuy-notes').value.trim();
-  
+
   if(!name) return;
-  
-  toBuyList.push({ name, qty, notes });
+
+  // Vérifier si l'article existe déjà
+  const existingIndex = toBuyList.findIndex(item =>
+    item.name.toLowerCase() === name.toLowerCase()
+  );
+
+  if(existingIndex !== -1){
+    // Cumuler les quantités
+    toBuyList[existingIndex].qty += qty;
+    toBuyList[existingIndex].notes = mergeNotes(toBuyList[existingIndex].notes, notes);
+  } else {
+    // Ajouter nouveau
+    toBuyList.push({ name, qty, notes });
+  }
+
   localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-  
-  // Sync vers cloud
+
+  // Sync vers cloud immédiatement
   if(window.addAchat){
     console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
-    addAchat({ name, qty, notes });
+    addAchat({ name, qty, notes }).then(() => {
+      // Recharger depuis cloud pour éviter les duplications
+      if(window.getAchats){
+        getAchats().then(result => {
+          if(result && result.length > 0){
+            const cloudNames = result.map(a => a.nom.toLowerCase());
+            // Synchroniser la liste locale avec le cloud
+            toBuyList = result.map(a => ({
+              name: a.nom,
+              qty: a.quantite,
+              notes: a.notes || ''
+            }));
+            localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+            renderToBuy();
+          }
+        });
+      }
+    });
   } else {
     console.warn('⚠️ addAchat non disponible');
   }
-  
+
   e.target.reset();
   document.getElementById('tobuy-qty').value = 1;
   renderToBuy();
