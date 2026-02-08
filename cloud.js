@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Supabase Cloud Integration for Pharmacie Domicile
  * VERSION 6.0 - API REST directe - CORRIGÉ
  */
@@ -7,11 +7,18 @@ const SUPABASE_URL = 'https://oywsadhtcvzhesnmevdg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xJrQOqaul0GTcvoJe92LpA_ACquZtRe';
 
 var isCloudEnabled = false;
+var cloudMedsPoller = null;
+var supabaseClient = null;
+var realtimeChannel = null;
+var realtimeAchatsChannel = null;
 
 // Test connection à Supabase
 async function initCloud() {
     try {
         console.log('🔄 Test connexion Supabase...');
+        if (!supabaseClient && window.supabase && typeof window.supabase.createClient === 'function') {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
         const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?select=count`, {
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -215,6 +222,161 @@ function getCloudStatus() {
     return { enabled: isCloudEnabled };
 }
 
+
+// Quick change signature for fast polling
+async function getMedicamentsSignature() {
+    if (!isCloudEnabled) return '';
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?select=id,updated_at,created_at,quantite,prix,stock_initial,nb_boites,date_peremption&order=id.asc`, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            return '';
+        }
+        const data = await response.json();
+        if (!Array.isArray(data)) return '';
+        return data.map(row => {
+            const ts = row.updated_at || row.created_at || '';
+            return `${row.id}|${ts}|${row.quantite}|${row.prix}|${row.stock_initial}|${row.nb_boites}|${row.date_peremption || ''}`;
+        }).join(';');
+    } catch (e) {
+        console.warn('Signature fetch error:', e);
+        return '';
+    }
+}
+
+// Subscription for fast sync (realtime if available, else polling)
+function subscribeToMedicaments(onChange, options) {
+    if (!isCloudEnabled) return null;
+
+    if (supabaseClient && typeof supabaseClient.channel === 'function') {
+        if (realtimeChannel) {
+            try { supabaseClient.removeChannel(realtimeChannel); } catch (e) {}
+        }
+        realtimeChannel = supabaseClient
+            .channel('medicaments-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'medicaments' }, (payload) => {
+                try { onChange(payload); } catch (e) { console.warn('onChange error:', e); }
+            })
+            .subscribe();
+
+        return function unsubscribe() {
+            if (realtimeChannel) {
+                try { supabaseClient.removeChannel(realtimeChannel); } catch (e) {}
+                realtimeChannel = null;
+            }
+        };
+    }
+
+    const cfg = options || {};
+    const intervalMs = Math.max(2000, Number(cfg.intervalMs) || 5000);
+    let lastSig = null;
+    let stopped = false;
+
+    async function poll() {
+        if (stopped) return;
+        const sig = await getMedicamentsSignature();
+        if (!sig) return;
+        if (lastSig && sig !== lastSig) {
+            try {
+                onChange({ type: 'change', source: 'poll' });
+            } catch (e) {
+                console.warn('onChange error:', e);
+            }
+        }
+        lastSig = sig;
+    }
+
+    poll();
+    const id = setInterval(poll, intervalMs);
+    cloudMedsPoller = id;
+
+    return function unsubscribe() {
+        stopped = true;
+        if (id) clearInterval(id);
+        if (cloudMedsPoller === id) cloudMedsPoller = null;
+    };
+}
+
+// Subscription for achats (realtime if available, else polling)
+function subscribeToAchats(onChange, options) {
+    if (!isCloudEnabled) return null;
+
+    if (supabaseClient && typeof supabaseClient.channel === 'function') {
+        if (realtimeAchatsChannel) {
+            try { supabaseClient.removeChannel(realtimeAchatsChannel); } catch (e) {}
+        }
+        realtimeAchatsChannel = supabaseClient
+            .channel('achats-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'achats' }, (payload) => {
+                try { onChange(payload); } catch (e) { console.warn('onChange error:', e); }
+            })
+            .subscribe();
+
+        return function unsubscribe() {
+            if (realtimeAchatsChannel) {
+                try { supabaseClient.removeChannel(realtimeAchatsChannel); } catch (e) {}
+                realtimeAchatsChannel = null;
+            }
+        };
+    }
+
+    const cfg = options || {};
+    const intervalMs = Math.max(2000, Number(cfg.intervalMs) || 5000);
+    let lastSig = null;
+    let stopped = false;
+
+    async function poll() {
+        if (stopped) return;
+        const sig = await getAchats();
+        const nextSig = Array.isArray(sig) ? sig.map(a => `${a.id}|${a.updated_at || a.created_at || ''}|${a.quantite}|${a.nom}`).join(';') : '';
+        if (!nextSig) return;
+        if (lastSig && nextSig !== lastSig) {
+            try {
+                onChange({ type: 'change', source: 'poll' });
+            } catch (e) {
+                console.warn('onChange error:', e);
+            }
+        }
+        lastSig = nextSig;
+    }
+
+    poll();
+    const id = setInterval(poll, intervalMs);
+
+    return function unsubscribe() {
+        stopped = true;
+        if (id) clearInterval(id);
+    };
+}
+
+// Supprimer tous les medicaments du cloud
+async function clearAllCloudMeds() {
+    if (!isCloudEnabled) return { error: 'Cloud not enabled' };
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?id=not.is.null`, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+
+        if (response.ok) {
+            return { error: null };
+        } else {
+            const err = await response.text();
+            return { error: err };
+        }
+    } catch (e) {
+        return { error: e.message };
+    }
+}
 // ========== ACHATS (À ACHETER) ==========
 
 // Récupérer tous les achats - retourne un tableau simple
@@ -352,3 +514,7 @@ window.getAchats = getAchats;
 window.addAchat = addAchat;
 window.deleteAchatByName = deleteAchatByName;
 window.clearAchats = clearAchats;
+window.subscribeToMedicaments = subscribeToMedicaments;
+window.clearAllCloudMeds = clearAllCloudMeds;
+window.subscribeToAchats = subscribeToAchats;
+
