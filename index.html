@@ -1716,7 +1716,7 @@ Nouvelle saisie :
   ex.genre = genre;
   ex.expiry = earliestExpiry(ex.expiry, expiryISO);
   ex.notes = mergeNotes(ex.notes, notes);
-  if(!ex.purchaseDate) ex.purchaseDate = purchaseDate;
+  ex.purchaseDate = purchaseDate;
   ex._localModified = true; // Marquer comme modifié localement
 
   meds[existingIndex] = ex;
@@ -1819,6 +1819,7 @@ document.getElementById('edit-form').addEventListener('submit', function(e){
 Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
 
     if(confirm(msg)){
+      const oldId = meds[idx].id;
       target.quantity = (Number(target.quantity)||0) + quantity;
       target.initialStock = (Number(target.initialStock)||0) + initialStock;
       target.price = price; // dernier prix remplace
@@ -1826,6 +1827,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
       target.genre = genre;
       target.expiry = earliestExpiry(target.expiry, expiryISO);
       target.notes = mergeNotes(target.notes, notes);
+      if(!target.purchaseDate) target.purchaseDate = purchaseDate;
       target._localModified = true; // Marquer comme modifié localement
 
       meds[otherIndex] = target;
@@ -1843,6 +1845,14 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
           }
         });
       }
+      // Supprimer l'ancien en cloud si nécessaire
+      if(window.deleteMedicament && oldId && oldId !== target.id){
+        deleteMedicament(oldId).then(result => {
+          if(result && result.error){
+            console.error('Erreur suppression cloud (ancien):', result.error);
+          }
+        });
+      }
       
       closeEdit();
       renderAll();
@@ -1851,12 +1861,12 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
     }
   }
 
+  const keepId = meds[idx].id;
   meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate };
+  if(keepId) meds[idx].id = keepId;
   meds[idx]._localModified = true; // Marquer comme modifié localement
   save();
 
-  // Sync désactivé pour les modifications
-  /*
   // Mettre à jour le cloud IMMÉDIATEMENT
   if(window.updateMedicament && meds[idx].id){
     updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate }).then(result => {
@@ -1867,7 +1877,6 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
       }
     });
   }
-  */
   
   closeEdit();
   renderAll();
