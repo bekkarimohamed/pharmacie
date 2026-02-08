@@ -66,7 +66,7 @@ async function getMedicaments() {
             return [];
         }
         
-        const data = await response.json();
+    const data = await response.json();
         console.log('✅ Médicaments cloud:', data.length);
         return data || [];
     } catch (e) {
@@ -91,6 +91,7 @@ async function addMedicament(med) {
         prix: med.price,
         nb_boites: med.nbBoxes,
         date_peremption: med.expiry,
+        date_achat: med.purchaseDate || null,
         notes: med.notes || ''
     };
     
@@ -185,6 +186,7 @@ async function updateMedicament(id, med) {
         prix: med.price,
         nb_boites: med.nbBoxes,
         date_peremption: med.expiry,
+        date_achat: med.purchaseDate || null,
         notes: med.notes || ''
     };
     
@@ -227,7 +229,7 @@ function getCloudStatus() {
 async function getMedicamentsSignature() {
     if (!isCloudEnabled) return '';
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?select=id,updated_at,created_at,quantite,prix,stock_initial,nb_boites,date_peremption&order=id.asc`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?select=id,updated_at,created_at,quantite,prix,stock_initial,nb_boites,date_peremption,date_achat&order=id.asc`, {
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -241,7 +243,7 @@ async function getMedicamentsSignature() {
         if (!Array.isArray(data)) return '';
         return data.map(row => {
             const ts = row.updated_at || row.created_at || '';
-            return `${row.id}|${ts}|${row.quantite}|${row.prix}|${row.stock_initial}|${row.nb_boites}|${row.date_peremption || ''}`;
+            return `${row.id}|${ts}|${row.quantite}|${row.prix}|${row.stock_initial}|${row.nb_boites}|${row.date_peremption || ''}|${row.date_achat || ''}`;
         }).join(';');
     } catch (e) {
         console.warn('Signature fetch error:', e);
