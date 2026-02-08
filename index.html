@@ -1800,7 +1800,7 @@ function renderToBuy(){
         <td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td>
         <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td>
         <td>${escapeHtml(item.notes || '-')}</td>
-        <td><button class="action-btn delete" onclick="removeToBuyByName('${escapeHtml(item.name)}')">🗑️</button></td>
+        <td><button class="action-btn delete" onclick="removeToBuyByName(${JSON.stringify(item.name)})">🗑️</button></td>
       </tr>
     `;
   });
@@ -1823,11 +1823,25 @@ function removeToBuyByName(name){
   toBuyList.splice(idx, 1);
   localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
   renderToBuy();
-  
-  // Sync vers cloud
+
+  // Sync vers cloud - suppression activée avec confirmation
   if(window.deleteAchatByName){
     console.log('☁️ Suppression cloud:', name);
-    deleteAchatByName(name);
+    deleteAchatByName(name).then(() => {
+      console.log('✅ Suppression cloud confirmée pour:', name);
+      // Forcer une resync pour s'assurer que les changements sont propagés
+      setTimeout(() => {
+        if(window.getAchats){
+          getAchats().then(result => {
+            if(result && result.length >= 0){
+              console.log('🔄 Resync achats après suppression, cloud a:', result.length);
+            }
+          });
+        }
+      }, 500);
+    }).catch(e => {
+      console.error('❌ Erreur suppression cloud:', e);
+    });
   }
 }
 
