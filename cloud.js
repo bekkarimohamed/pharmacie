@@ -434,7 +434,7 @@ async function addAchat(item) {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
                 'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
+                'Prefer': 'return=representation'
             },
             body: JSON.stringify(data)
         });
@@ -442,8 +442,9 @@ async function addAchat(item) {
         console.log('📥 Réponse addAchat:', response.status);
         
         if (response.ok || response.status === 201) {
+            const result = await response.json();
             console.log('✅ Achat inséré dans cloud');
-            return { error: null };
+            return { error: null, data: result };
         } else {
             const err = await response.text();
             console.error('❌ Erreur addAchat:', err);
@@ -478,6 +479,34 @@ async function deleteAchatByName(name) {
         }
     } catch (e) {
         console.error('❌ Erreur deleteAchatByName:', e);
+        return { error: e.message };
+    }
+}
+
+// Supprimer un achat par id
+async function deleteAchatById(id) {
+    if (!isCloudEnabled) return { error: 'Cloud not enabled' };
+    if (!id) return { error: 'Missing id' };
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+
+        if (response.ok) {
+            console.log('✅ Achat id', id, 'supprimé du cloud');
+            return { error: null };
+        } else {
+            const err = await response.text();
+            console.error('❌ Erreur deleteAchatById:', err);
+            return { error: err };
+        }
+    } catch (e) {
+        console.error('❌ Erreur deleteAchatById:', e);
         return { error: e.message };
     }
 }
@@ -519,4 +548,5 @@ window.clearAchats = clearAchats;
 window.subscribeToMedicaments = subscribeToMedicaments;
 window.clearAllCloudMeds = clearAllCloudMeds;
 window.subscribeToAchats = subscribeToAchats;
+window.deleteAchatById = deleteAchatById;
 
