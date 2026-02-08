@@ -24,10 +24,10 @@
       --radius: 15px;
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       --title-color: #00695c;
-      --list-header: linear-gradient(135deg, #009688 0%, #00bcd4 100%);
+      --list-header: #00796b;
       --list-row: rgba(255, 255, 255, 0.98);
-      --list-row-alt: rgba(0, 150, 136, 0.06);
-      --list-border: rgba(0, 150, 136, 0.18);
+      --list-row-alt: rgba(255, 255, 255, 0.98);
+      --list-border: rgba(0, 121, 107, 0.22);
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
@@ -143,10 +143,10 @@
       --card-bg: rgba(22, 33, 62, 0.95);
       --text: #ecf0f1;
       --text-light: #2c3e50;
-      --list-header: linear-gradient(135deg, #00796b 0%, #00838f 100%);
+      --list-header: #00796b;
       --list-row: rgba(22, 33, 62, 0.85);
-      --list-row-alt: rgba(0, 150, 136, 0.16);
-      --list-border: rgba(0, 150, 136, 0.28);
+      --list-row-alt: rgba(22, 33, 62, 0.85);
+      --list-border: rgba(0, 121, 107, 0.28);
       --title-color: #00695c;
     }
 
@@ -344,9 +344,6 @@
 
     tbody tr{
       background: var(--list-row);
-    }
-    tbody tr:nth-child(even){
-      background: var(--list-row-alt);
     }
     tr:hover{
       background: rgba(0, 150, 136, 0.12);
@@ -729,13 +726,13 @@
       nav{padding:.3rem}
       nav ul{
         display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+        grid-template-columns:repeat(4, 1fr);
         gap:.3rem;
         align-items:center
       }
       nav a{
         padding:.35rem .4rem;
-        font-size:.72rem;
+        font-size:.68rem;
         text-align:center;
         flex-direction:column;
         gap:.2rem;
@@ -847,14 +844,14 @@
     @media (max-width: 480px) {
       /* Navigation mobile - afficher tous les libellés */
       nav ul{
-        grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));
-        gap:.3rem
+        grid-template-columns:repeat(4, 1fr);
+        gap:.25rem
       }
       nav a{
-        padding:.35rem .3rem;
-        font-size:.68rem;
+        padding:.3rem .25rem;
+        font-size:.62rem;
         flex-direction:column;
-        gap:.15rem;
+        gap:.1rem;
         line-height:1.1;
         text-align:center
       }
@@ -1156,8 +1153,9 @@
     <!-- À acheter -->
     <section id="to-buy" class="section">
       <h2>🛒 Médicaments à acheter</h2>
+      <button id="tobuy-toggle" class="nav-btn" style="margin:.5rem 0;">➕ Ajouter</button>
 
-      <form id="tobuy-form" style="max-width:420px;">
+      <form id="tobuy-form" style="max-width:420px;display:none;">
         <div class="form-group"><label>Nom du médicament *</label><input type="text" id="tobuy-name" required></div>
         <div class="form-group"><label>Quantité *</label><input type="number" id="tobuy-qty" min="1" value="1" required></div>
         <div class="form-group"><label>Genre / Notes</label><input type="text" id="tobuy-notes" placeholder="ex : comprimé, sirop, crème..."></div>
@@ -2004,19 +2002,19 @@ function renderToBuy(){
         <td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td>
         <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td>
         <td>${escapeHtml(item.notes || '-')}</td>
-        <td><button class="action-btn delete" onclick="removeToBuyByName(${JSON.stringify(item.name)})">🗑️</button></td>
+        <td><button class="action-btn delete" onclick="removeToBuyItem(${item.id || 'null'}, ${JSON.stringify(item.name)})">🗑️</button></td>
       </tr>
     `;
   });
 }
 
-// Supprimer par nom (pour supporter le tri)
-function removeToBuyByName(name){
+// Supprimer par id si possible (fallback nom)
+function removeToBuyItem(id, name){
   if(!confirm('Supprimer "' + name + '" de la liste ?')) return;
   
   // Trouver l'index
   const idx = toBuyList.findIndex(item => 
-    item.name.toLowerCase() === name.toLowerCase()
+    (id && item.id === id) || item.name.toLowerCase() === name.toLowerCase()
   );
   
   if(idx === -1) {
@@ -2029,10 +2027,10 @@ function removeToBuyByName(name){
   renderToBuy();
 
   // Sync vers cloud - suppression activée avec confirmation
-  if(window.deleteAchatByName){
-    console.log('☁️ Suppression cloud:', name);
-    deleteAchatByName(name).then(() => {
-      console.log('✅ Suppression cloud confirmée pour:', name);
+  if(window.deleteAchatById && id){
+    console.log('☁️ Suppression cloud (id):', id);
+    deleteAchatById(id).then(() => {
+      console.log('✅ Suppression cloud confirmée pour id:', id);
       // Forcer une resync pour s'assurer que les changements sont propagés
       setTimeout(() => {
         if(window.getAchats){
@@ -2046,6 +2044,11 @@ function removeToBuyByName(name){
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
     });
+  } else if(window.deleteAchatByName){
+    console.log('☁️ Suppression cloud (nom):', name);
+    deleteAchatByName(name).catch(e => {
+      console.error('❌ Erreur suppression cloud:', e);
+    });
   }
 }
 
@@ -2053,13 +2056,17 @@ function removeToBuy(idx){
   if(confirm('Supprimer ce médicament de la liste ?')){
     var deletedItem = toBuyList[idx];
     var deletedName = deletedItem.name;
+    var deletedId = deletedItem.id;
     
     toBuyList.splice(idx, 1);
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
     renderToBuy();
     
     // Sync IMMÉDIAT vers cloud - suppression directe
-    if(window.deleteAchatByName){
+    if(window.deleteAchatById && deletedId){
+      console.log('☁️ Suppression immédiate id', deletedId, 'du cloud');
+      deleteAchatById(deletedId);
+    } else if(window.deleteAchatByName){
       console.log('☁️ Suppression immédiate de', deletedName, 'du cloud');
       deleteAchatByName(deletedName);
     }
@@ -2094,14 +2101,14 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   // Sync vers cloud immédiatement
   if(window.addAchat){
     console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
-    addAchat({ name, qty, notes }).then(() => {
+    addAchat({ name, qty, notes }).then((res) => {
       // Recharger depuis cloud pour éviter les duplications
       if(window.getAchats){
         getAchats().then(result => {
           if(result && result.length > 0){
-            const cloudNames = result.map(a => a.nom.toLowerCase());
             // Synchroniser la liste locale avec le cloud
             toBuyList = result.map(a => ({
+              id: a.id,
               name: a.nom,
               qty: a.quantite,
               notes: a.notes || ''
@@ -2312,6 +2319,17 @@ document.getElementById('btn-reset-all').addEventListener('click', async (e)=>{
   updateStats();
   alert('✅ Données locales et cloud effacées.');
 });
+
+const toBuyToggle = document.getElementById('tobuy-toggle');
+const toBuyForm = document.getElementById('tobuy-form');
+if(toBuyToggle && toBuyForm){
+  toBuyToggle.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const isHidden = toBuyForm.style.display === 'none' || toBuyForm.style.display === '';
+    toBuyForm.style.display = isHidden ? 'block' : 'none';
+    toBuyToggle.textContent = isHidden ? '➖ Fermer' : '➕ Ajouter';
+  });
+}
 
 // recherches live
 ['search','search-edit','search-delete','search-use'].forEach(id=>{
@@ -2593,6 +2611,7 @@ async function autoSyncFromCloud(){
             var key = (a.nom || '').toLowerCase().trim();
             if(key && a.nom){
               uniqueCloudAchats[key] = {
+                id: a.id,
                 name: a.nom.trim(),
                 qty: Math.max(1, Number(a.quantite) || 1),
                 notes: (a.notes || '').trim()
@@ -2611,9 +2630,10 @@ async function autoSyncFromCloud(){
               var newQty = Math.max(1, Number(cloudItem.qty) || 1);
               var newNotes = cloudItem.notes || '';
 
-              if(localItem.qty !== newQty || localItem.notes !== newNotes){
+              if(localItem.qty !== newQty || localItem.notes !== newNotes || !localItem.id){
                 toBuyList[index].qty = newQty;
                 toBuyList[index].notes = newNotes;
+                if(!toBuyList[index].id) toBuyList[index].id = cloudItem.id;
                 changed = true;
                 console.log('🔄 Achat mis à jour:', localItem.name, 'qty:', newQty);
               }
@@ -2883,6 +2903,7 @@ function loadToBuyFromCloud(){
       const exists = toBuyList.some(lc => lc.name.toLowerCase() === key);
       if(!exists){
         toBuyList.push({
+          id: a.id,
           name: a.nom,
           qty: a.quantite,
           notes: a.notes || ''
