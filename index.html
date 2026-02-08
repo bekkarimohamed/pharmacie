@@ -72,6 +72,39 @@
       justify-content: center;
     }
 
+    /* Dark mode toggle button */
+    .theme-toggle-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      margin-left: auto;
+    }
+
+    .theme-toggle-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.1);
+    }
+
+    .theme-toggle-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      transition: var(--transition);
+    }
+
+    body.dark-mode .theme-toggle-btn svg {
+      transform: rotate(180deg);
+    }
+
     /* Dark mode toggle */
     .theme-toggle {
       background: rgba(255,255,255,0.1);
@@ -861,6 +894,13 @@
       <li><a href="#" data-target="to-buy"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4V2C7 1.45 7.45 1 8 1s1 .45 1 1v2h6V2c0-.55.45-1 1-1s1 .45 1 1v2h5c.55 0 1 .45 1 1s-.45 1-1 1h-1v13c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6H2c-.55 0-1-.45-1-1s.45-1 1-1h5zm2 0V3c0-.55.45-1 1-1s1 .45 1 1v1h4V3c0-.55.45-1 1-1s1 .45 1 1v1h2v2H5V6h4zm-2 4v9h12V8H7z"/></svg> À acheter</a></li>
       <li><a href="Sposnor.html" target="_blank"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63C19.68 7.55 18.92 7 18.09 7h-.98c-.83 0-1.59.55-1.87 1.37L12.5 16H16v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-2H20zM5.5 7L2.5 16H7v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-6h4.5l-3-9H5.5z"/></svg> Sponsors</a></li>
 
+      <!-- Theme Toggle Button -->
+      <li><button id="theme-toggle" class="theme-toggle-btn" title="Basculer mode sombre/clair">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
+        </svg>
+      </button></li>
+
       <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
       <li><a href="#" id="btn-save" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/></svg> Sauvegarder</a></li>
       <li><a href="#" id="btn-restore" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li>
@@ -1124,6 +1164,16 @@ const SEEDED_KEY = "medicines_seeded_once";
 let auth = false;
 let meds = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let toBuyList = JSON.parse(localStorage.getItem(TOBUY_KEY)) || [];
+
+// Ajouter timestamps aux données existantes si manquant
+meds.forEach(m => {
+  if(!m.created_at) m.created_at = new Date().toISOString();
+  if(!m.updated_at) m.updated_at = new Date().toISOString();
+});
+toBuyList.forEach(t => {
+  if(!t.created_at) t.created_at = new Date().toISOString();
+  if(!t.updated_at) t.updated_at = new Date().toISOString();
+});
 
 /* =========================
    UTILITAIRES
@@ -1429,17 +1479,28 @@ document.getElementById('add-form').addEventListener('submit', function(e){
   }
 
   const notes = document.getElementById('notes').value.trim();
+  const now = new Date().toISOString();
 
   const k = keyOf(name, dosage);
   const existingIndex = meds.findIndex(m => keyOf(m.name, m.dosage) === k);
 
   if(existingIndex === -1){
-    meds.push({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes, _localModified: true });
+    const newMed = {
+      name, dosage, genre, initialStock, quantity, price, nbBoxes,
+      expiry: expiryISO, notes,
+      created_at: now,
+      updated_at: now,
+      _localModified: true
+    };
+    meds.push(newMed);
     save();
-    
+
     // Sauvegarder vers cloud IMMÉDIATEMENT
     if(window.addMedicament){
-      addMedicament({ name, dosage, genre, initialStock, quantity, price, nbBoxes, expiry: expiryISO, notes }).then(result => {
+      addMedicament({
+        name, dosage, genre, initialStock, quantity, price, nbBoxes,
+        expiry: expiryISO, notes
+      }).then(result => {
         if(result.error){
           console.error('Erreur ajout cloud:', result.error);
         } else {
@@ -1447,13 +1508,14 @@ document.getElementById('add-form').addEventListener('submit', function(e){
           // Assigner l'ID retourné au médicament local
           if(result.data && result.data[0] && result.data[0].id){
             meds[meds.length - 1].id = result.data[0].id;
+            meds[meds.length - 1].updated_at = new Date().toISOString();
             save();
             console.log('ID cloud assigné:', result.data[0].id);
           }
         }
       });
     }
-    
+
     e.target.reset();
     show('inventory');
     renderAll();
@@ -1954,6 +2016,21 @@ function clearAllStock(){
 document.getElementById('pwd-btn').addEventListener('click', checkPwd);
 document.getElementById('logout-link').addEventListener('click', (e)=>{ e.preventDefault(); logout(); });
 
+// Dark mode toggle
+const themeToggle = document.getElementById('theme-toggle');
+if(themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+  });
+}
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme');
+if(savedTheme === 'dark') {
+  document.body.classList.add('dark-mode');
+}
+
 document.querySelectorAll('nav a[data-target]').forEach(a=>{
   a.addEventListener('click', (e)=>{
     e.preventDefault();
@@ -2157,14 +2234,14 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 // Sync manuel via bouton
 
-// Sync automatique depuis cloud - VERSION ULTRA-SÉCURISÉE
+// Sync automatique depuis cloud - VERSION AMÉLIORÉE AVEC CONFLITS
 async function autoSyncFromCloud(){
   if(!window.getMedicaments) {
     console.warn('⏳ getMedicaments non disponible - sync retardé');
     return;
   }
 
-  console.log('🔄 Démarrage autoSyncFromCloud sécurisé...');
+  console.log('🔄 Démarrage autoSyncFromCloud amélioré...');
 
   try {
     var result = await getMedicaments();
@@ -2185,7 +2262,8 @@ async function autoSyncFromCloud(){
         price: m.prix,
         nbBoxes: m.nb_boites,
         expiry: m.date_peremption,
-        notes: m.notes || ''
+        notes: m.notes || '',
+        updated_at: m.updated_at || m.created_at
       };
     });
 
@@ -2205,107 +2283,95 @@ async function autoSyncFromCloud(){
     // Convertir en tableau unique
     cloudMeds = Object.values(uniqueCloudMeds);
 
-    // PROTECTION : Assigner les IDs cloud UNIQUEMENT si ils n'existent pas
-    var idsAssigned = false;
-    meds.forEach(function(m){
-      var key = keyOf(m.name, m.dosage);
-      if(!m.id && uniqueCloudMeds[key]){
-        m.id = uniqueCloudMeds[key].id;
-        idsAssigned = true;
-        console.log('✅ ID assigné:', m.name, m.id);
-      }
-    });
-
-    if(idsAssigned){
-      save();
-      console.log('💾 IDs locaux mis à jour');
-    }
-
-    // PROTECTION ABSOLUE : Sync cloud → local UNIQUEMENT pour les NOUVEAUX médicaments
-    // JAMAIS modifier ou écraser les données locales existantes
     var localChanged = false;
     var addedCount = 0;
+    var updatedCount = 0;
 
-    // Créer un Set des clés locales existantes pour une vérification rapide
-    var localKeys = new Set();
-    meds.forEach(function(m){
-      localKeys.add(keyOf(m.name, m.dosage));
+    // Créer une map des médicaments locaux par clé
+    var localMap = {};
+    meds.forEach(function(m, index){
+      var key = keyOf(m.name, m.dosage);
+      localMap[key] = { med: m, index: index };
     });
 
     cloudMeds.forEach(function(cm){
       var key = keyOf(cm.name, cm.dosage);
+      var localEntry = localMap[key];
 
-      // UNIQUEMENT ajouter si cette clé n'existe PAS en local
-      if(!localKeys.has(key)){
-        // NOUVEAU médicament du cloud, l'ajouter AVEC VALIDATION ULTRA-STRICTE
-        console.log('➕ Nouveau du cloud (protégé):', cm.name);
+      if(!localEntry){
+        // NOUVEAU médicament du cloud, l'ajouter
+        console.log('➕ Nouveau du cloud:', cm.name);
 
-        // VALIDATION ULTRA-STRICTE : données essentielles ET cohérentes
-        var name = (cm.name || '').trim();
-        var dosage = (cm.dosage || '').trim();
+        var validMed = {
+          id: cm.id,
+          name: cm.name,
+          dosage: cm.dosage,
+          genre: cm.genre || '',
+          quantity: Math.max(0, Number(cm.quantity) || 0),
+          initialStock: Math.max(0, Number(cm.initialStock) || 0),
+          price: Math.max(0, Number(cm.price) || 0),
+          nbBoxes: Math.max(1, Number(cm.nbBoxes) || 1),
+          expiry: cm.expiry || null,
+          notes: cm.notes || '',
+          updated_at: cm.updated_at
+        };
 
-        if(name && dosage && name.length > 0 && dosage.length > 0){
-          // VALIDATION supplémentaire : éviter les données corrompues
-          var quantity = Number(cm.quantity);
-          var price = Number(cm.price);
+        meds.push(validMed);
+        localChanged = true;
+        addedCount++;
+        console.log('✅ Médicament ajouté:', cm.name, 'qty:', validMed.quantity, 'price:', validMed.price);
+      } else {
+        // Médicament existe déjà, vérifier si mise à jour nécessaire
+        var localMed = localEntry.med;
+        var cloudTime = new Date(cm.updated_at || 0);
+        var localTime = new Date(localMed.updated_at || 0);
 
-          // Rejeter les données manifestement invalides
-          if(isNaN(quantity) || quantity < 0 || isNaN(price) || price < 0){
-            console.warn('⚠️ Données cloud invalides ignorées:', name, 'qty:', cm.quantity, 'price:', cm.price);
-            return;
-          }
+        // Si cloud plus récent OU si local n'a pas de timestamp
+        if(cloudTime > localTime || !localMed.updated_at){
+          console.log('🔄 Mise à jour depuis cloud:', cm.name, 'ancien qty:', localMed.quantity, 'nouveau:', cm.quantity);
 
-          var validMed = {
-            id: cm.id,
-            name: name,
-            dosage: dosage,
-            genre: cm.genre || '',
-            quantity: Math.max(0, quantity),
-            initialStock: Math.max(0, Number(cm.initialStock) || 0),
-            price: Math.max(0, price),
-            nbBoxes: Math.max(1, Number(cm.nbBoxes) || 1),
-            expiry: cm.expiry || null,
-            notes: cm.notes || ''
-          };
+          // Mettre à jour les données locales avec celles du cloud
+          localMed.id = cm.id;
+          localMed.quantity = Math.max(0, Number(cm.quantity) || 0);
+          localMed.initialStock = Math.max(0, Number(cm.initialStock) || 0);
+          localMed.price = Math.max(0, Number(cm.price) || 0);
+          localMed.nbBoxes = Math.max(1, Number(cm.nbBoxes) || 1);
+          localMed.expiry = cm.expiry || localMed.expiry;
+          localMed.notes = cm.notes || localMed.notes;
+          localMed.genre = cm.genre || localMed.genre;
+          localMed.updated_at = cm.updated_at;
 
-          meds.push(validMed);
+          meds[localEntry.index] = localMed;
           localChanged = true;
-          addedCount++;
-          console.log('✅ Médicament ajouté (protégé):', name, 'qty:', validMed.quantity, 'price:', validMed.price);
-        } else {
-          console.warn('⚠️ Médicament cloud ignoré (données incomplètes):', cm);
+          updatedCount++;
+          console.log('✅ Médicament mis à jour:', cm.name, 'qty:', localMed.quantity, 'price:', localMed.price);
         }
       }
-      // PROTECTION TOTALE : Si la clé existe déjà en local, NE RIEN FAIRE
     });
 
     if(localChanged){
       save();
-      console.log('💾 Sync terminé: +' + addedCount + ' nouveaux médicaments ajoutés');
+      console.log('💾 Sync terminé: +' + addedCount + ' ajoutés, ~' + updatedCount + ' mis à jour');
       if(typeof renderAll === 'function') renderAll();
       if(typeof updateStats === 'function') updateStats();
     } else {
-      console.log('ℹ️ Aucune modification nécessaire (données locales préservées)');
+      console.log('ℹ️ Aucune modification nécessaire');
     }
 
-    // PROTECTION : Ne JAMAIS supprimer les médicaments locaux
-    // Les suppressions doivent être faites manuellement
-
-    // PROTECTION : Sync achats (À acheter) avec validation stricte
+    // Sync achats (À acheter) avec validation stricte
     if(window.getAchats){
       try {
         var achatsResult = await getAchats();
         if(achatsResult && achatsResult.length > 0){
-          console.log('🔄 Sync achats sécurisé: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
+          console.log('🔄 Sync achats: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
 
-          // Créer map unique des achats cloud AVEC VALIDATION
           var uniqueCloudAchats = {};
           achatsResult.forEach(function(a){
             var key = (a.nom || '').toLowerCase().trim();
             if(key && a.nom){
               uniqueCloudAchats[key] = {
                 name: a.nom.trim(),
-                qty: Math.max(1, Number(a.quantite) || 1), // Minimum 1
+                qty: Math.max(1, Number(a.quantite) || 1),
                 notes: (a.notes || '').trim()
               };
             }
@@ -2313,13 +2379,12 @@ async function autoSyncFromCloud(){
 
           var changed = false;
 
-          // PROTECTION : Mettre à jour UNIQUEMENT les achats existants
+          // Mettre à jour les achats existants
           toBuyList.forEach(function(localItem, index){
             var key = localItem.name.toLowerCase().trim();
             var cloudItem = uniqueCloudAchats[key];
 
             if(cloudItem){
-              // Mettre à jour quantité et notes si différentes (avec validation)
               var newQty = Math.max(1, Number(cloudItem.qty) || 1);
               var newNotes = cloudItem.notes || '';
 
@@ -2329,13 +2394,11 @@ async function autoSyncFromCloud(){
                 changed = true;
                 console.log('🔄 Achat mis à jour:', localItem.name, 'qty:', newQty);
               }
-              // Retirer de la map cloud (déjà traité)
               delete uniqueCloudAchats[key];
             }
-            // NE PAS supprimer les achats locaux qui n'existent plus dans le cloud
           });
 
-          // PROTECTION : N'ajouter les nouveaux QUE s'ils n'existent pas déjà
+          // Ajouter les nouveaux achats
           Object.values(uniqueCloudAchats).forEach(function(newItem){
             var exists = toBuyList.some(function(local){
               return local.name.toLowerCase().trim() === newItem.name.toLowerCase().trim();
@@ -2359,7 +2422,7 @@ async function autoSyncFromCloud(){
     }
 
     window.cloudReady = true;
-    console.log('✅ Auto-sync sécurisé terminé - données locales préservées');
+    console.log('✅ Auto-sync amélioré terminé');
   } catch(e) {
     console.warn('Sync auto échoué:', e);
   }
