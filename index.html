@@ -23,6 +23,11 @@
       --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
       --radius: 15px;
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --title-color: #00695c;
+      --list-header: linear-gradient(135deg, #009688 0%, #00bcd4 100%);
+      --list-row: rgba(255, 255, 255, 0.98);
+      --list-row-alt: rgba(0, 150, 136, 0.06);
+      --list-border: rgba(0, 150, 136, 0.18);
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
@@ -138,6 +143,15 @@
       --card-bg: rgba(22, 33, 62, 0.95);
       --text: #ecf0f1;
       --text-light: #2c3e50;
+      --list-header: linear-gradient(135deg, #00796b 0%, #00838f 100%);
+      --list-row: rgba(22, 33, 62, 0.85);
+      --list-row-alt: rgba(0, 150, 136, 0.16);
+      --list-border: rgba(0, 150, 136, 0.28);
+      --title-color: #00695c;
+    }
+
+    h1, h2, h3, h4{
+      color: var(--title-color);
     }
 
     body.dark-mode .stat-card,
@@ -196,6 +210,10 @@
       --card-bg: rgba(22, 33, 62, 0.95);
       --text: #ecf0f1;
       --text-light: #2c3e50;
+      --list-header: linear-gradient(135deg, #00796b 0%, #00838f 100%);
+      --list-row: rgba(22, 33, 62, 0.85);
+      --list-row-alt: rgba(0, 150, 136, 0.16);
+      --list-border: rgba(0, 150, 136, 0.28);
     }
 
     body.dark-mode .stat-card,
@@ -301,16 +319,17 @@
 
     th, td{
       padding: 1rem;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
+      border-bottom: 1px solid var(--list-border);
       text-align: left;
       vertical-align: top;
     }
 
     th{
-      background: var(--accent);
+      background: var(--list-header);
       color: white;
-      font-weight: 600;
+      font-weight: 700;
       position: relative;
+      letter-spacing: 0.3px;
     }
 
     th::after {
@@ -323,8 +342,14 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
     }
 
+    tbody tr{
+      background: var(--list-row);
+    }
+    tbody tr:nth-child(even){
+      background: var(--list-row-alt);
+    }
     tr:hover{
-      background: rgba(102, 126, 234, 0.05);
+      background: rgba(0, 150, 136, 0.12);
       transform: scale(1.01);
       transition: var(--transition);
     }
@@ -596,6 +621,66 @@
       animation: modalSlideIn 0.4s ease-out;
     }
 
+    .details-modal{
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 9000;
+      padding: 1rem;
+    }
+    .details-content{
+      background: var(--card-bg);
+      color: var(--text);
+      width: 100%;
+      max-width: 520px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+    }
+    .details-content h3{
+      margin-bottom: 0.75rem;
+      font-size: 1.2rem;
+    }
+    .details-grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 1rem;
+      font-size: 0.95rem;
+    }
+    .details-grid .label{
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .details-grid .value{
+      color: var(--text);
+      word-break: break-word;
+    }
+    .details-actions{
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .details-close{
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
     @keyframes modalSlideIn {
       from { opacity: 0; transform: scale(0.8) translateY(-20px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
@@ -644,14 +729,17 @@
       nav{padding:.3rem}
       nav ul{
         display:grid;
-        grid-template-columns:repeat(3,1fr);
+        grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
         gap:.3rem;
         align-items:center
       }
       nav a{
-        padding:.3rem .4rem;
-        font-size:.75rem;
-        text-align:center
+        padding:.35rem .4rem;
+        font-size:.72rem;
+        text-align:center;
+        flex-direction:column;
+        gap:.2rem;
+        line-height:1.1
       }
 
       /* Container - plus compact */
@@ -757,58 +845,34 @@
     }
 
     @media (max-width: 480px) {
-      /* Navigation mobile - 7 boutons visibles en grille */
+      /* Navigation mobile - afficher tous les libellés */
       nav ul{
-        grid-template-columns:repeat(4,1fr);
-        gap:.2rem
+        grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));
+        gap:.3rem
       }
       nav a{
-        padding:.25rem .3rem;
-        font-size:.7rem
+        padding:.35rem .3rem;
+        font-size:.68rem;
+        flex-direction:column;
+        gap:.15rem;
+        line-height:1.1;
+        text-align:center
+      }
+      .nav-icon{
+        width:16px;
+        height:16px
       }
       .stats-grid{grid-template-columns:repeat(2,1fr)}
-
-      /* Masquer les boutons secondaires sur très petit écran */
-      #btn-save,
-      #btn-restore,
-      #btn-sync,
-      #btn-load-cloud,
-      #btn-clear{
-        display:none
-      }
-
-      /* Garder les boutons essentiels - montrer plus sur mobile */
-      nav ul li:nth-child(-n+9){
-        display:block
-      }
-
-      /* Always show Quitter button */
+      
+      /* Toujours visible */
       #logout-link{
         display:block !important
-      }
-
-      /* Cacher la colonne Actions (colonne 10) */
-      #med-table th:nth-child(10),
-      #med-table td:nth-child(10),
-      #med-table-edit th:nth-child(4),
-      #med-table-edit td:nth-child(4),
-      #med-table-edit th:nth-child(5),
-      #med-table-edit td:nth-child(5),
-      #med-table-delete th:nth-child(4),
-      #med-table-delete td:nth-child(4),
-      #med-table-delete th:nth-child(5),
-      #med-table-delete td:nth-child(5),
-      #med-table-use th:nth-child(4),
-      #med-table-use td:nth-child(4),
-      #med-table-use th:nth-child(5),
-      #med-table-use td:nth-child(5){
-        display:none
       }
 
       /* Colonnes visibles sur mobile */
       #med-table th:nth-child(1),
       #med-table td:nth-child(1){
-        min-width:80px
+        min-width:90px
       }
       #med-table th:nth-child(2),
       #med-table td:nth-child(2){
@@ -816,30 +880,22 @@
       }
       #med-table th:nth-child(3),
       #med-table td:nth-child(3){
-        min-width:50px
+        min-width:60px
       }
       #med-table th:nth-child(4),
       #med-table td:nth-child(4){
-        min-width:40px
+        min-width:45px
       }
       #med-table th:nth-child(5),
       #med-table td:nth-child(5){
-        min-width:50px
+        min-width:65px
       }
       #med-table th:nth-child(6),
       #med-table td:nth-child(6){
-        min-width:50px
+        min-width:60px
       }
       #med-table th:nth-child(7),
       #med-table td:nth-child(7){
-        min-width:60px
-      }
-      #med-table th:nth-child(8),
-      #med-table td:nth-child(8){
-        min-width:50px
-      }
-      #med-table th:nth-child(9),
-      #med-table td:nth-child(9){
         min-width:70px
       }
 
@@ -882,17 +938,38 @@
     </div>
   </div>
 
+  <!-- Modal détails médicament -->
+  <div id="details-modal" class="details-modal">
+    <div class="details-content">
+      <h3 id="details-title">Détails</h3>
+      <div class="details-grid">
+        <div class="label">Nom</div><div class="value" id="details-name">-</div>
+        <div class="label">Dosage</div><div class="value" id="details-dosage">-</div>
+        <div class="label">Genre</div><div class="value" id="details-genre">-</div>
+        <div class="label">Quantité</div><div class="value" id="details-quantity">-</div>
+        <div class="label">Date d'achat</div><div class="value" id="details-purchase">-</div>
+        <div class="label">Stock initial</div><div class="value" id="details-initial">-</div>
+        <div class="label">Prix</div><div class="value" id="details-price">-</div>
+        <div class="label">Boîtes</div><div class="value" id="details-boxes">-</div>
+        <div class="label">Péremption</div><div class="value" id="details-expiry">-</div>
+        <div class="label">Notes</div><div class="value" id="details-notes">-</div>
+      </div>
+      <div class="details-actions">
+        <button class="details-close" id="details-close-btn">Fermer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Navigation -->
   <nav id="main-nav" style="display:none;">
     <ul>
       <li><a href="#" data-target="home"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil</a></li>
-      <li><a href="#" data-target="inventory"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 7h-4V4c0-1.1-.9-2-2-2H10c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4z"/></svg> Inventaire</a></li>
+      <li><a href="#" data-target="inventory"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 7h-4V4c0-1.1-.9-2-2-2H10c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4z"/></svg> Stock actuel</a></li>
       <li><a href="#" data-target="add"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Saisie</a></li>
       <li><a href="#" data-target="edit-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Modifier</a></li>
       <li><a href="#" data-target="delete-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Supprimer</a></li>
       <li><a href="#" data-target="use-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Utiliser</a></li>
       <li><a href="#" data-target="to-buy"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4V2C7 1.45 7.45 1 8 1s1 .45 1 1v2h6V2c0-.55.45-1 1-1s1 .45 1 1v2h5c.55 0 1 .45 1 1s-.45 1-1 1h-1v13c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6H2c-.55 0-1-.45-1-1s.45-1 1-1h5zm2 0V3c0-.55.45-1 1-1s1 .45 1 1v1h4V3c0-.55.45-1 1-1s1 .45 1 1v1h2v2H5V6h4zm-2 4v9h12V8H7z"/></svg> À acheter</a></li>
-      <li><a href="Sposnor.html" target="_blank"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63C19.68 7.55 18.92 7 18.09 7h-.98c-.83 0-1.59.55-1.87 1.37L12.5 16H16v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-2H20zM5.5 7L2.5 16H7v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-6h4.5l-3-9H5.5z"/></svg> Sponsors</a></li>
 
       <!-- Theme Toggle Button -->
       <li><button id="theme-toggle" class="theme-toggle-btn" title="Basculer mode sombre/clair">
@@ -904,11 +981,9 @@
       <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
       <li><a href="#" id="btn-save" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/></svg> Sauvegarder</a></li>
       <li><a href="#" id="btn-restore" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li>
-      <li><a href="#" id="btn-sync" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 14.61 20 13.38 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 9.39 4 10.62 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Sync</a></li>
-      <li><a href="#" id="btn-load-cloud" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> Charger</a></li>
       <li><a href="#" id="btn-clean-dup" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li>
-      <li><a href="#" id="btn-force-sync" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 14.61 20 13.38 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 9.39 4 10.62 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Force Sync</a></li>
       <li><a href="#" id="btn-clear" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li>
+      <li><a href="#" id="btn-reset-all" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> Réinitialiser</a></li>
 
       <li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li>
     </ul>
@@ -945,22 +1020,19 @@
       </div>
     </section>
 
-    <!-- Inventaire -->
+    <!-- Stock actuel -->
     <section id="inventory" class="section">
-      <h2>📦 Inventaire complet</h2>
+      <h2>📦 Stock actuel</h2>
 
       <div style="display:flex;gap:1rem;margin:1rem 0;align-items:center;flex-wrap:wrap;">
         <input type="text" id="search" placeholder="🔎 Rechercher (nom, dosage, notes)…" style="flex:1;">
-        <div style="background:#e8f5e8;padding:.6rem 1rem;border-radius:var(--radius);font-size:.95rem;">
-          💰 Valeur totale : <strong id="total-value">0.00 DH</strong>
-        </div>
       </div>
 
       <table id="med-table">
         <thead>
           <tr>
-            <th>Nom</th><th>Genre</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Alerte</th><th>Notes</th><th>Actions</th>
+            <th>Nom</th><th>Genre</th><th>Dosage</th><th>Qté</th>
+            <th>Péremption</th><th>Alerte</th><th>Actions</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -996,6 +1068,18 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label>Date d'achat</label>
+          <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+            <input type="date" id="purchase-date" style="flex:1;min-width:160px;" disabled>
+            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;">
+              <input type="checkbox" id="purchase-date-custom">
+              Autre jour
+            </label>
+          </div>
+          <small style="display:block;margin-top:.4rem;color:#666;">Par défaut : aujourd'hui. Cochez "Autre jour" pour saisir.</small>
+        </div>
+
         <!-- Stock initial AVANT quantité actuelle -->
         <div class="form-group"><label>Stock initial *</label><input type="number" id="initial-stock" min="0" required></div>
         <div class="form-group"><label>Quantité actuelle *</label><input type="number" id="quantity" min="0" required></div>
@@ -1023,8 +1107,7 @@
       <table id="med-table-edit">
         <thead>
           <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Notes</th><th>Modifier</th>
+            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Modifier</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1039,8 +1122,7 @@
       <table id="med-table-delete">
         <thead>
           <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Supprimer</th>
+            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Supprimer</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1064,8 +1146,7 @@
       <table id="med-table-use">
         <thead>
           <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Stock init.</th><th>Prix (DH)</th>
-            <th>Péremption</th><th>Utiliser</th>
+            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Utiliser</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1098,7 +1179,7 @@
   <!-- Modal d'édition -->
   <div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;overflow-y:auto;padding:1rem;">
     <div style="background:#fff;padding:2rem;border-radius:8px;width:100%;max-width:540px;box-shadow:0 4px 20px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;">
-      <h3 style="color:var(--primary);margin-bottom:1.2rem;">✏️ Modifier le médicament</h3>
+      <h3 style="margin-bottom:1.2rem;">✏️ Modifier le médicament</h3>
 
       <form id="edit-form">
         <input type="hidden" id="edit-index">
@@ -1125,6 +1206,17 @@
             <option value="Patch">Patch</option>
             <option value="Autre">Autre</option>
           </select>
+        </div>
+
+        <div class="form-group"><label>Date d'achat</label>
+          <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+            <input type="date" id="edit-purchase-date" style="flex:1;min-width:160px;" disabled>
+            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;">
+              <input type="checkbox" id="edit-purchase-date-custom">
+              Autre jour
+            </label>
+          </div>
+          <small style="display:block;margin-top:.4rem;color:#666;">Par défaut : aujourd'hui. Cochez "Autre jour" pour saisir.</small>
         </div>
 
         <div class="form-group"><label>Stock initial *</label><input type="number" id="edit-initial" min="0" required></div>
@@ -1157,6 +1249,7 @@
 const PASSWORD = "mohamed1964";
 const STORAGE_KEY = "medicines";
 const TOBUY_KEY = "medicines_to_buy";
+const PENDING_DELETE_KEY = "medicines_pending_delete";
 
 // (optionnel) clé si tu veux gérer des exemples une seule fois
 const SEEDED_KEY = "medicines_seeded_once";
@@ -1190,7 +1283,74 @@ function escapeAttr(str){
   return escapeHtml(str).replaceAll("\n"," ");
 }
 
+function getTodayISODate(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function openDetails(idx){
+  const m = meds[idx];
+  if(!m) return;
+
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = val;
+  };
+
+  setText('details-title', `Détails: ${m.name || ''}`);
+  setText('details-name', m.name || '-');
+  setText('details-dosage', m.dosage || '-');
+  setText('details-genre', m.genre || '-');
+  setText('details-quantity', String(Number(m.quantity) || 0));
+  setText('details-purchase', m.purchaseDate || '-');
+  setText('details-initial', String(Number(m.initialStock) || 0));
+  setText('details-price', (Number(m.price) || 0).toFixed(2) + ' DH');
+  setText('details-boxes', String(Number(m.nbBoxes) || 1));
+  setText('details-expiry', fmtMMAA(m.expiry));
+  setText('details-notes', (m.notes || '-'));
+
+  const modal = document.getElementById('details-modal');
+  if(modal) modal.style.display = 'flex';
+}
+
+function closeDetails(){
+  const modal = document.getElementById('details-modal');
+  if(modal) modal.style.display = 'none';
+}
+
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(meds)); }
+function getPendingDeleteMap(){
+  try {
+    return JSON.parse(localStorage.getItem(PENDING_DELETE_KEY)) || {};
+  } catch(e) {
+    return {};
+  }
+}
+function setPendingDeleteMap(map){
+  localStorage.setItem(PENDING_DELETE_KEY, JSON.stringify(map || {}));
+}
+function markPendingDelete(key){
+  const map = getPendingDeleteMap();
+  map[key] = Date.now();
+  setPendingDeleteMap(map);
+}
+function clearPendingDelete(key){
+  const map = getPendingDeleteMap();
+  if(map[key]){
+    delete map[key];
+    setPendingDeleteMap(map);
+  }
+}
+function cleanupPendingDeletes(cloudKeys){
+  const map = getPendingDeleteMap();
+  let changed = false;
+  Object.keys(map).forEach(k => {
+    if(!cloudKeys[k]){
+      delete map[k];
+      changed = true;
+    }
+  });
+  if(changed) setPendingDeleteMap(map);
+}
 
 function normalizeName(str){
   return String(str || "").trim().replace(/\s+/g, " ");
@@ -1368,12 +1528,12 @@ function renderAll(){
 
     tbody.innerHTML = '';
 
-    if(filtered.length === 0){
-      const colCount =
-        tableId === 'med-table' ? 10 :
-        tableId === 'med-table-edit' ? 8 :
-        tableId === 'med-table-delete' ? 7 :
-        tableId === 'med-table-use' ? 7 : 10;
+      if(filtered.length === 0){
+        const colCount =
+          tableId === 'med-table' ? 7 :
+          tableId === 'med-table-edit' ? 6 :
+          tableId === 'med-table-delete' ? 6 :
+          tableId === 'med-table-use' ? 6 : 7;
 
       tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-msg">Aucun médicament trouvé</td></tr>`;
       return;
@@ -1384,7 +1544,6 @@ function renderAll(){
       const expCls = expClass(m.expiry);
       const stkCls = stockClass(Number(m.quantity));
       const q = Number(m.quantity) || 0;
-      const p = Number(m.price) || 0;
 
       // Calcul des alertes
       let alertMsgs = [];
@@ -1399,19 +1558,20 @@ function renderAll(){
 
       let row = `
         <tr class="${stkCls}">
-          <td style="color:#1976d2;font-weight:bold;">${escapeHtml(m.name)}</td>
-          <td>${escapeHtml(m.genre || '-')}</td>
+          <td style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" title="Voir détails" onclick="openDetails(${idx})">${escapeHtml(m.name)}</td>
+      `;
+      if(tableId === 'med-table'){
+        row += `<td>${escapeHtml(m.genre || '-')}</td>`;
+      }
+      row += `
           <td>${escapeHtml(m.dosage)}</td>
           <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${q}</td>
-          <td>${Number(m.initialStock) || 0}</td>
-          <td>${p.toFixed(2)} DH</td>
           <td class="${expCls}">${fmtMMAA(m.expiry)}</td>
           <td>${alertHtml}</td>
       `;
 
       if(tableId === 'med-table'){
         row += `
-          <td class="notes-cell" title="${escapeAttr(m.notes || '')}">${escapeHtml(m.notes || '-')}</td>
           <td>
             <button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">✏️</button>
             <button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">🗑️</button>
@@ -1420,7 +1580,6 @@ function renderAll(){
         `;
       } else if(tableId === 'med-table-edit'){
         row += `
-          <td class="notes-cell" title="${escapeAttr(m.notes || '')}">${escapeHtml(m.notes || '-')}</td>
           <td><button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">✏️</button></td>
         `;
       } else if(tableId === 'med-table-delete'){
@@ -1443,14 +1602,7 @@ function renderAll(){
   renderTable('med-table-delete');
   renderTable('med-table-use');
 
-  const total = filtered.reduce((sum, m) => {
-    const p = Number(m.price) || 0;
-    const nb = Number(m.nbBoxes) || 1;
-    return sum + (p * nb);
-  }, 0);
-
-  const totalEl = document.getElementById('total-value');
-  if (totalEl) totalEl.textContent = total.toFixed(2) + " DH";
+  // Valeur totale supprimée (prix non affiché)
 }
 
 /* =========================
@@ -1462,6 +1614,13 @@ document.getElementById('add-form').addEventListener('submit', function(e){
   const name = normalizeName(document.getElementById('name').value);
   const dosage = normalizeName(document.getElementById('dosage').value);
   const genre = document.getElementById('genre').value;
+  const purchaseDateEl = document.getElementById('purchase-date');
+  const purchaseDateCustomEl = document.getElementById('purchase-date-custom');
+  let purchaseDate = purchaseDateEl ? purchaseDateEl.value : '';
+  if(!purchaseDateCustomEl || !purchaseDateCustomEl.checked){
+    purchaseDate = getTodayISODate();
+  }
+  if(!purchaseDate) purchaseDate = getTodayISODate();
 
   const initialStock = parseInt(document.getElementById('initial-stock').value, 10) || 0;
   const quantity = parseInt(document.getElementById('quantity').value, 10) || 0;
@@ -1487,7 +1646,7 @@ document.getElementById('add-form').addEventListener('submit', function(e){
   if(existingIndex === -1){
     const newMed = {
       name, dosage, genre, initialStock, quantity, price, nbBoxes,
-      expiry: expiryISO, notes,
+      expiry: expiryISO, notes, purchaseDate,
       created_at: now,
       updated_at: now,
       _localModified: true
@@ -1499,7 +1658,7 @@ document.getElementById('add-form').addEventListener('submit', function(e){
     if(window.addMedicament){
       addMedicament({
         name, dosage, genre, initialStock, quantity, price, nbBoxes,
-        expiry: expiryISO, notes
+        expiry: expiryISO, notes, purchaseDate
       }).then(result => {
         if(result.error){
           console.error('Erreur ajout cloud:', result.error);
@@ -1517,6 +1676,11 @@ document.getElementById('add-form').addEventListener('submit', function(e){
     }
 
     e.target.reset();
+    if(purchaseDateEl && purchaseDateCustomEl){
+      purchaseDateCustomEl.checked = false;
+      purchaseDateEl.disabled = true;
+      purchaseDateEl.value = getTodayISODate();
+    }
     show('inventory');
     renderAll();
     updateStats();
@@ -1552,6 +1716,7 @@ Nouvelle saisie :
   ex.genre = genre;
   ex.expiry = earliestExpiry(ex.expiry, expiryISO);
   ex.notes = mergeNotes(ex.notes, notes);
+  if(!ex.purchaseDate) ex.purchaseDate = purchaseDate;
   ex._localModified = true; // Marquer comme modifié localement
 
   meds[existingIndex] = ex;
@@ -1591,6 +1756,16 @@ function openEdit(idx){
   document.getElementById('edit-nb-boxes').value = Number(m.nbBoxes) || 1;
   document.getElementById('edit-expiry-mmaa').value = fmtMMAA(m.expiry);
   document.getElementById('edit-notes').value = m.notes || '';
+  const editPurchaseDate = document.getElementById('edit-purchase-date');
+  const editPurchaseCustom = document.getElementById('edit-purchase-date-custom');
+  if(editPurchaseDate && editPurchaseCustom){
+    const today = getTodayISODate();
+    const val = m.purchaseDate || today;
+    editPurchaseDate.value = val;
+    const isCustom = val !== today;
+    editPurchaseCustom.checked = isCustom;
+    editPurchaseDate.disabled = !isCustom;
+  }
 
   document.getElementById('edit-modal').style.display = 'flex';
 }
@@ -1606,6 +1781,13 @@ document.getElementById('edit-form').addEventListener('submit', function(e){
   const name = normalizeName(document.getElementById('edit-name').value);
   const dosage = normalizeName(document.getElementById('edit-dosage').value);
   const genre = document.getElementById('edit-genre').value;
+  const editPurchaseDate = document.getElementById('edit-purchase-date');
+  const editPurchaseCustom = document.getElementById('edit-purchase-date-custom');
+  let purchaseDate = editPurchaseDate ? editPurchaseDate.value : '';
+  if(!editPurchaseCustom || !editPurchaseCustom.checked){
+    purchaseDate = (meds[idx] && meds[idx].purchaseDate) ? meds[idx].purchaseDate : getTodayISODate();
+  }
+  if(!purchaseDate) purchaseDate = getTodayISODate();
 
   const initialStock = parseInt(document.getElementById('edit-initial').value, 10) || 0;
   const quantity = parseInt(document.getElementById('edit-quantity').value, 10) || 0;
@@ -1669,7 +1851,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
     }
   }
 
-  meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes };
+  meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate };
   meds[idx]._localModified = true; // Marquer comme modifié localement
   save();
 
@@ -1677,7 +1859,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
   /*
   // Mettre à jour le cloud IMMÉDIATEMENT
   if(window.updateMedicament && meds[idx].id){
-    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes }).then(result => {
+    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate }).then(result => {
       if(result.error){
         console.error('Erreur update cloud:', result.error);
       } else {
@@ -1699,19 +1881,20 @@ function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
   if(confirm(`Supprimer "${m.name} (${m.dosage})" ?`)){
-    // Sync désactivé pour les suppressions
-    /*
+    const key = keyOf(m.name, m.dosage);
+    markPendingDelete(key);
+
     // Supprimer du cloud IMMÉDIATEMENT (avec fallback nom+dosage)
     if(window.deleteMedicament){
       deleteMedicament(m.id, m.name, m.dosage).then(result => {
-        if(result.error){
+        if(result && result.error){
           console.error('❌ Erreur suppression cloud:', result.error);
         } else {
+          clearPendingDelete(key);
           console.log('✅ Suppression cloud réussie');
         }
       });
     }
-    */
 
     meds.splice(idx, 1);
     save();
@@ -1738,6 +1921,18 @@ function useMed(idx){
     // Si stock épuisé, supprimer localement seulement (pas de sync)
     if(m.quantity === 0){
       logInfo('🗑️ Stock épuisé - suppression locale de ' + m.name);
+      const key = keyOf(m.name, m.dosage);
+      markPendingDelete(key);
+      if(window.deleteMedicament){
+        deleteMedicament(m.id, m.name, m.dosage).then(result => {
+          if(result && result.error){
+            logError('❌ Erreur suppression cloud: ' + result.error);
+          } else {
+            clearPendingDelete(key);
+            logSuccess('✅ Suppression cloud: ' + m.name);
+          }
+        });
+      }
 
       // Supprimer de la liste locale seulement
       setTimeout(() => {
@@ -2029,6 +2224,32 @@ function clearAllStock(){
 ========================= */
 document.getElementById('pwd-btn').addEventListener('click', checkPwd);
 document.getElementById('logout-link').addEventListener('click', (e)=>{ e.preventDefault(); logout(); });
+document.getElementById('details-close-btn').addEventListener('click', closeDetails);
+document.getElementById('details-modal').addEventListener('click', (e)=>{
+  if(e.target && e.target.id === 'details-modal') closeDetails();
+});
+
+const purchaseDateInput = document.getElementById('purchase-date');
+const purchaseDateCustom = document.getElementById('purchase-date-custom');
+if(purchaseDateInput && purchaseDateCustom){
+  purchaseDateInput.value = getTodayISODate();
+  purchaseDateCustom.addEventListener('change', ()=>{
+    purchaseDateInput.disabled = !purchaseDateCustom.checked;
+    if(!purchaseDateCustom.checked){
+      purchaseDateInput.value = getTodayISODate();
+    }
+  });
+}
+const editPurchaseDateInput = document.getElementById('edit-purchase-date');
+const editPurchaseDateCustom = document.getElementById('edit-purchase-date-custom');
+if(editPurchaseDateInput && editPurchaseDateCustom){
+  editPurchaseDateCustom.addEventListener('change', ()=>{
+    editPurchaseDateInput.disabled = !editPurchaseDateCustom.checked;
+    if(!editPurchaseDateCustom.checked){
+      editPurchaseDateInput.value = getTodayISODate();
+    }
+  });
+}
 
 // Dark mode toggle
 const themeToggle = document.getElementById('theme-toggle');
@@ -2055,94 +2276,33 @@ document.querySelectorAll('nav a[data-target]').forEach(a=>{
 // actions backup
 document.getElementById('btn-save').addEventListener('click', (e)=>{ e.preventDefault(); saveBackup(); });
 document.getElementById('btn-restore').addEventListener('click', (e)=>{ e.preventDefault(); restoreBackup(); });
-document.getElementById('btn-sync').addEventListener('click', async (e)=>{ 
-  e.preventDefault();
-  
-  if(!window.addMedicament || !window.getMedicaments){
-    alert('Cloud non activé');
-    return;
-  }
-  
-  // D'abord pousser les données locales vers cloud
-  if(meds.length > 0){
-    console.log('🔄 Début sync local→cloud, meds count:', meds.length);
-    logInfo('📤 Push vers cloud...');
-    
-    try {
-      // Récupérer les données cloud actuelles
-      var cloudResult = await getMedicaments();
-      var cloudMeds = cloudResult || [];
-      
-      console.log('Cloud a:', cloudMeds.length, 'médicaments');
-      
-      // Créer une map pour les médicaments cloud par nom+dosage
-      var cloudMap = {};
-      cloudMeds.forEach(function(m){
-        var key = keyOf(m.name, m.dosage);
-        cloudMap[key] = m;
-      });
-      
-      var synced = 0;
-      
-      // Pour chaque médicament local, sync vers cloud
-      for(var j = 0; j < meds.length; j++){
-        var m = meds[j];
-        var key = keyOf(m.name, m.dosage);
-        
-        var medData = {
-          name: m.name,
-          dosage: m.dosage,
-          genre: m.genre,
-          quantity: m.quantity,
-          initialStock: m.initialStock,
-          price: m.price,
-          nbBoxes: m.nbBoxes,
-          expiry: m.expiry,
-          notes: m.notes || ''
-        };
-        
-        if(cloudMap[key]){
-          // Existe déjà dans cloud, mettre à jour
-          console.log('Mise à jour:', medData.name);
-          await updateMedicament(cloudMap[key].id, medData);
-          synced++;
-        } else {
-          // N'existe pas, créer
-          console.log('Création:', medData.name);
-          await addMedicament(medData);
-          synced++;
-        }
-      }
-      
-      console.log('Push terminé:', synced, 'médicaments syncés');
-      logSuccess('✅ ' + synced + ' médicaments pushés');
-      
-    } catch(e) {
-      console.error('Erreur push:', e);
-      logError('❌ Erreur push: ' + e.message);
-    }
-  }
-  
-  // Puis charger les données cloud (pull)
-  logInfo('📥 Pull depuis cloud...');
-  loadFromCloud();
-  
-  alert('✅ Sync terminé ! Données synchronisées avec le cloud.');
-});
-
-// Bouton charger depuis cloud
-document.getElementById('btn-load-cloud').addEventListener('click', (e)=>{ 
-  e.preventDefault();
-  if(!window.getMedicaments){
-    alert('Cloud non activé');
-    return;
-  }
-  logInfo('📥 Chargement données cloud...');
-  loadFromCloud();
-});
-
 document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventDefault(); clearAllStock(); });
 document.getElementById('btn-clean-dup').addEventListener('click', (e)=>{ e.preventDefault(); clearLocalDuplicates(); });
+document.getElementById('btn-reset-all').addEventListener('click', async (e)=>{
+  e.preventDefault();
+  if(!confirm('⚠️ Tout effacer (local + cloud) ? Cette action est irréversible.')) return;
+
+  // Effacer cloud
+  try {
+    if(window.clearAllCloudMeds) await clearAllCloudMeds();
+    if(window.clearAchats) await clearAchats();
+  } catch(e) {
+    console.warn('Erreur effacement cloud:', e);
+  }
+
+  // Effacer local
+  meds = [];
+  toBuyList = [];
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(TOBUY_KEY);
+  localStorage.removeItem(SEEDED_KEY);
+  localStorage.removeItem(PENDING_DELETE_KEY);
+
+  renderAll();
+  renderToBuy();
+  updateStats();
+  alert('✅ Données locales et cloud effacées.');
+});
 
 // recherches live
 ['search','search-edit','search-delete','search-use'].forEach(id=>{
@@ -2305,11 +2465,23 @@ async function autoSyncFromCloud(){
         nbBoxes: m.nb_boites,
         expiry: m.date_peremption,
         notes: m.notes || '',
+        purchaseDate: m.date_achat || '',
         updated_at: m.updated_at || m.created_at
       };
     });
 
     console.log('☁️ Cloud meds reçus:', cloudMeds.length);
+
+    // Nettoyer les suppressions en attente
+    var cloudKeys = {};
+    cloudMeds.forEach(function(cm){
+      cloudKeys[keyOf(cm.name, cm.dosage)] = true;
+    });
+    cleanupPendingDeletes(cloudKeys);
+    var pendingDeleteMap = getPendingDeleteMap();
+    cloudMeds = cloudMeds.filter(function(cm){
+      return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
+    });
 
     // PROTECTION ANTI-DOUBLONS : Créer une map unique par clé
     var uniqueCloudMeds = {};
@@ -2500,7 +2672,7 @@ function refreshFromCloud(){
   getMedicaments().then(function(result){
     if(!result || result.length === 0) return;
     
-    const cloudMeds = result.map(function(m){
+    let cloudMeds = result.map(function(m){
       return {
         id: m.id,
         name: m.nom,
@@ -2511,8 +2683,31 @@ function refreshFromCloud(){
         price: m.prix,
         nbBoxes: m.nb_boites,
         expiry: m.date_peremption,
-        notes: m.notes || ''
+        notes: m.notes || '',
+        purchaseDate: m.date_achat || ''
       };
+    });
+
+    // Nettoyer les suppressions en attente
+    var cloudKeys = {};
+    cloudMeds.forEach(function(cm){
+      cloudKeys[keyOf(cm.name, cm.dosage)] = true;
+    });
+    cleanupPendingDeletes(cloudKeys);
+    var pendingDeleteMap = getPendingDeleteMap();
+    cloudMeds = cloudMeds.filter(function(cm){
+      return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
+    });
+
+    // Nettoyer les suppressions en attente
+    var cloudKeys = {};
+    cloudMeds.forEach(function(cm){
+      cloudKeys[keyOf(cm.name, cm.dosage)] = true;
+    });
+    cleanupPendingDeletes(cloudKeys);
+    var pendingDeleteMap = getPendingDeleteMap();
+    cloudMeds = cloudMeds.filter(function(cm){
+      return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
     });
     
     // Fusion cloud + local (AJOUTER + METTRE À JOUR + SUPPRIMER)
@@ -2607,10 +2802,22 @@ function loadFromCloud(){
         price: m.prix,
         nbBoxes: m.nb_boites,
         expiry: m.date_peremption,
-        notes: m.notes || ''
+        notes: m.notes || '',
+        purchaseDate: m.date_achat || ''
       };
     });
     
+    // Nettoyer les suppressions en attente
+    var cloudKeys = {};
+    cloudMeds.forEach(function(cm){
+      cloudKeys[keyOf(cm.name, cm.dosage)] = true;
+    });
+    cleanupPendingDeletes(cloudKeys);
+    var pendingDeleteMap = getPendingDeleteMap();
+    cloudMeds = cloudMeds.filter(function(cm){
+      return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
+    });
+
     console.log('📥 Cloud meds:', cloudMeds.length);
     
     if(cloudMeds.length > 0){
@@ -2726,8 +2933,20 @@ async function loadAndShowFromCloud(){
       price: m.prix,
       nbBoxes: m.nb_boites,
       expiry: m.date_peremption,
-      notes: m.notes || ''
+      notes: m.notes || '',
+      purchaseDate: m.date_achat || ''
     };
+  });
+
+  // Nettoyer les suppressions en attente
+  var cloudKeys = {};
+  cloudMeds.forEach(function(cm){
+    cloudKeys[keyOf(cm.name, cm.dosage)] = true;
+  });
+  cleanupPendingDeletes(cloudKeys);
+  var pendingDeleteMap = getPendingDeleteMap();
+  cloudMeds = cloudMeds.filter(function(cm){
+    return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
   });
   
   // Fusionner : ajouter les médicaments cloud qui n'existent pas en local
@@ -2793,7 +3012,8 @@ async function saveAllToCloud(callback){
       price: m.price,
       nbBoxes: m.nbBoxes,
       expiry: m.expiry,
-      notes: m.notes || ''
+      notes: m.notes || '',
+      purchaseDate: m.purchaseDate || ''
     };
     
     if(cloudMap[key]){
