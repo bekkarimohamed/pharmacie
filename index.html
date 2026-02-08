@@ -747,7 +747,9 @@
       <li><a href="#" id="btn-restore" class="nav-btn">📂 Restaurer</a></li>
       <li><a href="#" id="btn-sync" class="nav-btn">🔄 Sync</a></li>
       <li><a href="#" id="btn-load-cloud" class="nav-btn">📥 Charger</a></li>
-      <li><a href="#" id="btn-clear" class="nav-btn">🧹 Vider</a></li>
+      <li><a href="#" id="btn-clean-dup" class="nav-btn">🧹 Nettoyer</a></li>
+      <li><a href="#" id="btn-force-sync" class="nav-btn">🔄 Force Sync</a></li>
+      <li><a href="#" id="btn-clear" class="nav-btn">🗑️ Vider</a></li>
 
       <li><a href="#" id="logout-link">🚪 Quitter</a></li>
     </ul>
@@ -1933,6 +1935,7 @@ document.getElementById('btn-load-cloud').addEventListener('click', (e)=>{
 });
 
 document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventDefault(); clearAllStock(); });
+document.getElementById('btn-clean-dup').addEventListener('click', (e)=>{ e.preventDefault(); clearLocalDuplicates(); });
 
 // recherches live
 ['search','search-edit','search-delete','search-use'].forEach(id=>{
@@ -2602,6 +2605,103 @@ async function forceDebugSync(){
     }
   } catch(e){
     document.getElementById('debug-status').textContent = 'Erreur';
+  }
+}
+
+// Clear local duplicates and sync with cloud
+async function clearLocalDuplicates(){
+  if(!auth) return;
+  if(!confirm('⚠️ Voulez-vous supprimer les doublons locaux et synchroniser avec le cloud ?')) return;
+
+  console.log('🧹 Suppression des doublons locaux...');
+
+  // Créer une map pour détecter les doublons
+  var uniqueMeds = {};
+  var duplicatesRemoved = 0;
+
+  meds.forEach(function(m, index){
+    var key = keyOf(m.name, m.dosage);
+    if(uniqueMeds[key]){
+      // Doublon trouvé, supprimer
+      duplicatesRemoved++;
+      console.log('🗑️ Doublon supprimé:', m.name, m.dosage);
+    } else {
+      uniqueMeds[key] = m;
+    }
+  });
+
+  // Convertir la map en tableau
+  meds = Object.values(uniqueMeds);
+
+  console.log('✅ Doublons supprimés:', duplicatesRemoved);
+  console.log('📊 Médicaments uniques restants:', meds.length);
+
+  save();
+  renderAll();
+  updateStats();
+
+  // Synchroniser avec le cloud
+  if(window.getMedicaments){
+    console.log('🔄 Synchronisation avec le cloud...');
+    loadFromCloud();
+  }
+
+  alert('✅ Nettoyage terminé ! ' + duplicatesRemoved + ' doublons supprimés.');
+}
+
+// Improved sync for "À acheter" deletions
+async function syncToBuyDeletions(){
+  if(!window.getAchats) return;
+
+  try {
+    var cloudResult = await getAchats();
+    if(!cloudResult || cloudResult.length === 0){
+      // Si cloud vide, vider local aussi
+      toBuyList = [];
+      localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+      renderToBuy();
+      console.log('🗑️ Liste "À acheter" vidée (cloud vide)');
+      return;
+    }
+
+    // Créer map des noms cloud
+    var cloudNames = {};
+    cloudResult.forEach(function(a){
+      cloudNames[a.nom.toLowerCase()] = {
+        qty: a.quantite,
+        notes: a.notes || ''
+      };
+    });
+
+    var changed = false;
+
+    // Supprimer les locaux qui n'existent plus dans cloud
+    for(var i = toBuyList.length - 1; i >= 0; i--){
+      var localName = toBuyList[i].name.toLowerCase();
+      if(!cloudNames[localName]){
+        console.log('🗑️ Suppression locale (pas dans cloud):', toBuyList[i].name);
+        toBuyList.splice(i, 1);
+        changed = true;
+      } else {
+        // Mettre à jour quantité si différente
+        var cloudItem = cloudNames[localName];
+        if(toBuyList[i].qty !== cloudItem.qty || toBuyList[i].notes !== cloudItem.notes){
+          toBuyList[i].qty = cloudItem.qty;
+          toBuyList[i].notes = cloudItem.notes;
+          changed = true;
+          console.log('🔄 Quantité mise à jour:', toBuyList[i].name);
+        }
+      }
+    }
+
+    if(changed){
+      localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+      renderToBuy();
+      console.log('✅ Sync "À acheter" terminé');
+    }
+
+  } catch(e) {
+    console.warn('Erreur sync "À acheter":', e);
   }
 }
 
