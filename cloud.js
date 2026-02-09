@@ -511,6 +511,41 @@ async function deleteAchatById(id) {
     }
 }
 
+// Mettre à jour un achat par id
+async function updateAchatById(id, item) {
+    if (!isCloudEnabled) return { error: 'Cloud not enabled' };
+    if (!id) return { error: 'Missing id' };
+
+    const data = {
+        nom: item.name,
+        quantite: item.qty,
+        notes: item.notes || ''
+    };
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            return { error: null };
+        } else {
+            const err = await response.text();
+            console.error('❌ Erreur updateAchatById:', err);
+            return { error: err };
+        }
+    } catch (e) {
+        console.error('❌ Erreur updateAchatById:', e);
+        return { error: e.message };
+    }
+}
+
 // Vider tous les achats
 async function clearAchats() {
     if (!isCloudEnabled) return { error: 'Cloud not enabled' };
@@ -549,4 +584,5 @@ window.subscribeToMedicaments = subscribeToMedicaments;
 window.clearAllCloudMeds = clearAllCloudMeds;
 window.subscribeToAchats = subscribeToAchats;
 window.deleteAchatById = deleteAchatById;
+window.updateAchatById = updateAchatById;
 
