@@ -2031,6 +2031,17 @@ function renderToBuy(){
   
   tbody.innerHTML = '';
   
+  // Dédupliquer par nom (préférer item avec id)
+  const dedupMap = {};
+  toBuyList.forEach(item => {
+    const key = (item.name || '').toLowerCase().trim();
+    if(!key) return;
+    if(!dedupMap[key] || (!dedupMap[key].id && item.id)){
+      dedupMap[key] = item;
+    }
+  });
+  toBuyList = Object.values(dedupMap);
+
   if(toBuyList.length === 0){
     tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucun médicament dans la liste</td></tr>';
     return;
@@ -2163,26 +2174,8 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
         if(idx !== -1){
           toBuyList[idx].id = newId;
           localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+          renderToBuy();
         }
-      }
-      // Recharger depuis cloud pour éviter les duplications
-      if(window.getAchats){
-        getAchats().then(result => {
-          if(result && result.length > 0){
-            // Synchroniser la liste locale avec le cloud
-            toBuyList = result.map(a => ({
-              id: a.id,
-              name: a.nom,
-              qty: a.quantite,
-              notes: a.notes || ''
-            }));
-            cleanupPendingToBuyDeletes(toBuyList);
-            const pendingMap = getPendingToBuyDeleteMap();
-            toBuyList = toBuyList.filter(a => !pendingMap[toBuyDeleteKey(a.id, a.name)]);
-            localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-            renderToBuy();
-          }
-        });
       }
     });
   } else {
@@ -2977,48 +2970,20 @@ function loadToBuyFromCloud(){
       return;
     }
     
-    // Fusion cloud + local (sans écraser)
-    const cloudNames = result.map(a => a.nom.toLowerCase());
-    
-    // Ajouter les nouveaux du cloud
-    let changed = false;
+    // Remplacer la liste locale par le cloud (source de vérité)
     const pendingMap = getPendingToBuyDeleteMap();
     const cloudList = result.map(a => ({ id: a.id, name: a.nom }));
     cleanupPendingToBuyDeletes(cloudList);
+    toBuyList = result.map(a => ({
+      id: a.id,
+      name: a.nom,
+      qty: a.quantite,
+      notes: a.notes || ''
+    })).filter(a => !pendingMap[toBuyDeleteKey(a.id, a.name)]);
 
-    result.forEach(function(a){
-      const key = a.nom.toLowerCase();
-      const exists = toBuyList.some(lc => lc.name.toLowerCase() === key);
-      if(pendingMap[toBuyDeleteKey(a.id, a.nom)]) return;
-      if(!exists){
-        toBuyList.push({
-          id: a.id,
-          name: a.nom,
-          qty: a.quantite,
-          notes: a.notes || ''
-        });
-        console.log('➕ Achat ajouté depuis cloud:', a.nom);
-        changed = true;
-      }
-    });
-    
-    // Supprimer les locaux qui n'existent plus dans cloud
-    for(let i = toBuyList.length - 1; i >= 0; i--){
-      const key = toBuyList[i].name.toLowerCase();
-      if(!cloudNames.includes(key)){
-        console.log('🗑️ Achat supprimé local:', toBuyList[i].name);
-        toBuyList.splice(i, 1);
-        changed = true;
-      }
-    }
-    
-    if(changed){
-      localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-      renderToBuy();
-      console.log('✅ Sync achats terminée:', toBuyList.length, 'articles');
-    } else {
-      console.log('ℹ️ Aucun changement achats');
-    }
+    localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+    renderToBuy();
+    console.log('✅ Sync achats terminée:', toBuyList.length, 'articles');
   });
 }
 
