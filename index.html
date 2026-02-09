@@ -2088,7 +2088,7 @@ function removeToBuyItem(id, name){
     console.log('☁️ Suppression cloud (id):', id);
     deleteAchatById(id).then((result) => {
       if(result && result.error){
-        throw new Error(result.error);
+        throw new Error((result.status ? ('HTTP ' + result.status + ' ') : '') + result.error);
       }
       clearPendingToBuyDelete(id, name);
       console.log('✅ Suppression cloud confirmée pour id:', id);
@@ -2101,17 +2101,17 @@ function removeToBuyItem(id, name){
         console.log('☁️ Fallback suppression cloud (nom):', name);
         deleteAchatByName(name).then((r) => {
           if(r && r.error){
-            throw new Error(r.error);
+            throw new Error((r.status ? ('HTTP ' + r.status + ' ') : '') + r.error);
           }
           clearPendingToBuyDelete(id, name);
           loadToBuyFromCloud();
         }).catch(err => {
           console.error('❌ Erreur suppression cloud (nom):', err);
-          alert('❌ Suppression cloud refusée (vérifier RLS).');
+          alert('❌ Suppression cloud refusée: ' + err.message);
           loadToBuyFromCloud();
         });
       } else {
-        alert('❌ Suppression cloud refusée (vérifier RLS).');
+        alert('❌ Suppression cloud refusée.');
         loadToBuyFromCloud();
       }
     });
@@ -2119,13 +2119,13 @@ function removeToBuyItem(id, name){
     console.log('☁️ Suppression cloud (nom):', name);
     deleteAchatByName(name).then((result) => {
       if(result && result.error){
-        throw new Error(result.error);
+        throw new Error((result.status ? ('HTTP ' + result.status + ' ') : '') + result.error);
       }
       clearPendingToBuyDelete(id, name);
       loadToBuyFromCloud();
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
-      alert('❌ Suppression cloud refusée (vérifier RLS).');
+      alert('❌ Suppression cloud refusée: ' + e.message);
       loadToBuyFromCloud();
     });
   }
