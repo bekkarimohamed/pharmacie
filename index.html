@@ -2097,7 +2097,23 @@ function removeToBuyItem(id, name){
       }, 500);
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
-      loadToBuyFromCloud();
+      if(window.deleteAchatByName){
+        console.log('☁️ Fallback suppression cloud (nom):', name);
+        deleteAchatByName(name).then((r) => {
+          if(r && r.error){
+            throw new Error(r.error);
+          }
+          clearPendingToBuyDelete(id, name);
+          loadToBuyFromCloud();
+        }).catch(err => {
+          console.error('❌ Erreur suppression cloud (nom):', err);
+          alert('❌ Suppression cloud refusée (vérifier RLS).');
+          loadToBuyFromCloud();
+        });
+      } else {
+        alert('❌ Suppression cloud refusée (vérifier RLS).');
+        loadToBuyFromCloud();
+      }
     });
   } else if(window.deleteAchatByName){
     console.log('☁️ Suppression cloud (nom):', name);
@@ -2109,6 +2125,7 @@ function removeToBuyItem(id, name){
       loadToBuyFromCloud();
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
+      alert('❌ Suppression cloud refusée (vérifier RLS).');
       loadToBuyFromCloud();
     });
   }
