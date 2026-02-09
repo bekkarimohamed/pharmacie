@@ -2474,6 +2474,7 @@ function logInfo(msg){ logDebug(msg, 'info'); }
    INITIALISATION
 ========================= */
 const FAST_SYNC_INTERVAL_MS = 5000;
+const DEBUG_LOGS = false;
 let autoSyncTimer = null;
 let cloudSubUnsubscribe = null;
 let achatsSubUnsubscribe = null;
@@ -2553,19 +2554,19 @@ async function autoSyncFromCloud(){
     return;
   }
 
-  console.log('🔄 Démarrage autoSyncFromCloud amélioré...');
+  if(DEBUG_LOGS) console.log('🔄 Démarrage autoSyncFromCloud amélioré...');
 
   try {
     var result = await getMedicaments();
 
     if(!result || result.length === 0) {
-      console.log('ℹ️ Aucun médicament dans le cloud');
+      if(DEBUG_LOGS) console.log('ℹ️ Aucun médicament dans le cloud');
       if(isOnline()){
         meds = [];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
         renderAll();
         updateStats();
-        console.log('🧹 Local stock effacé (cloud vide)');
+        if(DEBUG_LOGS) console.log('🧹 Local stock effacé (cloud vide)');
       }
       return;
     }
@@ -2587,7 +2588,7 @@ async function autoSyncFromCloud(){
       };
     });
 
-    console.log('☁️ Cloud meds reçus:', cloudMeds.length);
+    if(DEBUG_LOGS) console.log('☁️ Cloud meds reçus:', cloudMeds.length);
 
     // Nettoyer les suppressions en attente
     var cloudKeys = {};
@@ -2686,7 +2687,7 @@ async function autoSyncFromCloud(){
       if(typeof renderAll === 'function') renderAll();
       if(typeof updateStats === 'function') updateStats();
     } else {
-      console.log('ℹ️ Aucune modification nécessaire');
+      if(DEBUG_LOGS) console.log('ℹ️ Aucune modification nécessaire');
     }
 
     // Sync achats (À acheter) avec validation stricte
@@ -2694,7 +2695,7 @@ async function autoSyncFromCloud(){
       try {
         var achatsResult = await getAchats();
         if(achatsResult && achatsResult.length > 0){
-          console.log('🔄 Sync achats: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
+            if(DEBUG_LOGS) console.log('🔄 Sync achats: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
 
             var uniqueCloudAchats = {};
             achatsResult.forEach(function(a){
@@ -2730,7 +2731,7 @@ async function autoSyncFromCloud(){
                   toBuyList[index].notes = newNotes;
                   if(!toBuyList[index].id) toBuyList[index].id = cloudItem.id;
                   changed = true;
-                  console.log('🔄 Achat mis à jour:', localItem.name, 'qty:', newQty);
+                if(DEBUG_LOGS) console.log('🔄 Achat mis à jour:', localItem.name, 'qty:', newQty);
                 }
                 delete uniqueCloudAchats[key];
               }
@@ -2746,7 +2747,7 @@ async function autoSyncFromCloud(){
               if(!exists){
                 toBuyList.push(newItem);
                 changed = true;
-                console.log('➕ Nouvel achat du cloud:', newItem.name);
+                if(DEBUG_LOGS) console.log('➕ Nouvel achat du cloud:', newItem.name);
               }
             });
 
@@ -2758,7 +2759,7 @@ async function autoSyncFromCloud(){
           toBuyList = [];
           localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
           if(typeof renderToBuy === 'function') renderToBuy();
-          console.log('🧹 Liste "À acheter" effacée (cloud vide)');
+          if(DEBUG_LOGS) console.log('🧹 Liste "À acheter" effacée (cloud vide)');
         }
       } catch(e) {
         console.warn('Sync achats échoué:', e);
@@ -2766,7 +2767,7 @@ async function autoSyncFromCloud(){
     }
 
     window.cloudReady = true;
-    console.log('✅ Auto-sync amélioré terminé');
+    if(DEBUG_LOGS) console.log('✅ Auto-sync amélioré terminé');
   } catch(e) {
     console.warn('Sync auto échoué:', e);
   } finally {
