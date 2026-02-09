@@ -471,15 +471,15 @@ async function deleteAchatByName(name) {
         
         if (response.ok) {
             console.log('✅ Achat', name, 'supprimé du cloud');
-            return { error: null };
+            return { error: null, status: response.status };
         } else {
             const err = await response.text();
             console.error('❌ Erreur deleteAchatByName:', err);
-            return { error: err };
+            return { error: err, status: response.status };
         }
     } catch (e) {
         console.error('❌ Erreur deleteAchatByName:', e);
-        return { error: e.message };
+        return { error: e.message, status: 0 };
     }
 }
 
@@ -499,15 +499,15 @@ async function deleteAchatById(id) {
 
         if (response.ok) {
             console.log('✅ Achat id', id, 'supprimé du cloud');
-            return { error: null };
+            return { error: null, status: response.status };
         } else {
             const err = await response.text();
             console.error('❌ Erreur deleteAchatById:', err);
-            return { error: err };
+            return { error: err, status: response.status };
         }
     } catch (e) {
         console.error('❌ Erreur deleteAchatById:', e);
-        return { error: e.message };
+        return { error: e.message, status: 0 };
     }
 }
 
@@ -560,13 +560,13 @@ async function clearAchats() {
         });
         
         if (response.ok) {
-            return { error: null };
+            return { error: null, status: response.status };
         } else {
             const err = await response.text();
-            return { error: err };
+            return { error: err, status: response.status };
         }
     } catch (e) {
-        return { error: e.message };
+        return { error: e.message, status: 0 };
     }
 }
 
