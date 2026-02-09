@@ -2774,7 +2774,7 @@ function subscribeToAchatsChanges(){
 
   return subscribeToAchats(function(payload){
     console.log('Achats change detected:', payload);
-    syncToBuyDeletions();
+    loadToBuyFromCloud();
   }, { intervalMs: FAST_SYNC_INTERVAL_MS });
 }
 
