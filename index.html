@@ -984,6 +984,7 @@
       <li><a href="#" id="btn-clear-local" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider local</a></li>
 
       <li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li>
+      <li><span style="color:#fff;font-size:.7rem;opacity:.7;">v<span id="app-version">-</span></span></li>
     </ul>
   </nav>
 
@@ -2328,6 +2329,9 @@ document.getElementById('details-close-btn').addEventListener('click', closeDeta
 document.getElementById('details-modal').addEventListener('click', (e)=>{
   if(e.target && e.target.id === 'details-modal') closeDetails();
 });
+const appVersionEl = document.getElementById('app-version');
+if(appVersionEl) appVersionEl.textContent = APP_VERSION;
+if(DEBUG_LOGS) console.log('App version:', APP_VERSION);
 
 const purchaseDateInput = document.getElementById('purchase-date');
 const purchaseDateCustom = document.getElementById('purchase-date-custom');
@@ -2491,6 +2495,7 @@ function logInfo(msg){ logDebug(msg, 'info'); }
 ========================= */
 const FAST_SYNC_INTERVAL_MS = 5000;
 const DEBUG_LOGS = false;
+const APP_VERSION = "2026-02-09-2";
 let autoSyncTimer = null;
 let cloudSubUnsubscribe = null;
 let achatsSubUnsubscribe = null;
@@ -3290,7 +3295,7 @@ async function syncToBuyDeletions(){
 <!-- Supabase Realtime SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Cloud Integration (REST API) -->
-<script src="cloud.js?v=20260209"></script>
+<script src="cloud.js?v=20260209b"></script>
 
 </body>
 </html>
