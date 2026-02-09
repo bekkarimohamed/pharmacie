@@ -981,6 +981,7 @@
       <li><a href="#" id="btn-clean-dup" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li>
       <li><a href="#" id="btn-clear" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li>
       <li><a href="#" id="btn-reset-all" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> Réinitialiser</a></li>
+      <li><a href="#" id="btn-clear-local" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider local</a></li>
 
       <li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li>
     </ul>
@@ -2401,6 +2402,21 @@ document.getElementById('btn-reset-all').addEventListener('click', async (e)=>{
   renderToBuy();
   updateStats();
   alert('✅ Données locales et cloud effacées.');
+});
+document.getElementById('btn-clear-local').addEventListener('click', (e)=>{
+  e.preventDefault();
+  if(!confirm('⚠️ Vider uniquement les données locales ?')) return;
+  meds = [];
+  toBuyList = [];
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(TOBUY_KEY);
+  localStorage.removeItem(SEEDED_KEY);
+  localStorage.removeItem(PENDING_DELETE_KEY);
+  localStorage.removeItem(PENDING_TOBUY_DELETE_KEY);
+  renderAll();
+  renderToBuy();
+  updateStats();
+  alert('✅ Données locales effacées.');
 });
 
 const toBuyToggle = document.getElementById('tobuy-toggle');
