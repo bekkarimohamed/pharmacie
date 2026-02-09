@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -306,7 +306,7 @@
       margin-top: 1rem;
       background: var(--card-bg);
       backdrop-filter: blur(10px);
-      border-radius: var(--radius);
+      border-radius: 4px;
       overflow: hidden;
       box-shadow: var(--shadow);
       animation: tableSlideIn 0.5s ease-out;
@@ -1248,6 +1248,7 @@ const PASSWORD = "mohamed1964";
 const STORAGE_KEY = "medicines";
 const TOBUY_KEY = "medicines_to_buy";
 const PENDING_DELETE_KEY = "medicines_pending_delete";
+const PENDING_TOBUY_DELETE_KEY = "tobuy_pending_delete";
 
 // (optionnel) clé si tu veux gérer des exemples une seule fois
 const SEEDED_KEY = "medicines_seeded_once";
@@ -1316,6 +1317,7 @@ function closeDetails(){
 }
 
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(meds)); }
+function isOnline(){ return navigator.onLine !== false; }
 function getPendingDeleteMap(){
   try {
     return JSON.parse(localStorage.getItem(PENDING_DELETE_KEY)) || {};
@@ -1348,6 +1350,49 @@ function cleanupPendingDeletes(cloudKeys){
     }
   });
   if(changed) setPendingDeleteMap(map);
+}
+
+function getPendingToBuyDeleteMap(){
+  try {
+    return JSON.parse(localStorage.getItem(PENDING_TOBUY_DELETE_KEY)) || {};
+  } catch(e) {
+    return {};
+  }
+}
+function setPendingToBuyDeleteMap(map){
+  localStorage.setItem(PENDING_TOBUY_DELETE_KEY, JSON.stringify(map || {}));
+}
+function toBuyDeleteKey(id, name){
+  if(id) return `id:${id}`;
+  return `name:${String(name || '').toLowerCase().trim()}`;
+}
+function markPendingToBuyDelete(id, name){
+  const map = getPendingToBuyDeleteMap();
+  map[toBuyDeleteKey(id, name)] = Date.now();
+  setPendingToBuyDeleteMap(map);
+}
+function clearPendingToBuyDelete(id, name){
+  const map = getPendingToBuyDeleteMap();
+  const key = toBuyDeleteKey(id, name);
+  if(map[key]){
+    delete map[key];
+    setPendingToBuyDeleteMap(map);
+  }
+}
+function cleanupPendingToBuyDeletes(cloudItems){
+  const map = getPendingToBuyDeleteMap();
+  const cloudKeys = {};
+  cloudItems.forEach(a => {
+    cloudKeys[toBuyDeleteKey(a.id, a.name)] = true;
+  });
+  let changed = false;
+  Object.keys(map).forEach(k => {
+    if(!cloudKeys[k]){
+      delete map[k];
+      changed = true;
+    }
+  });
+  if(changed) setPendingToBuyDeleteMap(map);
 }
 
 function normalizeName(str){
@@ -2011,6 +2056,7 @@ function renderToBuy(){
 // Supprimer par id si possible (fallback nom)
 function removeToBuyItem(id, name){
   if(!confirm('Supprimer "' + name + '" de la liste ?')) return;
+  markPendingToBuyDelete(id, name);
   
   // Trouver l'index
   const idx = toBuyList.findIndex(item => 
@@ -2029,7 +2075,11 @@ function removeToBuyItem(id, name){
   // Sync vers cloud - suppression activée avec confirmation
   if(window.deleteAchatById && id){
     console.log('☁️ Suppression cloud (id):', id);
-    deleteAchatById(id).then(() => {
+    deleteAchatById(id).then((result) => {
+      if(result && result.error){
+        throw new Error(result.error);
+      }
+      clearPendingToBuyDelete(id, name);
       console.log('✅ Suppression cloud confirmée pour id:', id);
       // Forcer une resync pour s'assurer que les changements sont propagés
       setTimeout(() => {
@@ -2046,7 +2096,12 @@ function removeToBuyItem(id, name){
     });
   } else if(window.deleteAchatByName){
     console.log('☁️ Suppression cloud (nom):', name);
-    deleteAchatByName(name).catch(e => {
+    deleteAchatByName(name).then((result) => {
+      if(result && result.error){
+        throw new Error(result.error);
+      }
+      clearPendingToBuyDelete(id, name);
+    }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
     });
   }
@@ -2102,6 +2157,14 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   if(window.addAchat){
     console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
     addAchat({ name, qty, notes }).then((res) => {
+      if(res && res.data && res.data[0] && res.data[0].id){
+        const newId = res.data[0].id;
+        const idx = toBuyList.findIndex(item => item.name.toLowerCase() === name.toLowerCase());
+        if(idx !== -1){
+          toBuyList[idx].id = newId;
+          localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+        }
+      }
       // Recharger depuis cloud pour éviter les duplications
       if(window.getAchats){
         getAchats().then(result => {
@@ -2113,6 +2176,9 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
               qty: a.quantite,
               notes: a.notes || ''
             }));
+            cleanupPendingToBuyDeletes(toBuyList);
+            const pendingMap = getPendingToBuyDeleteMap();
+            toBuyList = toBuyList.filter(a => !pendingMap[toBuyDeleteKey(a.id, a.name)]);
             localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
             renderToBuy();
           }
@@ -2477,6 +2543,13 @@ async function autoSyncFromCloud(){
 
     if(!result || result.length === 0) {
       console.log('ℹ️ Aucun médicament dans le cloud');
+      if(isOnline()){
+        meds = [];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
+        renderAll();
+        updateStats();
+        console.log('🧹 Local stock effacé (cloud vide)');
+      }
       return;
     }
 
@@ -2606,58 +2679,69 @@ async function autoSyncFromCloud(){
         if(achatsResult && achatsResult.length > 0){
           console.log('🔄 Sync achats: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
 
-          var uniqueCloudAchats = {};
-          achatsResult.forEach(function(a){
-            var key = (a.nom || '').toLowerCase().trim();
-            if(key && a.nom){
-              uniqueCloudAchats[key] = {
-                id: a.id,
-                name: a.nom.trim(),
-                qty: Math.max(1, Number(a.quantite) || 1),
-                notes: (a.notes || '').trim()
-              };
-            }
-          });
-
-          var changed = false;
-
-          // Mettre à jour les achats existants
-          toBuyList.forEach(function(localItem, index){
-            var key = localItem.name.toLowerCase().trim();
-            var cloudItem = uniqueCloudAchats[key];
-
-            if(cloudItem){
-              var newQty = Math.max(1, Number(cloudItem.qty) || 1);
-              var newNotes = cloudItem.notes || '';
-
-              if(localItem.qty !== newQty || localItem.notes !== newNotes || !localItem.id){
-                toBuyList[index].qty = newQty;
-                toBuyList[index].notes = newNotes;
-                if(!toBuyList[index].id) toBuyList[index].id = cloudItem.id;
-                changed = true;
-                console.log('🔄 Achat mis à jour:', localItem.name, 'qty:', newQty);
+            var uniqueCloudAchats = {};
+            achatsResult.forEach(function(a){
+              var key = (a.nom || '').toLowerCase().trim();
+              if(key && a.nom){
+                uniqueCloudAchats[key] = {
+                  id: a.id,
+                  name: a.nom.trim(),
+                  qty: Math.max(1, Number(a.quantite) || 1),
+                  notes: (a.notes || '').trim()
+                };
               }
-              delete uniqueCloudAchats[key];
-            }
-          });
-
-          // Ajouter les nouveaux achats
-          Object.values(uniqueCloudAchats).forEach(function(newItem){
-            var exists = toBuyList.some(function(local){
-              return local.name.toLowerCase().trim() === newItem.name.toLowerCase().trim();
             });
 
-            if(!exists){
-              toBuyList.push(newItem);
-              changed = true;
-              console.log('➕ Nouvel achat du cloud:', newItem.name);
-            }
-          });
+            const cloudList = Object.values(uniqueCloudAchats);
+            cleanupPendingToBuyDeletes(cloudList);
+            const pendingMap = getPendingToBuyDeleteMap();
+
+            var changed = false;
+
+            // Mettre à jour les achats existants
+            toBuyList.forEach(function(localItem, index){
+              var key = localItem.name.toLowerCase().trim();
+              var cloudItem = uniqueCloudAchats[key];
+
+              if(cloudItem){
+                if(pendingMap[toBuyDeleteKey(cloudItem.id, cloudItem.name)]) return;
+                var newQty = Math.max(1, Number(cloudItem.qty) || 1);
+                var newNotes = cloudItem.notes || '';
+
+                if(localItem.qty !== newQty || localItem.notes !== newNotes || !localItem.id){
+                  toBuyList[index].qty = newQty;
+                  toBuyList[index].notes = newNotes;
+                  if(!toBuyList[index].id) toBuyList[index].id = cloudItem.id;
+                  changed = true;
+                  console.log('🔄 Achat mis à jour:', localItem.name, 'qty:', newQty);
+                }
+                delete uniqueCloudAchats[key];
+              }
+            });
+
+          // Ajouter les nouveaux achats
+            Object.values(uniqueCloudAchats).forEach(function(newItem){
+              if(pendingMap[toBuyDeleteKey(newItem.id, newItem.name)]) return;
+              var exists = toBuyList.some(function(local){
+                return local.name.toLowerCase().trim() === newItem.name.toLowerCase().trim();
+              });
+
+              if(!exists){
+                toBuyList.push(newItem);
+                changed = true;
+                console.log('➕ Nouvel achat du cloud:', newItem.name);
+              }
+            });
 
           if(changed){
             localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
             if(typeof renderToBuy === 'function') renderToBuy();
           }
+        } else if(isOnline()){
+          toBuyList = [];
+          localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+          if(typeof renderToBuy === 'function') renderToBuy();
+          console.log('🧹 Liste "À acheter" effacée (cloud vide)');
         }
       } catch(e) {
         console.warn('Sync achats échoué:', e);
@@ -2898,9 +2982,14 @@ function loadToBuyFromCloud(){
     
     // Ajouter les nouveaux du cloud
     let changed = false;
+    const pendingMap = getPendingToBuyDeleteMap();
+    const cloudList = result.map(a => ({ id: a.id, name: a.nom }));
+    cleanupPendingToBuyDeletes(cloudList);
+
     result.forEach(function(a){
       const key = a.nom.toLowerCase();
       const exists = toBuyList.some(lc => lc.name.toLowerCase() === key);
+      if(pendingMap[toBuyDeleteKey(a.id, a.nom)]) return;
       if(!exists){
         toBuyList.push({
           id: a.id,
