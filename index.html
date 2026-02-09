@@ -2092,18 +2092,12 @@ function removeToBuyItem(id, name){
       }
       clearPendingToBuyDelete(id, name);
       console.log('✅ Suppression cloud confirmée pour id:', id);
-      // Forcer une resync pour s'assurer que les changements sont propagés
       setTimeout(() => {
-        if(window.getAchats){
-          getAchats().then(result => {
-            if(result && result.length >= 0){
-              console.log('🔄 Resync achats après suppression, cloud a:', result.length);
-            }
-          });
-        }
+        loadToBuyFromCloud();
       }, 500);
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
+      loadToBuyFromCloud();
     });
   } else if(window.deleteAchatByName){
     console.log('☁️ Suppression cloud (nom):', name);
@@ -2112,8 +2106,10 @@ function removeToBuyItem(id, name){
         throw new Error(result.error);
       }
       clearPendingToBuyDelete(id, name);
+      loadToBuyFromCloud();
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
+      loadToBuyFromCloud();
     });
   }
 }
@@ -2157,6 +2153,16 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
     // Cumuler les quantités
     toBuyList[existingIndex].qty += qty;
     toBuyList[existingIndex].notes = mergeNotes(toBuyList[existingIndex].notes, notes);
+    const existingId = toBuyList[existingIndex].id;
+    if(window.updateAchatById && existingId){
+      updateAchatById(existingId, {
+        name,
+        qty: toBuyList[existingIndex].qty,
+        notes: toBuyList[existingIndex].notes
+      }).then(() => {
+        loadToBuyFromCloud();
+      });
+    }
   } else {
     // Ajouter nouveau
     toBuyList.push({ name, qty, notes });
@@ -2177,6 +2183,7 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
           renderToBuy();
         }
       }
+      loadToBuyFromCloud();
     });
   } else {
     console.warn('⚠️ addAchat non disponible');
@@ -2967,6 +2974,12 @@ function loadToBuyFromCloud(){
   getAchats().then(function(result){
     if(!result || result.length === 0){
       console.log('ℹ️ Aucune donnée achats cloud');
+      if(isOnline()){
+        toBuyList = [];
+        localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+        renderToBuy();
+        console.log('🧹 Liste "À acheter" effacée (cloud vide)');
+      }
       return;
     }
     
