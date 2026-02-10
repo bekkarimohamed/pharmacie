@@ -456,12 +456,13 @@ async function addAchat(item) {
     }
 }
 
-// Supprimer un achat par nom
+// Supprimer un achat par nom (insensible à la casse)
 async function deleteAchatByName(name) {
     if (!isCloudEnabled) return { error: 'Cloud not enabled' };
     
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?nom=eq.${encodeURIComponent(name)}`, {
+        const safeName = encodeURIComponent(String(name || '').trim());
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?nom=ilike.${safeName}`, {
             method: 'DELETE',
             headers: {
                 'apikey': SUPABASE_KEY,
