@@ -211,7 +211,7 @@
       --card-bg: rgba(22, 33, 62, 0.95);
       --text: #ecf0f1;
       --text-light: #2c3e50;
-      --list-header: linear-gradient(135deg, #00796b 0%, #00838f 100%);
+      --list-header: #0f766e;
       --list-row: rgba(22, 33, 62, 0.85);
       --list-row-alt: rgba(0, 150, 136, 0.16);
       --list-border: rgba(0, 150, 136, 0.28);
@@ -276,6 +276,31 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
+
+    /* Boutons nav: effet 3D + gras */
+    nav a, .nav-btn{
+      font-weight: 700;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+    }
+    nav a:active, .nav-btn:active{
+      transform: translateY(1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    /* Couleurs par section */
+    nav a[data-target="home"]{ background: linear-gradient(135deg,#2c7be5,#6f42c1); }
+    nav a[data-target="inventory"]{ background: linear-gradient(135deg,#1f9d55,#2dd4bf); }
+    nav a[data-target="add"]{ background: linear-gradient(135deg,#f59e0b,#f97316); }
+    nav a[data-target="edit-mode"]{ background: linear-gradient(135deg,#10b981,#22c55e); }
+    nav a[data-target="delete-mode"]{ background: linear-gradient(135deg,#ef4444,#f43f5e); }
+    nav a[data-target="use-mode"]{ background: linear-gradient(135deg,#0ea5e9,#6366f1); }
+    nav a[data-target="to-buy"]{ background: linear-gradient(135deg,#f97316,#f43f5e); }
+
+    /* Boutons à masquer */
+    .nav-hidden{ display:none !important; }
 
     .container{
       padding: 2rem;
@@ -977,12 +1002,12 @@
       </button></li>
 
       <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
-      <li><a href="#" id="btn-save" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/></svg> Sauvegarder</a></li>
-      <li><a href="#" id="btn-restore" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li>
-      <li><a href="#" id="btn-clean-dup" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li>
-      <li><a href="#" id="btn-clear" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li>
-      <li><a href="#" id="btn-reset-all" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> Réinitialiser</a></li>
-      <li><a href="#" id="btn-clear-local" class="nav-btn"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider local</a></li>
+      <li><a href="#" id="btn-save" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/></svg> Sauvegarder</a></li>
+      <li><a href="#" id="btn-restore" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li>
+      <li><a href="#" id="btn-clean-dup" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li>
+      <li><a href="#" id="btn-clear" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li>
+      <li><a href="#" id="btn-reset-all" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> Réinitialiser</a></li>
+      <li><a href="#" id="btn-clear-local" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider local</a></li>
 
       <li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li>
       <li><span style="color:#fff;font-size:.7rem;opacity:.7;">v<span id="app-version">-</span></span></li>
