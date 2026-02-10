@@ -2528,6 +2528,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
           // Charger données cloud initiales
           loadFromCloud();
+          loadToBuyFromCloud();
 
           // Sync automatique rapide
           if(autoSyncTimer) clearInterval(autoSyncTimer);
@@ -2592,6 +2593,7 @@ async function autoSyncFromCloud(){
 
   try {
     var result = await getMedicaments();
+    var cloudMeds = [];
 
     if(!result || result.length === 0) {
       if(DEBUG_LOGS) console.log('ℹ️ Aucun médicament dans le cloud');
@@ -2602,67 +2604,67 @@ async function autoSyncFromCloud(){
         updateStats();
         if(DEBUG_LOGS) console.log('🧹 Local stock effacé (cloud vide)');
       }
-      return;
+    } else {
+      cloudMeds = result.map(function(m){
+        return {
+          id: m.id,
+          name: m.nom,
+          dosage: m.dosage,
+          genre: m.genre,
+          quantity: m.quantite,
+          initialStock: m.stock_initial,
+          price: m.prix,
+          nbBoxes: m.nb_boites,
+          expiry: m.date_peremption,
+          notes: m.notes || '',
+          purchaseDate: m.date_achat || '',
+          updated_at: m.updated_at || m.created_at
+        };
+      });
+
+      if(DEBUG_LOGS) console.log('☁️ Cloud meds reçus:', cloudMeds.length);
     }
 
-    var cloudMeds = result.map(function(m){
-      return {
-        id: m.id,
-        name: m.nom,
-        dosage: m.dosage,
-        genre: m.genre,
-        quantity: m.quantite,
-        initialStock: m.stock_initial,
-        price: m.prix,
-        nbBoxes: m.nb_boites,
-        expiry: m.date_peremption,
-        notes: m.notes || '',
-        purchaseDate: m.date_achat || '',
-        updated_at: m.updated_at || m.created_at
-      };
-    });
+    if(cloudMeds.length > 0){
+      // Nettoyer les suppressions en attente
+      var cloudKeys = {};
+      cloudMeds.forEach(function(cm){
+        cloudKeys[keyOf(cm.name, cm.dosage)] = true;
+      });
+      cleanupPendingDeletes(cloudKeys);
+      var pendingDeleteMap = getPendingDeleteMap();
+      cloudMeds = cloudMeds.filter(function(cm){
+        return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
+      });
 
-    if(DEBUG_LOGS) console.log('☁️ Cloud meds reçus:', cloudMeds.length);
+      // PROTECTION ANTI-DOUBLONS : Créer une map unique par clé
+      var uniqueCloudMeds = {};
+      cloudMeds.forEach(function(cm){
+        var key = keyOf(cm.name, cm.dosage);
+        if(!uniqueCloudMeds[key]){
+          uniqueCloudMeds[key] = cm;
+        } else {
+          console.warn('⚠️ Doublon cloud ignoré:', cm.name, cm.dosage);
+        }
+      });
 
-    // Nettoyer les suppressions en attente
-    var cloudKeys = {};
-    cloudMeds.forEach(function(cm){
-      cloudKeys[keyOf(cm.name, cm.dosage)] = true;
-    });
-    cleanupPendingDeletes(cloudKeys);
-    var pendingDeleteMap = getPendingDeleteMap();
-    cloudMeds = cloudMeds.filter(function(cm){
-      return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
-    });
+      // Convertir en tableau unique
+      cloudMeds = Object.values(uniqueCloudMeds);
 
-    // PROTECTION ANTI-DOUBLONS : Créer une map unique par clé
-    var uniqueCloudMeds = {};
-    cloudMeds.forEach(function(cm){
-      var key = keyOf(cm.name, cm.dosage);
-      if(!uniqueCloudMeds[key]){
-        uniqueCloudMeds[key] = cm;
-      } else {
-        console.warn('⚠️ Doublon cloud ignoré:', cm.name, cm.dosage);
-      }
-    });
+      var localChanged = false;
+      var addedCount = 0;
+      var updatedCount = 0;
 
-    // Convertir en tableau unique
-    cloudMeds = Object.values(uniqueCloudMeds);
+      // Créer une map des médicaments locaux par clé
+      var localMap = {};
+      meds.forEach(function(m, index){
+        var key = keyOf(m.name, m.dosage);
+        localMap[key] = { med: m, index: index };
+      });
 
-    var localChanged = false;
-    var addedCount = 0;
-    var updatedCount = 0;
-
-    // Créer une map des médicaments locaux par clé
-    var localMap = {};
-    meds.forEach(function(m, index){
-      var key = keyOf(m.name, m.dosage);
-      localMap[key] = { med: m, index: index };
-    });
-
-    cloudMeds.forEach(function(cm){
-      var key = keyOf(cm.name, cm.dosage);
-      var localEntry = localMap[key];
+      cloudMeds.forEach(function(cm){
+        var key = keyOf(cm.name, cm.dosage);
+        var localEntry = localMap[key];
 
       if(!localEntry){
         // NOUVEAU médicament du cloud, l'ajouter
@@ -2713,15 +2715,16 @@ async function autoSyncFromCloud(){
           console.log('✅ Médicament mis à jour:', cm.name, 'qty:', localMed.quantity, 'price:', localMed.price);
         }
       }
-    });
+      });
 
-    if(localChanged){
-      save();
-      console.log('💾 Sync terminé: +' + addedCount + ' ajoutés, ~' + updatedCount + ' mis à jour');
-      if(typeof renderAll === 'function') renderAll();
-      if(typeof updateStats === 'function') updateStats();
-    } else {
-      if(DEBUG_LOGS) console.log('ℹ️ Aucune modification nécessaire');
+      if(localChanged){
+        save();
+        console.log('💾 Sync terminé: +' + addedCount + ' ajoutés, ~' + updatedCount + ' mis à jour');
+        if(typeof renderAll === 'function') renderAll();
+        if(typeof updateStats === 'function') updateStats();
+      } else {
+        if(DEBUG_LOGS) console.log('ℹ️ Aucune modification nécessaire');
+      }
     }
 
     // Sync achats (À acheter) avec validation stricte
@@ -2952,6 +2955,7 @@ function loadFromCloud(){
   getMedicaments().then(function(result){
     if(!result || result.length === 0){
       console.log('ℹ️ Aucune donnée cloud ou erreur');
+      loadToBuyFromCloud();
       return;
     }
     
