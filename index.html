@@ -2059,14 +2059,14 @@ function renderToBuy(){
   );
   
   sortedList.forEach((item)=>{
-    const idArg = item.id ? JSON.stringify(String(item.id)) : 'null';
-    const nameArg = JSON.stringify(String(item.name || ''));
+    const idAttr = item.id ? String(item.id) : '';
+    const nameAttr = String(item.name || '');
     tbody.innerHTML += `
       <tr>
         <td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td>
         <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td>
         <td>${escapeHtml(item.notes || '-')}</td>
-        <td><button class="action-btn delete" onclick="removeToBuyItem(${idArg}, ${nameArg})">🗑️</button></td>
+        <td><button class="action-btn delete tobuy-delete" data-id="${escapeAttr(idAttr)}" data-name="${escapeAttr(nameAttr)}">🗑️</button></td>
       </tr>
     `;
   });
@@ -2078,8 +2078,11 @@ function removeToBuyItem(id, name){
   markPendingToBuyDelete(id, name);
   
   // Trouver l'index
+  const idStr = id ? String(id) : '';
+  const nameStr = String(name || '');
   const idx = toBuyList.findIndex(item => 
-    (id && item.id === id) || item.name.toLowerCase() === name.toLowerCase()
+    (idStr && String(item.id || '') === idStr) ||
+    String(item.name || '').toLowerCase() === nameStr.toLowerCase()
   );
   
   if(idx === -1) {
@@ -2092,26 +2095,26 @@ function removeToBuyItem(id, name){
   renderToBuy();
 
   // Sync vers cloud - suppression activée avec confirmation
-  if(window.deleteAchatById && id){
-    console.log('☁️ Suppression cloud (id):', id);
-    deleteAchatById(id).then((result) => {
+  if(window.deleteAchatById && idStr){
+    console.log('☁️ Suppression cloud (id):', idStr);
+    deleteAchatById(idStr).then((result) => {
       if(result && result.error){
         throw new Error((result.status ? ('HTTP ' + result.status + ' ') : '') + result.error);
       }
-      clearPendingToBuyDelete(id, name);
-      console.log('✅ Suppression cloud confirmée pour id:', id);
+      clearPendingToBuyDelete(idStr, nameStr);
+      console.log('✅ Suppression cloud confirmée pour id:', idStr);
       setTimeout(() => {
         loadToBuyFromCloud();
       }, 500);
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
       if(window.deleteAchatByName){
-        console.log('☁️ Fallback suppression cloud (nom):', name);
-        deleteAchatByName(name).then((r) => {
+        console.log('☁️ Fallback suppression cloud (nom):', nameStr);
+        deleteAchatByName(nameStr).then((r) => {
           if(r && r.error){
             throw new Error((r.status ? ('HTTP ' + r.status + ' ') : '') + r.error);
           }
-          clearPendingToBuyDelete(id, name);
+          clearPendingToBuyDelete(idStr, nameStr);
           loadToBuyFromCloud();
         }).catch(err => {
           console.error('❌ Erreur suppression cloud (nom):', err);
@@ -2124,12 +2127,12 @@ function removeToBuyItem(id, name){
       }
     });
   } else if(window.deleteAchatByName){
-    console.log('☁️ Suppression cloud (nom):', name);
-    deleteAchatByName(name).then((result) => {
+    console.log('☁️ Suppression cloud (nom):', nameStr);
+    deleteAchatByName(nameStr).then((result) => {
       if(result && result.error){
         throw new Error((result.status ? ('HTTP ' + result.status + ' ') : '') + result.error);
       }
-      clearPendingToBuyDelete(id, name);
+      clearPendingToBuyDelete(idStr, nameStr);
       loadToBuyFromCloud();
     }).catch(e => {
       console.error('❌ Erreur suppression cloud:', e);
@@ -2391,6 +2394,16 @@ document.querySelectorAll('nav a[data-target]').forEach(a=>{
     e.preventDefault();
     show(a.getAttribute('data-target'));
   });
+});
+
+// Suppression "À acheter" via délégation (évite les onclick cassés)
+document.addEventListener('click', (e)=>{
+  const btn = e.target && e.target.closest ? e.target.closest('.tobuy-delete') : null;
+  if(!btn) return;
+  e.preventDefault();
+  const id = btn.getAttribute('data-id') || '';
+  const name = btn.getAttribute('data-name') || '';
+  removeToBuyItem(id || null, name || '');
 });
 
 // actions backup
@@ -3312,7 +3325,7 @@ async function syncToBuyDeletions(){
 <!-- Supabase Realtime SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Cloud Integration (REST API) -->
-<script src="cloud.js?v=20260210a"></script>
+<script src="cloud.js?v=20260210c"></script>
 
 </body>
 </html>
