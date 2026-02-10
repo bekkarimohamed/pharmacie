@@ -5,6 +5,7 @@
 
 const SUPABASE_URL = 'https://oywsadhtcvzhesnmevdg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xJrQOqaul0GTcvoJe92LpA_ACquZtRe';
+const SUPABASE_BUCKET = 'med-imae';
 
 var isCloudEnabled = false;
 var cloudMedsPoller = null;
@@ -92,6 +93,7 @@ async function addMedicament(med) {
         nb_boites: med.nbBoxes,
         date_peremption: med.expiry,
         date_achat: med.purchaseDate || null,
+        image_url: med.imageUrl || null,
         notes: med.notes || ''
     };
     
@@ -187,6 +189,7 @@ async function updateMedicament(id, med) {
         nb_boites: med.nbBoxes,
         date_peremption: med.expiry,
         date_achat: med.purchaseDate || null,
+        image_url: med.imageUrl || null,
         notes: med.notes || ''
     };
     
@@ -229,7 +232,7 @@ function getCloudStatus() {
 async function getMedicamentsSignature() {
     if (!isCloudEnabled) return '';
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?select=id,updated_at,created_at,quantite,prix,stock_initial,nb_boites,date_peremption,date_achat&order=id.asc`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/medicaments?select=id,updated_at,created_at,quantite,prix,stock_initial,nb_boites,date_peremption,date_achat,image_url&order=id.asc`, {
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -243,7 +246,7 @@ async function getMedicamentsSignature() {
         if (!Array.isArray(data)) return '';
         return data.map(row => {
             const ts = row.updated_at || row.created_at || '';
-            return `${row.id}|${ts}|${row.quantite}|${row.prix}|${row.stock_initial}|${row.nb_boites}|${row.date_peremption || ''}|${row.date_achat || ''}`;
+            return `${row.id}|${ts}|${row.quantite}|${row.prix}|${row.stock_initial}|${row.nb_boites}|${row.date_peremption || ''}|${row.date_achat || ''}|${row.image_url || ''}`;
         }).join(';');
     } catch (e) {
         console.warn('Signature fetch error:', e);
@@ -377,6 +380,35 @@ async function clearAllCloudMeds() {
         }
     } catch (e) {
         return { error: e.message };
+    }
+}
+
+// Upload image to Supabase Storage (public bucket)
+async function uploadMedImage(file, fileName) {
+    if (!supabaseClient || typeof supabaseClient.storage !== 'function' && !supabaseClient.storage) {
+        return { error: 'Supabase client non disponible' };
+    }
+    if (!file) return { error: 'Fichier manquant' };
+
+    try {
+        const path = fileName || `meds/${Date.now()}_${file.name}`;
+        const uploadRes = await supabaseClient.storage
+            .from(SUPABASE_BUCKET)
+            .upload(path, file, { upsert: true });
+
+        if (uploadRes.error) {
+            return { error: uploadRes.error.message || uploadRes.error };
+        }
+
+        const publicRes = supabaseClient.storage
+            .from(SUPABASE_BUCKET)
+            .getPublicUrl(path);
+
+        const url = publicRes?.data?.publicUrl;
+        if (!url) return { error: 'URL publique introuvable' };
+        return { error: null, url };
+    } catch (e) {
+        return { error: e.message || String(e) };
     }
 }
 // ========== ACHATS (À ACHETER) ==========
@@ -588,4 +620,5 @@ window.clearAllCloudMeds = clearAllCloudMeds;
 window.subscribeToAchats = subscribeToAchats;
 window.deleteAchatById = deleteAchatById;
 window.updateAchatById = updateAchatById;
+window.uploadMedImage = uploadMedImage;
 
