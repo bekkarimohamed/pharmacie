@@ -490,7 +490,8 @@ async function deleteAchatById(id) {
     if (!id) return { error: 'Missing id' };
 
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${id}`, {
+        const safeId = encodeURIComponent(String(id));
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${safeId}`, {
             method: 'DELETE',
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -524,7 +525,8 @@ async function updateAchatById(id, item) {
     };
 
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${id}`, {
+        const safeId = encodeURIComponent(String(id));
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/achats?id=eq.${safeId}`, {
             method: 'PATCH',
             headers: {
                 'apikey': SUPABASE_KEY,
