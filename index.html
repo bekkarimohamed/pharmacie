@@ -768,13 +768,14 @@
         border-radius:10px;
       }
       nav li{min-width:0}
-      nav a .nav-icon, nav a .icon{
+      nav a svg{
         width:16px;
         height:16px;
         min-width:16px;
         min-height:16px;
+        display:block;
       }
-      nav a span, nav a svg{display:block}
+      nav a span{display:block}
 
       /* Container - plus compact */
       .container{padding:.5rem}
@@ -842,6 +843,16 @@
         padding-left: 0.25rem;
         padding-right: 0.25rem;
       }
+      /* Table "À acheter" pleine largeur */
+      #tobuy-table{
+        display:table;
+        width:100%;
+        table-layout:fixed;
+      }
+      #tobuy-table th, #tobuy-table td{
+        white-space:normal;
+        word-break:break-word;
+      }
       th,td{
         padding:.3rem .25rem;
         min-width:50px
@@ -896,7 +907,7 @@
         min-height:48px;
         border-radius:9px;
       }
-      .nav-icon{
+      nav a svg{
         width:15px;
         height:15px
       }
