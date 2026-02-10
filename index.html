@@ -528,6 +528,20 @@
     }
 
     .notes-cell{max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+    .med-name-cell{
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+    }
+    .med-thumb{
+      width:28px;
+      height:28px;
+      border-radius:6px;
+      object-fit:cover;
+      border:1px solid rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.06);
+      flex:0 0 auto;
+    }
 
     /* Debug sync */
     #debug-sync{
@@ -880,6 +894,7 @@
         min-width:50px
       }
       .notes-cell{max-width:60px}
+      .med-thumb{width:22px;height:22px;border-radius:5px}
 
       /* Modal edit */
       #edit-modal{padding:.2rem}
@@ -1030,6 +1045,9 @@
   <div id="details-modal" class="details-modal">
     <div class="details-content">
       <h3 id="details-title">Détails</h3>
+      <div style="display:flex;justify-content:center;margin:.5rem 0 1rem;">
+        <img id="details-image" class="med-thumb" style="width:64px;height:64px;border-radius:10px;display:none;" alt="">
+      </div>
       <div class="details-grid">
         <div class="label">Nom</div><div class="value" id="details-name">-</div>
         <div class="label">Dosage</div><div class="value" id="details-dosage">-</div>
@@ -1183,6 +1201,12 @@
           <small style="display:block;margin-top:.5rem;color:#666;">Format : MM/AA</small>
         </div>
 
+        <div class="form-group">
+          <label>Photo (optionnel)</label>
+          <input type="file" id="image-file" accept="image/*" capture="environment">
+          <small style="display:block;margin-top:.4rem;color:#666;">Caméra ou galerie.</small>
+        </div>
+
         <div class="form-group"><label>Notes</label><textarea id="notes" placeholder="Optionnel"></textarea></div>
 
         <button type="submit">💊 Ajouter</button>
@@ -1321,6 +1345,12 @@
           <input type="text" id="edit-expiry-mmaa" inputmode="numeric" maxlength="5" placeholder="ex : 02/26" required>
         </div>
 
+        <div class="form-group">
+          <label>Photo (optionnel)</label>
+          <input type="file" id="edit-image-file" accept="image/*" capture="environment">
+          <small style="display:block;margin-top:.4rem;color:#666;">Laisser vide pour garder l'image actuelle.</small>
+        </div>
+
         <div class="form-group"><label>Notes</label><textarea id="edit-notes"></textarea></div>
 
         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
@@ -1402,6 +1432,17 @@ function openDetails(idx){
   setText('details-boxes', String(Number(m.nbBoxes) || 1));
   setText('details-expiry', fmtMMAA(m.expiry));
   setText('details-notes', (m.notes || '-'));
+
+  const imgEl = document.getElementById('details-image');
+  if(imgEl){
+    if(m.imageUrl){
+      imgEl.src = m.imageUrl;
+      imgEl.style.display = 'block';
+    } else {
+      imgEl.removeAttribute('src');
+      imgEl.style.display = 'none';
+    }
+  }
 
   const modal = document.getElementById('details-modal');
   if(modal) modal.style.display = 'flex';
@@ -1496,6 +1537,31 @@ function normalizeName(str){
 }
 function keyOf(name, dosage){
   return (normalizeName(name) + "||" + normalizeName(dosage)).toLowerCase();
+}
+function safeSlug(str){
+  return String(str || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/(^-|-$)/g,'');
+}
+function buildImagePath(name, dosage, file){
+  const ext = (file && file.name && file.name.includes('.'))
+    ? file.name.split('.').pop()
+    : (file && file.type ? file.type.split('/').pop() : 'jpg');
+  const base = `${safeSlug(name)}_${safeSlug(dosage)}_${Date.now()}`;
+  return `meds/${base}.${ext}`;
+}
+async function uploadMedImageIfAny(file, name, dosage){
+  if(!file) return '';
+  if(!window.uploadMedImage) return '';
+  const path = buildImagePath(name, dosage, file);
+  const res = await uploadMedImage(file, path);
+  if(res && res.error){
+    console.warn('Erreur upload image:', res.error);
+    alert('❌ Image non envoyée. Le médicament sera enregistré sans image.');
+    return '';
+  }
+  return res && res.url ? res.url : '';
 }
 
 function fmtMMAAFromISO(iso){
@@ -1683,6 +1749,8 @@ function renderAll(){
       const expCls = expClass(m.expiry);
       const stkCls = stockClass(Number(m.quantity));
       const q = Number(m.quantity) || 0;
+      const imgUrl = m.imageUrl ? escapeAttr(m.imageUrl) : '';
+      const imgHtml = imgUrl ? `<img class="med-thumb" src="${imgUrl}" alt="">` : `<span class="med-thumb"></span>`;
 
       // Calcul des alertes
       let alertMsgs = [];
@@ -1697,7 +1765,7 @@ function renderAll(){
 
       let row = `
         <tr class="${stkCls}">
-          <td style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" title="Voir détails" onclick="openDetails(${idx})">${escapeHtml(m.name)}</td>
+          <td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" title="Voir détails" onclick="openDetails(${idx})">${imgHtml}<span>${escapeHtml(m.name)}</span></td>
       `;
       if(tableId === 'med-table'){
         row += `<td>${escapeHtml(m.genre || '-')}</td>`;
@@ -1747,7 +1815,7 @@ function renderAll(){
 /* =========================
    AJOUT (avec alerte + cumul)
 ========================= */
-document.getElementById('add-form').addEventListener('submit', function(e){
+document.getElementById('add-form').addEventListener('submit', async function(e){
   e.preventDefault();
 
   const name = normalizeName(document.getElementById('name').value);
@@ -1778,6 +1846,8 @@ document.getElementById('add-form').addEventListener('submit', function(e){
 
   const notes = document.getElementById('notes').value.trim();
   const now = new Date().toISOString();
+  const imageFile = document.getElementById('image-file') ? document.getElementById('image-file').files[0] : null;
+  const imageUrl = await uploadMedImageIfAny(imageFile, name, dosage);
 
   const k = keyOf(name, dosage);
   const existingIndex = meds.findIndex(m => keyOf(m.name, m.dosage) === k);
@@ -1785,7 +1855,7 @@ document.getElementById('add-form').addEventListener('submit', function(e){
   if(existingIndex === -1){
     const newMed = {
       name, dosage, genre, initialStock, quantity, price, nbBoxes,
-      expiry: expiryISO, notes, purchaseDate,
+      expiry: expiryISO, notes, purchaseDate, imageUrl,
       created_at: now,
       updated_at: now,
       _localModified: true
@@ -1797,7 +1867,7 @@ document.getElementById('add-form').addEventListener('submit', function(e){
     if(window.addMedicament){
       addMedicament({
         name, dosage, genre, initialStock, quantity, price, nbBoxes,
-        expiry: expiryISO, notes, purchaseDate
+        expiry: expiryISO, notes, purchaseDate, imageUrl
       }).then(result => {
         if(result.error){
           console.error('Erreur ajout cloud:', result.error);
@@ -1820,6 +1890,7 @@ document.getElementById('add-form').addEventListener('submit', function(e){
       purchaseDateEl.disabled = true;
       purchaseDateEl.value = getTodayISODate();
     }
+    if(document.getElementById('image-file')) document.getElementById('image-file').value = '';
     show('inventory');
     renderAll();
     updateStats();
@@ -1856,6 +1927,7 @@ Nouvelle saisie :
   ex.expiry = earliestExpiry(ex.expiry, expiryISO);
   ex.notes = mergeNotes(ex.notes, notes);
   ex.purchaseDate = purchaseDate;
+  if(imageUrl) ex.imageUrl = imageUrl;
   ex._localModified = true; // Marquer comme modifié localement
 
   meds[existingIndex] = ex;
@@ -1911,7 +1983,7 @@ function openEdit(idx){
 function closeEdit(){ document.getElementById('edit-modal').style.display = 'none'; }
 document.getElementById('edit-cancel').addEventListener('click', closeEdit);
 
-document.getElementById('edit-form').addEventListener('submit', function(e){
+document.getElementById('edit-form').addEventListener('submit', async function(e){
   e.preventDefault();
 
   const idx = parseInt(document.getElementById('edit-index').value, 10);
@@ -1944,6 +2016,8 @@ document.getElementById('edit-form').addEventListener('submit', function(e){
   }
 
   const notes = document.getElementById('edit-notes').value.trim();
+  const editImageFile = document.getElementById('edit-image-file') ? document.getElementById('edit-image-file').files[0] : null;
+  const imageUrl = await uploadMedImageIfAny(editImageFile, name, dosage);
 
   // si modifie vers un existant => proposer fusion
   const newKey = keyOf(name, dosage);
@@ -1967,6 +2041,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
       target.expiry = earliestExpiry(target.expiry, expiryISO);
       target.notes = mergeNotes(target.notes, notes);
       if(!target.purchaseDate) target.purchaseDate = purchaseDate;
+      if(imageUrl) target.imageUrl = imageUrl;
       target._localModified = true; // Marquer comme modifié localement
 
       meds[otherIndex] = target;
@@ -2001,14 +2076,14 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
   }
 
   const keepId = meds[idx].id;
-  meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate };
+  meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || '') };
   if(keepId) meds[idx].id = keepId;
   meds[idx]._localModified = true; // Marquer comme modifié localement
   save();
 
   // Mettre à jour le cloud IMMÉDIATEMENT
   if(window.updateMedicament && meds[idx].id){
-    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate }).then(result => {
+    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || '') }).then(result => {
       if(result.error){
         console.error('Erreur update cloud:', result.error);
       } else {
@@ -2020,6 +2095,7 @@ Voulez-vous FUSIONNER (cumuler) ce médicament modifié avec l'existant ?`;
   closeEdit();
   renderAll();
   updateStats();
+  if(document.getElementById('edit-image-file')) document.getElementById('edit-image-file').value = '';
 });
 
 /* =========================
@@ -2372,7 +2448,8 @@ function restoreBackupFromFile(file){
         price: Number(x.price)||0,
         nbBoxes: Number(x.nbBoxes)||1,
         expiry: x.expiry,
-        notes: (x.notes||"").toString()
+        notes: (x.notes||"").toString(),
+        imageUrl: x.imageUrl || x.image_url || ''
       }));
 
       meds = cleaned;
@@ -2721,6 +2798,7 @@ async function autoSyncFromCloud(){
           expiry: m.date_peremption,
           notes: m.notes || '',
           purchaseDate: m.date_achat || '',
+          imageUrl: m.image_url || '',
           updated_at: m.updated_at || m.created_at
         };
       });
@@ -2784,6 +2862,7 @@ async function autoSyncFromCloud(){
           nbBoxes: Math.max(1, Number(cm.nbBoxes) || 1),
           expiry: cm.expiry || null,
           notes: cm.notes || '',
+          imageUrl: cm.imageUrl || '',
           updated_at: cm.updated_at
         };
 
@@ -2810,6 +2889,7 @@ async function autoSyncFromCloud(){
           localMed.expiry = cm.expiry || localMed.expiry;
           localMed.notes = cm.notes || localMed.notes;
           localMed.genre = cm.genre || localMed.genre;
+          localMed.imageUrl = cm.imageUrl || localMed.imageUrl || '';
           localMed.updated_at = cm.updated_at;
 
           meds[localEntry.index] = localMed;
@@ -2955,7 +3035,8 @@ function refreshFromCloud(){
         nbBoxes: m.nb_boites,
         expiry: m.date_peremption,
         notes: m.notes || '',
-        purchaseDate: m.date_achat || ''
+        purchaseDate: m.date_achat || '',
+        imageUrl: m.image_url || ''
       };
     });
 
@@ -3007,7 +3088,7 @@ function refreshFromCloud(){
         if(lm._localModified && !cm._localModified){
           // Local modifié plus récemment → garder local
           console.log('⏭️ Skip update (local plus récent):', lm.name);
-        } else if(lm.quantity !== cm.quantity || lm.price !== cm.price || lm.expiry !== cm.expiry){
+        } else if(lm.quantity !== cm.quantity || lm.price !== cm.price || lm.expiry !== cm.expiry || (lm.imageUrl || '') !== (cm.imageUrl || '')){
           // Cloud plus récent → prendre les données cloud
           console.log('✅ Update depuis cloud:', lm.name, 'qty:', lm.quantity, '→', cm.quantity);
           lm.id = cm.id;
@@ -3015,6 +3096,7 @@ function refreshFromCloud(){
           lm.price = cm.price;
           lm.expiry = cm.expiry;
           lm.notes = cm.notes || '';
+          lm.imageUrl = cm.imageUrl || '';
           updatedCount++;
         }
       }
@@ -3075,7 +3157,8 @@ function loadFromCloud(){
         nbBoxes: m.nb_boites,
         expiry: m.date_peremption,
         notes: m.notes || '',
-        purchaseDate: m.date_achat || ''
+        purchaseDate: m.date_achat || '',
+        imageUrl: m.image_url || ''
       };
     });
     
@@ -3190,7 +3273,8 @@ async function loadAndShowFromCloud(){
       nbBoxes: m.nb_boites,
       expiry: m.date_peremption,
       notes: m.notes || '',
-      purchaseDate: m.date_achat || ''
+      purchaseDate: m.date_achat || '',
+      imageUrl: m.image_url || ''
     };
   });
 
@@ -3269,7 +3353,8 @@ async function saveAllToCloud(callback){
       nbBoxes: m.nbBoxes,
       expiry: m.expiry,
       notes: m.notes || '',
-      purchaseDate: m.purchaseDate || ''
+      purchaseDate: m.purchaseDate || '',
+      imageUrl: m.imageUrl || ''
     };
     
     if(cloudMap[key]){
@@ -3415,7 +3500,7 @@ async function syncToBuyDeletions(){
 <!-- Supabase Realtime SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Cloud Integration (REST API) -->
-<script src="cloud.js?v=20260210c"></script>
+<script src="cloud.js?v=20260210d"></script>
 
 </body>
 </html>
