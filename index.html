@@ -2058,13 +2058,15 @@ function renderToBuy(){
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
   
-  sortedList.forEach((item, idx)=>{
+  sortedList.forEach((item)=>{
+    const idArg = item.id ? JSON.stringify(String(item.id)) : 'null';
+    const nameArg = JSON.stringify(String(item.name || ''));
     tbody.innerHTML += `
       <tr>
         <td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td>
         <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td>
         <td>${escapeHtml(item.notes || '-')}</td>
-        <td><button class="action-btn delete" onclick="removeToBuyItem(${item.id || 'null'}, ${JSON.stringify(item.name)})">🗑️</button></td>
+        <td><button class="action-btn delete" onclick="removeToBuyItem(${idArg}, ${nameArg})">🗑️</button></td>
       </tr>
     `;
   });
@@ -2172,10 +2174,15 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
     item.name.toLowerCase() === name.toLowerCase()
   );
 
+  let shouldInsert = false;
+  let targetIndex = -1;
+
   if(existingIndex !== -1){
     // Cumuler les quantités
     toBuyList[existingIndex].qty += qty;
     toBuyList[existingIndex].notes = mergeNotes(toBuyList[existingIndex].notes, notes);
+    targetIndex = existingIndex;
+
     const existingId = toBuyList[existingIndex].id;
     if(window.updateAchatById && existingId){
       updateAchatById(existingId, {
@@ -2185,31 +2192,36 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
       }).then(() => {
         loadToBuyFromCloud();
       });
+    } else {
+      shouldInsert = true;
     }
   } else {
     // Ajouter nouveau
     toBuyList.push({ name, qty, notes });
+    shouldInsert = true;
+    targetIndex = toBuyList.length - 1;
   }
 
   localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
 
-  // Sync vers cloud immédiatement
-  if(window.addAchat){
-    console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
-    addAchat({ name, qty, notes }).then((res) => {
-      if(res && res.data && res.data[0] && res.data[0].id){
-        const newId = res.data[0].id;
-        const idx = toBuyList.findIndex(item => item.name.toLowerCase() === name.toLowerCase());
-        if(idx !== -1){
-          toBuyList[idx].id = newId;
-          localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
-          renderToBuy();
+  // Sync vers cloud immédiatement (uniquement si nouvel enregistrement)
+  if(shouldInsert){
+    if(window.addAchat){
+      console.log('☁️ Sync ajout achat vers cloud:', { name, qty, notes });
+      addAchat({ name, qty, notes }).then((res) => {
+        if(res && res.data && res.data[0] && res.data[0].id){
+          const newId = res.data[0].id;
+          if(targetIndex !== -1 && toBuyList[targetIndex]){
+            toBuyList[targetIndex].id = newId;
+            localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
+            renderToBuy();
+          }
         }
-      }
-      loadToBuyFromCloud();
-    });
-  } else {
-    console.warn('⚠️ addAchat non disponible');
+        loadToBuyFromCloud();
+      });
+    } else {
+      console.warn('⚠️ addAchat non disponible');
+    }
   }
 
   e.target.reset();
