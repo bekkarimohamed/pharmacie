@@ -721,6 +721,27 @@
       cursor: pointer;
       font-weight: 600;
     }
+    .details-image-clickable{
+      cursor: zoom-in;
+    }
+    .image-zoom-modal{
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 11000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .image-zoom-modal img{
+      max-width: 95vw;
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
 
     @keyframes modalSlideIn {
       from { opacity: 0; transform: scale(0.8) translateY(-20px); }
@@ -1093,6 +1114,9 @@
         <button class="details-close" id="details-close-btn">Fermer</button>
       </div>
     </div>
+  </div>
+  <div id="image-zoom-modal" class="image-zoom-modal">
+    <img id="image-zoom-img" alt="">
   </div>
 
   <!-- Navigation -->
@@ -1467,9 +1491,15 @@ function openDetails(idx){
     if(m.imageUrl){
       imgEl.src = m.imageUrl;
       imgEl.style.display = 'block';
+      imgEl.classList.add('details-image-clickable');
+      imgEl.onclick = function(){
+        openImageZoom(m.imageUrl);
+      };
     } else {
       imgEl.removeAttribute('src');
       imgEl.style.display = 'none';
+      imgEl.classList.remove('details-image-clickable');
+      imgEl.onclick = null;
     }
   }
 
@@ -1480,6 +1510,21 @@ function openDetails(idx){
 function closeDetails(){
   const modal = document.getElementById('details-modal');
   if(modal) modal.style.display = 'none';
+}
+function openImageZoom(src){
+  if(!src) return;
+  const modal = document.getElementById('image-zoom-modal');
+  const img = document.getElementById('image-zoom-img');
+  if(!modal || !img) return;
+  img.src = src;
+  modal.style.display = 'flex';
+}
+function closeImageZoom(){
+  const modal = document.getElementById('image-zoom-modal');
+  const img = document.getElementById('image-zoom-img');
+  if(!modal || !img) return;
+  modal.style.display = 'none';
+  img.removeAttribute('src');
 }
 
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(meds)); }
@@ -2639,6 +2684,7 @@ document.getElementById('details-close-btn').addEventListener('click', closeDeta
 document.getElementById('details-modal').addEventListener('click', (e)=>{
   if(e.target && e.target.id === 'details-modal') closeDetails();
 });
+document.getElementById('image-zoom-modal').addEventListener('click', closeImageZoom);
 const appVersionEl = document.getElementById('app-version');
 if(appVersionEl) appVersionEl.textContent = APP_VERSION;
 if(DEBUG_LOGS) console.log('App version:', APP_VERSION);
