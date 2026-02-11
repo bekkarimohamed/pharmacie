@@ -347,7 +347,6 @@
 
     th, td{
       padding: 1rem;
-      border-bottom: 1px solid var(--list-border);
       text-align: left;
       vertical-align: top;
     }
@@ -372,6 +371,10 @@
 
     tbody tr{
       background: var(--list-row);
+      border-bottom: 1px solid var(--list-border);
+    }
+    tbody td{
+      border-bottom: none;
     }
     tr:hover{
       background: rgba(0, 150, 136, 0.12);
@@ -879,6 +882,21 @@
         margin: 0;
         padding-left: 0.25rem;
         padding-right: 0.25rem;
+        backdrop-filter: none;
+      }
+      /* Eviter décalage entre en-tête et lignes */
+      #med-table, #med-table-edit, #med-table-delete, #med-table-use, #tobuy-table{
+        width:100%;
+        table-layout:fixed;
+      }
+      #med-table thead, #med-table tbody,
+      #med-table-edit thead, #med-table-edit tbody,
+      #med-table-delete thead, #med-table-delete tbody,
+      #med-table-use thead, #med-table-use tbody,
+      #tobuy-table thead, #tobuy-table tbody{
+        display:table;
+        width:100%;
+        table-layout:fixed;
       }
       /* Table "À acheter" pleine largeur */
       #tobuy-table{
