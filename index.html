@@ -5,6 +5,8 @@
   <meta name="google" content="notranslate" />
   <title>Gestion de la Pharmacie à Domicile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#5a5fb8" />
+  <link rel="manifest" href="manifest.json" />
 
   <style>
     :root{
@@ -2753,6 +2755,13 @@ window.addEventListener('focus', () => {
     autoSyncFromCloud();
   }
 });
+
+// PWA service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 
 // Pas d'auto-sync - sync manuel uniquement
 // Les modifications sont syncées immédiatement vers le cloud
