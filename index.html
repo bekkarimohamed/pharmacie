@@ -885,18 +885,23 @@
         backdrop-filter: none;
       }
       /* Eviter décalage entre en-tête et lignes */
-      #med-table, #med-table-edit, #med-table-delete, #med-table-use, #tobuy-table{
+      #med-table, #med-table-edit, #med-table-delete, #med-table-use{
         width:100%;
-        table-layout:fixed;
+        table-layout:auto;
       }
       #med-table thead, #med-table tbody,
       #med-table-edit thead, #med-table-edit tbody,
       #med-table-delete thead, #med-table-delete tbody,
-      #med-table-use thead, #med-table-use tbody,
-      #tobuy-table thead, #tobuy-table tbody{
-        display:table;
-        width:100%;
-        table-layout:fixed;
+      #med-table-use thead, #med-table-use tbody{
+        display:table-row-group;
+        width:auto;
+        table-layout:auto;
+      }
+      #med-table th, #med-table td,
+      #med-table-edit th, #med-table-edit td,
+      #med-table-delete th, #med-table-delete td,
+      #med-table-use th, #med-table-use td{
+        white-space:nowrap;
       }
       /* Table "À acheter" pleine largeur */
       #tobuy-table{
