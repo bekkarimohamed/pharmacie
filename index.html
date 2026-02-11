@@ -375,7 +375,6 @@
     }
     tr:hover{
       background: rgba(0, 150, 136, 0.12);
-      transform: scale(1.01);
       transition: var(--transition);
     }
 
@@ -1803,6 +1802,14 @@ function renderAll(){
     const no = (m.notes || '').toLowerCase();
     return n.includes(filter) || d.includes(filter) || no.includes(filter);
   }) : meds;
+  const filteredSorted = [...filtered].sort((a, b) => {
+    const n1 = (a.name || '').toLowerCase();
+    const n2 = (b.name || '').toLowerCase();
+    if (n1 !== n2) return n1.localeCompare(n2);
+    const d1 = (a.dosage || '').toLowerCase();
+    const d2 = (b.dosage || '').toLowerCase();
+    return d1.localeCompare(d2);
+  });
 
   function renderTable(tableId){
     const tbody = document.querySelector(`#${tableId} tbody`);
@@ -1810,18 +1817,18 @@ function renderAll(){
 
     tbody.innerHTML = '';
 
-      if(filtered.length === 0){
-        const colCount =
-          tableId === 'med-table' ? 7 :
-          tableId === 'med-table-edit' ? 6 :
-          tableId === 'med-table-delete' ? 6 :
-          tableId === 'med-table-use' ? 6 : 7;
+    if(filteredSorted.length === 0){
+      const colCount =
+        tableId === 'med-table' ? 7 :
+        tableId === 'med-table-edit' ? 6 :
+        tableId === 'med-table-delete' ? 6 :
+        tableId === 'med-table-use' ? 6 : 7;
 
       tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-msg">Aucun médicament trouvé</td></tr>`;
       return;
     }
 
-    filtered.forEach(m=>{
+    filteredSorted.forEach(m=>{
       const idx = meds.indexOf(m);
       const expCls = expClass(m.expiry);
       const stkCls = stockClass(Number(m.quantity));
