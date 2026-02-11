@@ -1037,9 +1037,14 @@
               style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;">
         Accéder
       </button>
+      <button id="bio-btn"
+              style="margin-top:.6rem;background:#2e7d32;color:#fff;border:none;padding:.6rem 1.2rem;border-radius:var(--radius);cursor:pointer;font-size:.95rem;font-weight:600;">
+        Empreinte / Face ID
+      </button>
 
       <p id="pwd-error" style="color:#d32f2f;margin-top:1rem;display:none;">Mot de passe incorrect</p>
-      <p style="margin-top:1rem;font-size:.9rem;color:#666;">Astuce : Entrée = valider</p>
+      <p style="margin-top:.6rem;font-size:.85rem;color:#666;">Astuce : Entrée = valider</p>
+      <p style="margin-top:.4rem;font-size:.8rem;color:#666;">L'empreinte fonctionne seulement sur mobile/PWA.</p>
     </div>
   </div>
 
@@ -1647,6 +1652,76 @@ function logout(){
   setAppVisible(false);
   document.getElementById('pwd-input').value = '';
   document.getElementById('pwd-error').style.display = 'none';
+}
+
+/* =========================
+   BIOMETRIE (WebAuthn local)
+========================= */
+const BIO_KEY = 'biometric_credential_id';
+
+function bufferToBase64Url(buffer){
+  const bytes = new Uint8Array(buffer);
+  let str = '';
+  bytes.forEach(b => str += String.fromCharCode(b));
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function base64UrlToBuffer(base64url){
+  const pad = '='.repeat((4 - (base64url.length % 4)) % 4);
+  const base64 = (base64url + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const buffer = new ArrayBuffer(raw.length);
+  const bytes = new Uint8Array(buffer);
+  for(let i=0;i<raw.length;i++) bytes[i] = raw.charCodeAt(i);
+  return buffer;
+}
+
+async function biometricRegister(){
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const userId = crypto.getRandomValues(new Uint8Array(16));
+  const publicKey = {
+    challenge,
+    rp: { name: 'Pharmacie Domicile' },
+    user: {
+      id: userId,
+      name: 'local-user',
+      displayName: 'Utilisateur'
+    },
+    pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+    authenticatorSelection: {
+      authenticatorAttachment: 'platform',
+      userVerification: 'required'
+    },
+    timeout: 60000,
+    attestation: 'none'
+  };
+  const cred = await navigator.credentials.create({ publicKey });
+  if(!cred) throw new Error('Création empreinte échouée');
+  const id = bufferToBase64Url(cred.rawId);
+  localStorage.setItem(BIO_KEY, id);
+  return id;
+}
+
+async function biometricVerify(){
+  const storedId = localStorage.getItem(BIO_KEY);
+  if(!storedId){
+    await biometricRegister();
+  }
+  const allowId = localStorage.getItem(BIO_KEY);
+  if(!allowId) throw new Error('Aucune empreinte enregistrée');
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const publicKey = {
+    challenge,
+    allowCredentials: [{
+      type: 'public-key',
+      id: base64UrlToBuffer(allowId),
+      transports: ['internal']
+    }],
+    userVerification: 'required',
+    timeout: 60000
+  };
+  const assertion = await navigator.credentials.get({ publicKey });
+  if(!assertion) throw new Error('Vérification échouée');
+  return true;
 }
 
 /* =========================
@@ -2512,6 +2587,23 @@ function clearAllStock(){
    ÉVÉNEMENTS UI
 ========================= */
 document.getElementById('pwd-btn').addEventListener('click', checkPwd);
+document.getElementById('bio-btn').addEventListener('click', async ()=>{
+  if(!window.PublicKeyCredential || !navigator.credentials){
+    alert("❌ Empreinte non supportée sur cet appareil.");
+    return;
+  }
+  try{
+    await biometricVerify();
+    auth = true;
+    document.getElementById('pwd-error').style.display = 'none';
+    setAppVisible(true);
+    show('inventory');
+    updateStats();
+    renderAll();
+  } catch(e){
+    alert('❌ Empreinte refusée ou indisponible.');
+  }
+});
 document.getElementById('logout-link').addEventListener('click', (e)=>{ e.preventDefault(); logout(); });
 document.getElementById('details-close-btn').addEventListener('click', closeDetails);
 document.getElementById('details-modal').addEventListener('click', (e)=>{
