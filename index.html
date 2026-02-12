@@ -290,9 +290,14 @@
     nav a[data-target="delete-mode"]{ background: linear-gradient(135deg,#ef4444,#f43f5e); }
     nav a[data-target="use-mode"]{ background: linear-gradient(135deg,#0ea5e9,#6366f1); }
     nav a[data-target="to-buy"]{ background: linear-gradient(135deg,#f97316,#f43f5e); }
+    nav a[data-target="alerts"]{ background: linear-gradient(135deg,#14b8a6,#0ea5e9); }
+    nav a[data-target="genre-search"]{ background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    #logout-link{ background: linear-gradient(135deg,#64748b,#6366f1); }
+    #theme-toggle{ background: linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; border-radius:12px; }
 
     /* Boutons A  masquer */
     .nav-hidden{ display:none !important; }
+    nav li:has(> .nav-hidden){ display:none !important; }
 
     .container{
       padding: 2rem;
@@ -831,6 +836,9 @@
         height:16px;
       }
       nav li:last-child{display:none} /* cacher version sur mobile */
+      nav li:has(> #logout-link){
+        grid-column: 2 / span 3;
+      }
 
       /* Container - plus compact */
       .container{padding:.5rem}
@@ -1022,6 +1030,9 @@
       /* Toujours visible */
       #logout-link{
         display:block !important
+      }
+      nav li:has(> #logout-link){
+        grid-column: 2 / span 3;
       }
 
       /* Colonnes visibles sur mobile */
@@ -1742,6 +1753,13 @@ function setupExtraMenus(){
       </section>
     `);
   }
+}
+
+function collapseHiddenNavItems(){
+  document.querySelectorAll('#main-nav li').forEach(li => {
+    const a = li.querySelector('a.nav-hidden');
+    if(a) li.style.display = 'none';
+  });
 }
 
 /* =========================
@@ -2614,6 +2632,7 @@ if(savedTheme === 'dark') {
 }
 
 setupExtraMenus();
+collapseHiddenNavItems();
 
 document.addEventListener('change', (e)=>{
   if(e.target && e.target.id === 'genre-filter'){
