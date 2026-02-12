@@ -1664,18 +1664,37 @@ function renderAlertsSection(){
   tbody.innerHTML = list.map(m => {
     const a = getAlertFlags(m);
     const tags = [];
-    if(a.expired) tags.push('EXPIRE');
-    if(a.pre) tags.push('PRE-EXPIRATION');
-    if(a.zero) tags.push('STOCK NUL');
-    if(a.low) tags.push('STOCK FAIBLE');
+    if(a.expired){
+      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;">EXPIRE</span>');
+    }
+    if(a.pre){
+      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;">PRE-EXPIRATION</span>');
+    }
+    if(a.zero){
+      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;">STOCK NUL</span>');
+    }
+    if(a.low){
+      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;">STOCK FAIBLE</span>');
+    }
     const idx = meds.indexOf(m);
+    const qty = Number(m.quantity)||0;
+    const qtyStyle = a.zero
+      ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;'
+      : (a.low
+          ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;'
+          : 'font-weight:700;color:#d32f2f;');
+    const expStyle = a.expired
+      ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;'
+      : (a.pre
+          ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;'
+          : '');
     return `<tr>
       <td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" onclick="openDetails(${idx})">${escapeHtml(m.name)}</td>
       <td>${escapeHtml(m.genre || '-')}</td>
       <td>${escapeHtml(m.dosage || '-')}</td>
-      <td style="color:#d32f2f;font-weight:bold;">${Number(m.quantity)||0}</td>
-      <td>${fmtMMAA(m.expiry)}</td>
-      <td>${tags.join(' | ')}</td>
+      <td><span style="${qtyStyle}">${qty}</span></td>
+      <td><span style="${expStyle}">${fmtMMAA(m.expiry)}</span></td>
+      <td>${tags.join(' ')}</td>
     </tr>`;
   }).join('');
 }
