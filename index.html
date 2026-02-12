@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="google" content="notranslate" />
-  <title>Gestion de la Pharmacie Ã  Domicile</title>
+  <title>Gestion de la Pharmacie à Domicile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#5a5fb8" />
   <link rel="manifest" href="manifest.json" />
@@ -924,7 +924,7 @@
       #med-table-use th, #med-table-use td{
         white-space:nowrap;
       }
-      /* Table "Ã€ acheter" pleine largeur */
+      /* Table "À acheter" pleine largeur */
       #tobuy-table{
         display:table;
         width:100%;
@@ -939,8 +939,11 @@
         min-width:50px
       }
       .notes-cell{max-width:60px}
-      .med-thumb{width:22px;height:22px;border-radius:5px}
-      #med-table td.med-name-cell span{
+      .med-thumb{width:28px;height:28px;border-radius:6px}
+       #med-table td.med-name-cell span,
+      #med-table-edit td.med-name-cell span,
+      #med-table-delete td.med-name-cell span,
+      #med-table-use td.med-name-cell span{
         font-size:.92rem;
         line-height:1.2;
         font-weight:700;
@@ -1025,7 +1028,7 @@
       /* Colonnes visibles sur mobile */
       #med-table th:nth-child(1),
       #med-table td:nth-child(1){
-        min-width:130px
+        min-width:145px
       }
       #med-table th:nth-child(2),
       #med-table td:nth-child(2){
@@ -1051,8 +1054,11 @@
       #med-table td:nth-child(7){
         min-width:70px
       }
-      #med-table td.med-name-cell span{
-        font-size:1rem;
+       #med-table td.med-name-cell span,
+      #med-table-edit td.med-name-cell span,
+      #med-table-delete td.med-name-cell span,
+      #med-table-use td.med-name-cell span{
+        font-size:1.03rem;
         line-height:1.2;
         font-weight:700;
       }
@@ -1064,9 +1070,19 @@
         margin: 0.25rem 0;
       }
 
-      /* Table "Ã€ acheter" - responsive */
+      /* Table "À acheter" - responsive */
       #tobuy-table {
         font-size: 0.7rem;
+      }
+      #tobuy-table th, #tobuy-table td {
+        padding: 0.25rem 0.15rem;
+      }
+      #tobuy-table td:first-child{
+        font-size:.95rem;
+        font-weight:700;
+      }
+      #tobuy-table td:first-child, #tobuy-table td:nth-child(2), #tobuy-table td:nth-child(3){
+        line-height:1.2;
       }
       #tobuy-table th, #tobuy-table td {
         padding: 0.25rem 0.15rem;
@@ -1080,15 +1096,15 @@
   <!-- Modal de connexion -->
   <div id="pwd-modal" class="password-modal">
     <div class="password-content">
-      <h2>ðŸ” AccÃ¨s sÃ©curisÃ©</h2>
-      <p style="margin-top:.5rem;">Entrez le mot de passe pour accÃ©der Ã  l'application</p>
+      <h2>🔐 Accès sécurisé</h2>
+      <p style="margin-top:.5rem;">Entrez le mot de passe pour accéder à l'application</p>
 
       <input type="password" id="pwd-input" placeholder="Mot de passe"
              style="width:100%;padding:.75rem;margin:1rem 0;border:1px solid #ddd;border-radius:var(--radius);font-size:1.1rem;" />
 
       <button id="pwd-btn"
-              style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;">
-        AccÃ©der
+              style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1.03rem;font-weight:600;">
+        Accéder
       </button>
       <button id="bio-btn"
               style="margin-top:.6rem;background:#2e7d32;color:#fff;border:none;padding:.6rem 1.2rem;border-radius:var(--radius);cursor:pointer;font-size:.95rem;font-weight:600;">
@@ -1096,7 +1112,7 @@
       </button>
 
       <p id="pwd-error" style="color:#d32f2f;margin-top:1rem;display:none;">Mot de passe incorrect</p>
-      <p style="margin-top:.6rem;font-size:.85rem;color:#666;">Astuce : EntrÃ©e = valider</p>
+      <p style="margin-top:.6rem;font-size:.85rem;color:#666;">Astuce : Entrée = valider</p>
       <p style="margin-top:.4rem;font-size:.8rem;color:#666;">L'empreinte fonctionne seulement sur mobile/PWA.</p>
     </div>
   </div>
@@ -1117,7 +1133,7 @@
         <div class="label">Stock initial</div><div class="value" id="details-initial">-</div>
         <div class="label">Prix</div><div class="value" id="details-price">-</div>
         <div class="label">BoÃ®tes</div><div class="value" id="details-boxes">-</div>
-        <div class="label">PÃ©remption</div><div class="value" id="details-expiry">-</div>
+        <div class="label">Péremption</div><div class="value" id="details-expiry">-</div>
         <div class="label">Notes</div><div class="value" id="details-notes">-</div>
       </div>
       <div class="details-actions">
@@ -1138,7 +1154,7 @@
       <li><a href="#" data-target="edit-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Modifier</a></li>
       <li><a href="#" data-target="delete-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Supprimer</a></li>
       <li><a href="#" data-target="use-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Utiliser</a></li>
-      <li><a href="#" data-target="to-buy"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4V2C7 1.45 7.45 1 8 1s1 .45 1 1v2h6V2c0-.55.45-1 1-1s1 .45 1 1v2h5c.55 0 1 .45 1 1s-.45 1-1 1h-1v13c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6H2c-.55 0-1-.45-1-1s.45-1 1-1h5zm2 0V3c0-.55.45-1 1-1s1 .45 1 1v1h4V3c0-.55.45-1 1-1s1 .45 1 1v1h2v2H5V6h4zm-2 4v9h12V8H7z"/></svg> Ã€ acheter</a></li>
+      <li><a href="#" data-target="to-buy"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4V2C7 1.45 7.45 1 8 1s1 .45 1 1v2h6V2c0-.55.45-1 1-1s1 .45 1 1v2h5c.55 0 1 .45 1 1s-.45 1-1 1h-1v13c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6H2c-.55 0-1-.45-1-1s.45-1 1-1h5zm2 0V3c0-.55.45-1 1-1s1 .45 1 1v1h4V3c0-.55.45-1 1-1s1 .45 1 1v1h2v2H5V6h4zm-2 4v9h12V8H7z"/></svg> À acheter</a></li>
 
       <!-- Theme Toggle Button -->
       <li><button id="theme-toggle" class="theme-toggle-btn" title="Basculer mode sombre/clair">
@@ -1152,7 +1168,7 @@
       <li><a href="#" id="btn-restore" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li>
       <li><a href="#" id="btn-clean-dup" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li>
       <li><a href="#" id="btn-clear" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li>
-      <li><a href="#" id="btn-reset-all" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> RÃ©initialiser</a></li>
+      <li><a href="#" id="btn-reset-all" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> Réinitialiser</a></li>
       <li><a href="#" id="btn-clear-local" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider local</a></li>
 
       <li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li>
@@ -1193,17 +1209,17 @@
 
     <!-- Stock actuel -->
     <section id="inventory" class="section">
-      <h2>ðŸ“¦ Stock actuel</h2>
+      <h2>📦 Stock actuel</h2>
 
       <div style="display:flex;gap:1rem;margin:1rem 0;align-items:center;flex-wrap:wrap;">
-        <input type="text" id="search" placeholder="ðŸ”Ž Rechercher (nom, dosage, notes)â€¦" style="flex:1;">
+        <input type="text" id="search" placeholder="🔎 Rechercher (nom, dosage, notes)…" style="flex:1;">
       </div>
 
       <table id="med-table">
         <thead>
           <tr>
-            <th>Nom</th><th>Genre</th><th>Dosage</th><th>QtÃ©</th>
-            <th>PÃ©remption</th><th>Alerte</th><th>Actions</th>
+            <th>Nom</th><th>Genre</th><th>Dosage</th><th>Qté</th>
+            <th>Péremption</th><th>Alerte</th><th>Actions</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1218,7 +1234,7 @@
         <div class="form-group"><label>Nom *</label><input type="text" id="name" required></div>
         <div class="form-group"><label>Dosage *</label><input type="text" id="dosage" placeholder="ex : 500mg, 10ml" required></div>
         <div class="form-group"><label>Genre *</label>
-          <select id="genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem;">
+          <select id="genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1.03rem;">
             <option value="">SÃ©lectionner...</option>
             <option value="ComprimÃ©s">ComprimÃ©s</option>
             <option value="GÃ©lules">GÃ©lules</option>
@@ -1259,7 +1275,7 @@
         <div class="form-group"><label>Nombre de boÃ®tes *</label><input type="number" id="nb-boxes" min="1" value="1" required></div>
 
         <div class="form-group">
-          <label>Date de pÃ©remption (MM/AA) *</label>
+          <label>Date de Péremption (MM/AA) *</label>
           <input type="text" id="expiry-mmaa" inputmode="numeric" placeholder="ex : 02/26" maxlength="5" required>
           <small style="display:block;margin-top:.5rem;color:#666;">Format : MM/AA</small>
         </div>
@@ -1284,7 +1300,7 @@
       <table id="med-table-edit">
         <thead>
           <tr>
-            <th>Nom</th><th>Dosage</th><th>QtÃ©</th><th>PÃ©remption</th><th>Alerte</th><th>Modifier</th>
+            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Modifier</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1299,7 +1315,7 @@
       <table id="med-table-delete">
         <thead>
           <tr>
-            <th>Nom</th><th>Dosage</th><th>QtÃ©</th><th>PÃ©remption</th><th>Alerte</th><th>Supprimer</th>
+            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Supprimer</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1323,14 +1339,14 @@
       <table id="med-table-use">
         <thead>
           <tr>
-            <th>Nom</th><th>Dosage</th><th>QtÃ©</th><th>PÃ©remption</th><th>Alerte</th><th>Utiliser</th>
+            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Utiliser</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </section>
 
-    <!-- Ã€ acheter -->
+    <!-- À acheter -->
     <section id="to-buy" class="section">
       <h2>ðŸ›’ MÃ©dicaments Ã  acheter</h2>
       <button id="tobuy-toggle" class="nav-btn" style="margin:.5rem 0;">âž• Ajouter</button>
@@ -1365,7 +1381,7 @@
         <div class="form-group"><label>Nom *</label><input type="text" id="edit-name" required></div>
         <div class="form-group"><label>Dosage *</label><input type="text" id="edit-dosage" required></div>
         <div class="form-group"><label>Genre *</label>
-          <select id="edit-genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1rem;">
+          <select id="edit-genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1.03rem;">
             <option value="">SÃ©lectionner...</option>
             <option value="ComprimÃ©s">ComprimÃ©s</option>
             <option value="GÃ©lules">GÃ©lules</option>
@@ -1404,7 +1420,7 @@
         <div class="form-group"><label>Nombre de boÃ®tes *</label><input type="number" id="edit-nb-boxes" min="1" value="1" required></div>
 
         <div class="form-group">
-          <label>PÃ©remption (MM/AA) *</label>
+          <label>Péremption (MM/AA) *</label>
           <input type="text" id="edit-expiry-mmaa" inputmode="numeric" maxlength="5" placeholder="ex : 02/26" required>
         </div>
 
@@ -1418,7 +1434,7 @@
 
         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
           <button type="submit" style="flex:1;">ðŸ’¾ Enregistrer</button>
-          <button type="button" id="edit-cancel" style="flex:1;background:#6c757d;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:600;">âŒ Annuler</button>
+          <button type="button" id="edit-cancel" style="flex:1;background:#6c757d;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1.03rem;font-weight:600;">âŒ Annuler</button>
         </div>
       </form>
 
@@ -1842,7 +1858,7 @@ function updateStats(){
       listHtml += `
         <div style="background:#fff;padding:1rem;margin:.5rem 0;border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow);">
           <strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.dosage)}) â€“ ${status}
-          <br><small>QtÃ© : ${Number(m.quantity)||0}, Exp : ${fmtMMAA(m.expiry)}</small>
+          <br><small>Qté : ${Number(m.quantity)||0}, Exp : ${fmtMMAA(m.expiry)}</small>
         </div>`;
     }
   });
@@ -2069,13 +2085,13 @@ Stock actuel :
 - QuantitÃ© actuelle : ${ex.quantity}
 - Stock initial : ${ex.initialStock}
 - Prix : ${Number(ex.price||0).toFixed(2)} DH
-- PÃ©remption : ${fmtMMAA(ex.expiry)}
+- Péremption : ${fmtMMAA(ex.expiry)}
 
 Nouvelle saisie :
-- +QtÃ© : ${quantity}
+- +Qté : ${quantity}
 - +Stock init. : ${initialStock}
 - Nouveau prix : ${price.toFixed(2)} DH (remplace l'ancien)
-- PÃ©remption : ${fmtMMAA(expiryISO)}
+- Péremption : ${fmtMMAA(expiryISO)}
 
 âœ… Voulez-vous ACTUALISER (cumuler les stocks) ?`;
 
@@ -2357,7 +2373,7 @@ function useMed(idx){
 }
 
 /* =========================
-   Ã€ ACHETER (Liste de courses)
+   À acheter (Liste de courses)
 ========================= */
 function renderToBuy(){
   const tbody = document.querySelector('#tobuy-table tbody');
@@ -2743,7 +2759,7 @@ document.querySelectorAll('nav a[data-target]').forEach(a=>{
   });
 });
 
-// Suppression "Ã€ acheter" via dÃ©lÃ©gation (Ã©vite les onclick cassÃ©s)
+// Suppression "À acheter" via dÃ©lÃ©gation (Ã©vite les onclick cassÃ©s)
 document.addEventListener('click', (e)=>{
   const btn = e.target && e.target.closest ? e.target.closest('.tobuy-delete') : null;
   if(!btn) return;
@@ -3097,7 +3113,7 @@ async function autoSyncFromCloud(){
       }
     }
 
-    // Sync achats (Ã€ acheter) avec validation stricte
+    // Sync achats (À acheter) avec validation stricte
     if(window.getAchats){
       try {
         var achatsResult = await getAchats();
@@ -3166,7 +3182,7 @@ async function autoSyncFromCloud(){
           toBuyList = [];
           localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
           if(typeof renderToBuy === 'function') renderToBuy();
-          if(DEBUG_LOGS) console.log('ðŸ§¹ Liste "Ã€ acheter" effacÃ©e (cloud vide)');
+          if(DEBUG_LOGS) console.log('ðŸ§¹ Liste "À acheter" effacÃ©e (cloud vide)');
         }
       } catch(e) {
         console.warn('Sync achats Ã©chouÃ©:', e);
@@ -3407,7 +3423,7 @@ function loadToBuyFromCloud(){
         toBuyList = [];
         localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
         renderToBuy();
-        console.log('ðŸ§¹ Liste "Ã€ acheter" effacÃ©e (cloud vide)');
+        console.log('ðŸ§¹ Liste "À acheter" effacÃ©e (cloud vide)');
       }
       return;
     }
@@ -3626,7 +3642,7 @@ async function clearLocalDuplicates(){
   alert('âœ… Nettoyage terminÃ© ! ' + duplicatesRemoved + ' doublons supprimÃ©s.');
 }
 
-// Improved sync for "Ã€ acheter" deletions
+// Improved sync for "À acheter" deletions
 async function syncToBuyDeletions(){
   if(!window.getAchats) return;
 
@@ -3637,7 +3653,7 @@ async function syncToBuyDeletions(){
       toBuyList = [];
       localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
       renderToBuy();
-      console.log('ðŸ—‘ï¸ Liste "Ã€ acheter" vidÃ©e (cloud vide)');
+      console.log('ðŸ—‘ï¸ Liste "À acheter" vidÃ©e (cloud vide)');
       return;
     }
 
@@ -3674,11 +3690,11 @@ async function syncToBuyDeletions(){
     if(changed){
       localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
       renderToBuy();
-      console.log('âœ… Sync "Ã€ acheter" terminÃ©');
+      console.log('âœ… Sync "À acheter" terminÃ©');
     }
 
   } catch(e) {
-    console.warn('Erreur sync "Ã€ acheter":', e);
+    console.warn('Erreur sync "À acheter":', e);
   }
 }
 
@@ -3691,6 +3707,8 @@ async function syncToBuyDeletions(){
 
 </body>
 </html>
+
+
 
 
 
