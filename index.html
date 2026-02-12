@@ -538,8 +538,8 @@
       gap:0.5rem;
     }
     .med-thumb{
-      width:28px;
-      height:28px;
+      width:40px;
+      height:40px;
       border-radius:6px;
       object-fit:cover;
       border:1px solid rgba(0,0,0,0.12);
@@ -939,7 +939,7 @@
         min-width:50px
       }
       .notes-cell{max-width:60px}
-      .med-thumb{width:28px;height:28px;border-radius:6px}
+      .med-thumb{width:42px;height:42px;border-radius:8px}
        #med-table td.med-name-cell span,
       #med-table-edit td.med-name-cell span,
       #med-table-delete td.med-name-cell span,
@@ -1017,6 +1017,11 @@
       #theme-toggle svg{
         width:15px;
         height:15px;
+      }
+      .med-thumb{
+        width:46px;
+        height:46px;
+        border-radius:8px;
       }
       .stats-grid{grid-template-columns:repeat(2,1fr)}
       
@@ -1184,26 +1189,26 @@
   <div class="container" id="main" style="display:none;">
 
     <!-- Accueil -->
-    <section id="home" class="section active">
-      <h1>ðŸ¥ Gestionnaire de Pharmacie Ã  Domicile</h1>
+        <section id="home" class="section active">
+      <h1>Gestionnaire de Pharmacie ? Domicile</h1>
 
       <div class="stats-grid">
-        <div class="stat-card"><h3>ðŸ“Š Stock total</h3><div class="stat-number" id="total-meds">0</div></div>
-        <div class="stat-card"><h3>âŒ ExpirÃ©s</h3><div class="stat-number" id="expired-count">0</div></div>
-        <div class="stat-card"><h3>âš ï¸ PrÃ©â€‘expiration</h3><div class="stat-number" id="preexp-count">0</div></div>
-        <div class="stat-card"><h3>ðŸ“¦ Stock nul</h3><div class="stat-number" id="zerostock-count">0</div></div>
+        <div class="stat-card"><h3>Stock total</h3><div class="stat-number" id="total-meds">0</div></div>
+        <div class="stat-card"><h3>Expir?s</h3><div class="stat-number" id="expired-count">0</div></div>
+        <div class="stat-card"><h3>Pr??expiration</h3><div class="stat-number" id="preexp-count">0</div></div>
+        <div class="stat-card"><h3>Stock nul</h3><div class="stat-number" id="zerostock-count">0</div></div>
       </div>
 
-      <h3>ðŸ“‹ MÃ©dicaments nÃ©cessitant une attention</h3>
+      <h3>M?dicaments n?cessitant une attention</h3>
       <div id="attention-list" style="margin-top:.75rem;"></div>
       
       <!-- Debug sync status -->
       <div style="background:#f0f0f0;padding:1rem;margin-top:1rem;border-radius:8px;font-size:0.9rem;">
-        <h4>ðŸ”„ Ã‰tat Sync Cloud</h4>
-        <p>ðŸ“± Locaux: <strong id="debug-local-count">0</strong></p>
-        <p>â˜ï¸ Cloud: <strong id="debug-cloud-count">0</strong></p>
-        <p>ðŸ”— Statut: <strong id="debug-status">En attente...</strong></p>
-        <button onclick="forceDebugSync()" style="margin-top:0.5rem;padding:0.5rem 1rem;background:#2196F3;color:#fff;border:none;border-radius:4px;cursor:pointer;">ðŸ”„ Tester Sync</button>
+        <h4>?tat Sync Cloud</h4>
+        <p>Locaux: <strong id="debug-local-count">0</strong></p>
+        <p>Cloud: <strong id="debug-cloud-count">0</strong></p>
+        <p>Statut: <strong id="debug-status">En attente...</strong></p>
+        <button onclick="forceDebugSync()" style="margin-top:0.5rem;padding:0.5rem 1rem;background:#2196F3;color:#fff;border:none;border-radius:4px;cursor:pointer;">Tester Sync</button>
       </div>
     </section>
 
@@ -1225,19 +1230,18 @@
         <tbody></tbody>
       </table>
     </section>
-
     <!-- Ajout -->
     <section id="add" class="section">
-      <h2>âž• Ajouter un mÃ©dicament</h2>
+      <h2>Ajouter un médicament</h2>
 
       <form id="add-form">
         <div class="form-group"><label>Nom *</label><input type="text" id="name" required></div>
         <div class="form-group"><label>Dosage *</label><input type="text" id="dosage" placeholder="ex : 500mg, 10ml" required></div>
         <div class="form-group"><label>Genre *</label>
           <select id="genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1.03rem;">
-            <option value="">SÃ©lectionner...</option>
-            <option value="ComprimÃ©s">ComprimÃ©s</option>
-            <option value="GÃ©lules">GÃ©lules</option>
+            <option value="">Sélectionner...</option>
+            <option value="Comprimés">Comprimés</option>
+            <option value="Gélules">Gélules</option>
             <option value="Suppositoires">Suppositoires</option>
             <option value="Sachets">Sachets</option>
             <option value="Gel">Gel</option>
@@ -1246,7 +1250,7 @@
             <option value="Solution">Solution</option>
             <option value="Pommade">Pommade</option>
             <option value="Lotion">Lotion</option>
-            <option value="CrÃ¨me">CrÃ¨me</option>
+            <option value="Crème">Crème</option>
             <option value="Poudre">Poudre</option>
             <option value="Gouttes">Gouttes</option>
             <option value="Inhalation">Inhalation</option>
@@ -1264,15 +1268,15 @@
               Autre jour
             </label>
           </div>
-          <small style="display:block;margin-top:.4rem;color:#666;">Par dÃ©faut : aujourd'hui. Cochez "Autre jour" pour saisir.</small>
+          <small style="display:block;margin-top:.4rem;color:#666;">Par défaut : aujourd'hui. Cochez "Autre jour" pour saisir.</small>
         </div>
 
-        <!-- Stock initial AVANT quantitÃ© actuelle -->
+        <!-- Stock initial AVANT quantité actuelle -->
         <div class="form-group"><label>Stock initial *</label><input type="number" id="initial-stock" min="0" required></div>
-        <div class="form-group"><label>QuantitÃ© actuelle *</label><input type="number" id="quantity" min="0" required></div>
+        <div class="form-group"><label>Quantité actuelle *</label><input type="number" id="quantity" min="0" required></div>
 
         <div class="form-group"><label>Prix (DH) *</label><input type="number" id="price" min="0" step="0.01" required></div>
-        <div class="form-group"><label>Nombre de boÃ®tes *</label><input type="number" id="nb-boxes" min="1" value="1" required></div>
+        <div class="form-group"><label>Nombre de boîtes *</label><input type="number" id="nb-boxes" min="1" value="1" required></div>
 
         <div class="form-group">
           <label>Date de Péremption (MM/AA) *</label>
@@ -1283,19 +1287,18 @@
         <div class="form-group">
           <label>Photo (optionnel)</label>
           <input type="file" id="image-file" accept="image/*" capture="environment">
-          <small style="display:block;margin-top:.4rem;color:#666;">CamÃ©ra ou galerie.</small>
+          <small style="display:block;margin-top:.4rem;color:#666;">Caméra ou galerie.</small>
         </div>
 
         <div class="form-group"><label>Notes</label><textarea id="notes" placeholder="Optionnel"></textarea></div>
 
-        <button type="submit">ðŸ’Š Ajouter</button>
+        <button type="submit">Ajouter</button>
       </form>
     </section>
-
     <!-- Modifier -->
     <section id="edit-mode" class="section">
-      <h2>âœï¸ Modifier</h2>
-      <input type="text" id="search-edit" placeholder="ðŸ”Ž Rechercherâ€¦" />
+      <h2>Modifier</h2>
+      <input type="text" id="search-edit" placeholder="Rechercher..." />
 
       <table id="med-table-edit">
         <thead>
@@ -1306,11 +1309,10 @@
         <tbody></tbody>
       </table>
     </section>
-
     <!-- Supprimer -->
     <section id="delete-mode" class="section">
-      <h2>ðŸ—‘ï¸ Supprimer</h2>
-      <input type="text" id="search-delete" placeholder="ðŸ”Ž Rechercherâ€¦" />
+      <h2>Supprimer</h2>
+      <input type="text" id="search-delete" placeholder="Rechercher..." />
 
       <table id="med-table-delete">
         <thead>
@@ -1321,20 +1323,19 @@
         <tbody></tbody>
       </table>
     </section>
-
     <!-- Utiliser -->
     <section id="use-mode" class="section">
-      <h2>ðŸ’Š Utiliser</h2>
+      <h2>Utiliser</h2>
 
       <div class="form-group" style="max-width:420px;">
-        <label for="use-qty">QuantitÃ© Ã  utiliser :</label>
+        <label for="use-qty">Quantité à utiliser :</label>
         <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
           <input type="number" id="use-qty" min="1" value="1" style="width:120px;">
-          <span class="chip">Alerte stock faible â‰¤ 5</span>
+          <span class="chip">Alerte stock faible <= 5</span>
         </div>
       </div>
 
-      <input type="text" id="search-use" placeholder="ðŸ”Ž Rechercherâ€¦" />
+      <input type="text" id="search-use" placeholder="Rechercher..." />
 
       <table id="med-table-use">
         <thead>
@@ -1347,21 +1348,21 @@
     </section>
 
     <!-- À acheter -->
-    <section id="to-buy" class="section">
-      <h2>ðŸ›’ MÃ©dicaments Ã  acheter</h2>
-      <button id="tobuy-toggle" class="nav-btn" style="margin:.5rem 0;">âž• Ajouter</button>
+            <section id="to-buy" class="section">
+      <h2>Médicaments à acheter</h2>
+      <button id="tobuy-toggle" class="nav-btn" style="margin:.5rem 0;">Ajouter</button>
 
       <form id="tobuy-form" style="max-width:420px;display:none;">
-        <div class="form-group"><label>Nom du mÃ©dicament *</label><input type="text" id="tobuy-name" required></div>
-        <div class="form-group"><label>QuantitÃ© *</label><input type="number" id="tobuy-qty" min="1" value="1" required></div>
-        <div class="form-group"><label>Genre / Notes</label><input type="text" id="tobuy-notes" placeholder="ex : comprimÃ©, sirop, crÃ¨me..."></div>
-        <button type="submit">âž• Ajouter Ã  la liste</button>
+        <div class="form-group"><label>Nom du médicament *</label><input type="text" id="tobuy-name" required></div>
+        <div class="form-group"><label>Quantité *</label><input type="number" id="tobuy-qty" min="1" value="1" required></div>
+        <div class="form-group"><label>Genre / Notes</label><input type="text" id="tobuy-notes" placeholder="ex : comprimé, sirop, crème..."></div>
+        <button type="submit">Ajouter à la liste</button>
       </form>
 
       <table id="tobuy-table" style="margin-top:1.5rem;">
         <thead>
           <tr>
-            <th>Nom</th><th>QuantitÃ©</th><th>Genre</th><th>Actions</th>
+            <th>Nom</th><th>Quantité</th><th>Genre</th><th>Actions</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1447,7 +1448,7 @@
    CONFIG / STOCKAGE
 ========================= */
 const PASSWORD = "mohamed1964";
-const APP_VERSION = "2.01";
+const APP_VERSION = "2.50";
 const FAST_SYNC_INTERVAL_MS = 5000;
 const DEBUG_LOGS = false;
 const STORAGE_KEY = "medicines";
@@ -2822,7 +2823,7 @@ if(toBuyToggle && toBuyForm){
     e.preventDefault();
     const isHidden = toBuyForm.style.display === 'none' || toBuyForm.style.display === '';
     toBuyForm.style.display = isHidden ? 'block' : 'none';
-    toBuyToggle.textContent = isHidden ? 'âž– Fermer' : 'âž• Ajouter';
+    toBuyToggle.textContent = isHidden ? 'Fermer' : 'Ajouter';
   });
 }
 
@@ -3707,6 +3708,7 @@ async function syncToBuyDeletions(){
 
 </body>
 </html>
+
 
 
 
