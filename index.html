@@ -2795,7 +2795,6 @@ async function autoSyncFromCloud(){
 
             const cloudList = Object.values(uniqueCloudAchats);
             cleanupPendingToBuyDeletes(cloudList);
-            const pendingMap = getPendingToBuyDeleteMap();
 
             var changed = false;
 
@@ -2805,7 +2804,6 @@ async function autoSyncFromCloud(){
               var cloudItem = uniqueCloudAchats[key];
 
               if(cloudItem){
-                if(pendingMap[toBuyDeleteKey(cloudItem.id, cloudItem.name)]) return;
                 var newQty = Math.max(1, Number(cloudItem.qty) || 1);
                 var newNotes = cloudItem.notes || '';
 
@@ -2822,7 +2820,6 @@ async function autoSyncFromCloud(){
 
           // Ajouter les nouveaux achats
             Object.values(uniqueCloudAchats).forEach(function(newItem){
-              if(pendingMap[toBuyDeleteKey(newItem.id, newItem.name)]) return;
               var exists = toBuyList.some(function(local){
                 return local.name.toLowerCase().trim() === newItem.name.toLowerCase().trim();
               });
@@ -3089,7 +3086,6 @@ function loadToBuyFromCloud(){
     }
     
     // Remplacer la liste locale par le cloud (source de vAritA)
-    const pendingMap = getPendingToBuyDeleteMap();
     const cloudList = result.map(a => ({ id: a.id, name: a.nom }));
     cleanupPendingToBuyDeletes(cloudList);
     toBuyList = result.map(a => ({
@@ -3097,7 +3093,7 @@ function loadToBuyFromCloud(){
       name: a.nom,
       qty: a.quantite,
       notes: a.notes || ''
-    })).filter(a => !pendingMap[toBuyDeleteKey(a.id, a.name)]);
+    }));
 
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
     renderToBuy();
