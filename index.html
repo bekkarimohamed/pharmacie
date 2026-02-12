@@ -1485,6 +1485,8 @@ function show(id){
   if (el) el.classList.add('active');
   renderAll();
   if(id === 'to-buy') renderToBuy();
+  if(id === 'alerts') renderAlertsSection();
+  if(id === 'genre-search') renderGenreSection();
 }
 
 /* =========================
@@ -1509,12 +1511,12 @@ function updateStats(){
 
     if(isExp || isPre || isZero){
       let status = '';
-      if(isExp) status = 'a EXPIRA';
-      else if(isPre) status = 'as i  PRAaEXPIRATION';
-      else status = 'Y STOCK NUL';
+      if(isExp) status = 'EXPIRE';
+      else if(isPre) status = 'PRE-EXPIRATION';
+      else status = 'STOCK NUL';
 
       listHtml += `
-        <div style="background:#fff;padding:1rem;margin:.5rem 0;border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow);"><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.dosage)}) a ${status}
+        <div style="background:#fff;padding:1rem;margin:.5rem 0;border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow);"><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.dosage)}) - ${status}
           <br><small>Qte : ${Number(m.quantity)||0}, Exp : ${fmtMMAA(m.expiry)}</small></div>`;
     }
   });
@@ -1525,7 +1527,128 @@ function updateStats(){
   document.getElementById('zerostock-count').textContent = zer;
 
   document.getElementById('attention-list').innerHTML =
-    listHtml || '<p style="color:#2e7d32;">a... Aucun problA me dAtectA</p>';
+    listHtml || '<p style="color:#2e7d32;">Aucun probleme detecte</p>';
+}
+
+function getAlertFlags(m){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const limit = new Date(today); limit.setDate(today.getDate() + 30);
+  const exp = new Date(m.expiry); exp.setHours(0,0,0,0);
+  const qty = Number(m.quantity) || 0;
+  const expired = exp < today;
+  const pre = !expired && exp <= limit;
+  const zero = qty === 0;
+  const low = qty > 0 && qty <= 5;
+  return { expired, pre, zero, low };
+}
+
+function renderAlertsSection(){
+  const tbody = document.querySelector('#alerts-table tbody');
+  if(!tbody) return;
+  const list = meds
+    .filter(m => {
+      const a = getAlertFlags(m);
+      return a.expired || a.pre || a.zero || a.low;
+    })
+    .sort((a,b) => keyOf(a.name,a.dosage).localeCompare(keyOf(b.name,b.dosage)));
+
+  if(list.length === 0){
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Aucune alerte</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(m => {
+    const a = getAlertFlags(m);
+    const tags = [];
+    if(a.expired) tags.push('EXPIRE');
+    if(a.pre) tags.push('PRE-EXPIRATION');
+    if(a.zero) tags.push('STOCK NUL');
+    if(a.low) tags.push('STOCK FAIBLE');
+    const idx = meds.indexOf(m);
+    return `<tr>
+      <td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" onclick="openDetails(${idx})">${escapeHtml(m.name)}</td>
+      <td>${escapeHtml(m.genre || '-')}</td>
+      <td>${escapeHtml(m.dosage || '-')}</td>
+      <td style="color:#d32f2f;font-weight:bold;">${Number(m.quantity)||0}</td>
+      <td>${fmtMMAA(m.expiry)}</td>
+      <td>${tags.join(' | ')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderGenreSection(){
+  const select = document.getElementById('genre-filter');
+  const tbody = document.querySelector('#genre-table tbody');
+  if(!select || !tbody) return;
+
+  const genres = [...new Set(meds.map(m => String(m.genre || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const current = select.value || 'ALL';
+  select.innerHTML = `<option value="ALL">Tous les genres</option>` + genres.map(g=>`<option value="${escapeAttr(g)}">${escapeHtml(g)}</option>`).join('');
+  if([...select.options].some(o => o.value === current)) select.value = current;
+
+  const list = meds
+    .filter(m => select.value === 'ALL' ? true : String(m.genre || '') === select.value)
+    .sort((a,b) => keyOf(a.name,a.dosage).localeCompare(keyOf(b.name,b.dosage)));
+
+  if(list.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun resultat</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(m => {
+    const idx = meds.indexOf(m);
+    return `<tr>
+      <td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" onclick="openDetails(${idx})">${escapeHtml(m.name)}</td>
+      <td>${escapeHtml(m.genre || '-')}</td>
+      <td>${escapeHtml(m.dosage || '-')}</td>
+      <td style="color:#d32f2f;font-weight:bold;">${Number(m.quantity)||0}</td>
+      <td>${fmtMMAA(m.expiry)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setupExtraMenus(){
+  const navUl = document.querySelector('#main-nav ul');
+  const main = document.getElementById('main');
+  if(!navUl || !main) return;
+
+  if(!document.querySelector('nav a[data-target="alerts"]')){
+    const li = document.createElement('li');
+    li.innerHTML = '<a href="#" data-target="alerts">Alertes</a>';
+    navUl.insertBefore(li, document.getElementById('logout-link')?.parentElement || null);
+  }
+  if(!document.getElementById('alerts')){
+    main.insertAdjacentHTML('beforeend', `
+      <section id="alerts" class="section">
+        <h2>Alertes</h2>
+        <table id="alerts-table">
+          <thead><tr><th>Nom</th><th>Genre</th><th>Dosage</th><th>Qte</th><th>Peremption</th><th>Alerte</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    `);
+  }
+
+  if(!document.querySelector('nav a[data-target="genre-search"]')){
+    const li = document.createElement('li');
+    li.innerHTML = '<a href="#" data-target="genre-search">Recherche genre</a>';
+    navUl.insertBefore(li, document.getElementById('logout-link')?.parentElement || null);
+  }
+  if(!document.getElementById('genre-search')){
+    main.insertAdjacentHTML('beforeend', `
+      <section id="genre-search" class="section">
+        <h2>Recherche par genre</h2>
+        <div class="form-group" style="max-width:420px;margin-top:1rem;">
+          <label for="genre-filter">Genre</label>
+          <select id="genre-filter"></select>
+        </div>
+        <table id="genre-table">
+          <thead><tr><th>Nom</th><th>Genre</th><th>Dosage</th><th>Qte</th><th>Peremption</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    `);
+  }
 }
 
 /* =========================
@@ -1634,6 +1757,8 @@ function renderAll(){
   renderTable('med-table-edit');
   renderTable('med-table-delete');
   renderTable('med-table-use');
+  if(document.getElementById('alerts')?.classList.contains('active')) renderAlertsSection();
+  if(document.getElementById('genre-search')?.classList.contains('active')) renderGenreSection();
 
   // Valeur totale supprimAe (prix non affichA)
 }
@@ -2394,6 +2519,14 @@ const savedTheme = localStorage.getItem('theme');
 if(savedTheme === 'dark') {
   document.body.classList.add('dark-mode');
 }
+
+setupExtraMenus();
+
+document.addEventListener('change', (e)=>{
+  if(e.target && e.target.id === 'genre-filter'){
+    renderGenreSection();
+  }
+});
 
 document.querySelectorAll('nav a[data-target]').forEach(a=>{
   a.addEventListener('click', (e)=>{
