@@ -2681,6 +2681,7 @@ async function autoSyncFromCloud(){
       var localChanged = false;
       var addedCount = 0;
       var updatedCount = 0;
+      var deletedCount = 0;
 
       // CrAer une map des mAdicaments locaux par clA
       var localMap = {};
@@ -2746,9 +2747,25 @@ async function autoSyncFromCloud(){
       }
       });
 
+      // IMPORTANT: le cloud est source de verite.
+      // Si un medicament n'existe plus dans le cloud (supprime depuis telephone),
+      // il doit aussi etre supprime en local (PC).
+      var cloudKeySet = {};
+      cloudMeds.forEach(function(cm){
+        cloudKeySet[keyOf(cm.name, cm.dosage)] = true;
+      });
+      var beforeCount = meds.length;
+      meds = meds.filter(function(localMed){
+        return !!cloudKeySet[keyOf(localMed.name, localMed.dosage)];
+      });
+      deletedCount = beforeCount - meds.length;
+      if(deletedCount > 0){
+        localChanged = true;
+      }
+
       if(localChanged){
         save();
-        console.log('Y34 Sync terminA: +' + addedCount + ' ajoutAs, ~' + updatedCount + ' mis A  jour');
+        console.log('Y34 Sync terminA: +' + addedCount + ' ajoutAs, -' + deletedCount + ' supprimAs, ~' + updatedCount + ' mis A  jour');
         if(typeof renderAll === 'function') renderAll();
         if(typeof updateStats === 'function') updateStats();
       } else {
