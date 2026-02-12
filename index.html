@@ -1,14 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="fr" translate="no">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="google" content="notranslate" />
-  <title>Gestion de la Pharmacie à Domicile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#5a5fb8" />
-  <link rel="manifest" href="manifest.json" />
-
-  <style>
+﻿<!DOCTYPE html><html lang="fr" translate="no"><head><meta charset="UTF-8" /><meta name="google" content="notranslate" /><title>Gestion de la Pharmacie a Domicile</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="theme-color" content="#5a5fb8" /><link rel="manifest" href="manifest.json" /><style>
     :root{
       --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       --primary-color: #667eea;
@@ -301,7 +291,7 @@
     nav a[data-target="use-mode"]{ background: linear-gradient(135deg,#0ea5e9,#6366f1); }
     nav a[data-target="to-buy"]{ background: linear-gradient(135deg,#f97316,#f43f5e); }
 
-    /* Boutons Ã  masquer */
+    /* Boutons A  masquer */
     .nav-hidden{ display:none !important; }
 
     .container{
@@ -538,8 +528,8 @@
       gap:0.5rem;
     }
     .med-thumb{
-      width:40px;
-      height:40px;
+      width:28px;
+      height:28px;
       border-radius:6px;
       object-fit:cover;
       border:1px solid rgba(0,0,0,0.12);
@@ -841,7 +831,7 @@
       /* Container - plus compact */
       .container{padding:.5rem}
 
-      /* Titres rÃ©duits */
+      /* Titres rAduits */
       h1{font-size:1rem}
       h2{font-size:.95rem}
       h3{font-size:.9rem}
@@ -905,7 +895,7 @@
         padding-right: 0.25rem;
         backdrop-filter: none;
       }
-      /* Eviter dÃ©calage entre en-tÃªte et lignes */
+      /* Eviter dAcalage entre en-tAate et lignes */
       #med-table, #med-table-edit, #med-table-delete, #med-table-use{
         width:100%;
         table-layout:auto;
@@ -924,7 +914,7 @@
       #med-table-use th, #med-table-use td{
         white-space:nowrap;
       }
-      /* Table "À acheter" pleine largeur */
+      /* Table "A acheter" pleine largeur */
       #tobuy-table{
         display:table;
         width:100%;
@@ -939,7 +929,7 @@
         min-width:50px
       }
       .notes-cell{max-width:60px}
-      .med-thumb{width:42px;height:42px;border-radius:8px}
+      .med-thumb{width:24px;height:24px;border-radius:6px}
        #med-table td.med-name-cell span,
       #med-table-edit td.med-name-cell span,
       #med-table-delete td.med-name-cell span,
@@ -982,7 +972,7 @@
     }
 
     @media (max-width: 480px) {
-      /* Navigation mobile - afficher tous les libellÃ©s */
+      /* Navigation mobile - afficher tous les libellAs */
       nav ul{
         grid-template-columns:repeat(5, 1fr);
         gap:.2rem;
@@ -1019,9 +1009,9 @@
         height:15px;
       }
       .med-thumb{
-        width:46px;
-        height:46px;
-        border-radius:8px;
+        width:22px;
+        height:22px;
+        border-radius:5px;
       }
       .stats-grid{grid-template-columns:repeat(2,1fr)}
       
@@ -1068,14 +1058,14 @@
         font-weight:700;
       }
 
-      /* Liste attention - trÃ¨s compact */
+      /* Liste attention - trA s compact */
       .attention-list-item {
         font-size: 0.8rem;
         padding: 0.5rem;
         margin: 0.25rem 0;
       }
 
-      /* Table "À acheter" - responsive */
+      /* Table "A acheter" - responsive */
       #tobuy-table {
         font-size: 0.7rem;
       }
@@ -1093,357 +1083,18 @@
         padding: 0.25rem 0.15rem;
       }
     }
-  </style>
-</head>
-
-<body>
-
-  <!-- Modal de connexion -->
-  <div id="pwd-modal" class="password-modal">
-    <div class="password-content">
-      <h2>🔐 Accès sécurisé</h2>
-      <p style="margin-top:.5rem;">Entrez le mot de passe pour accéder à l'application</p>
-
-      <input type="password" id="pwd-input" placeholder="Mot de passe"
-             style="width:100%;padding:.75rem;margin:1rem 0;border:1px solid #ddd;border-radius:var(--radius);font-size:1.1rem;" />
-
-      <button id="pwd-btn"
+  </style></head><body><!-- Modal de connexion --><div id="pwd-modal" class="password-modal"><div class="password-content"><h2> Acces securise</h2><p style="margin-top:.5rem;">Entrez le mot de passe pour acceder a l'application</p><input type="password" id="pwd-input" placeholder="Mot de passe"
+             style="width:100%;padding:.75rem;margin:1rem 0;border:1px solid #ddd;border-radius:var(--radius);font-size:1.1rem;" /><button id="pwd-btn"
               style="background:var(--primary);color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1.03rem;font-weight:600;">
-        Accéder
-      </button>
-      <button id="bio-btn"
+        Acceder
+      </button><button id="bio-btn"
               style="margin-top:.6rem;background:#2e7d32;color:#fff;border:none;padding:.6rem 1.2rem;border-radius:var(--radius);cursor:pointer;font-size:.95rem;font-weight:600;">
         Empreinte / Face ID
-      </button>
-
-      <p id="pwd-error" style="color:#d32f2f;margin-top:1rem;display:none;">Mot de passe incorrect</p>
-      <p style="margin-top:.6rem;font-size:.85rem;color:#666;">Astuce : Entrée = valider</p>
-      <p style="margin-top:.4rem;font-size:.8rem;color:#666;">L'empreinte fonctionne seulement sur mobile/PWA.</p>
-    </div>
-  </div>
-
-  <!-- Modal dÃ©tails mÃ©dicament -->
-  <div id="details-modal" class="details-modal">
-    <div class="details-content">
-      <h3 id="details-title">DÃ©tails</h3>
-      <div style="display:flex;justify-content:center;margin:.5rem 0 1rem;">
-        <img id="details-image" class="med-thumb" style="width:64px;height:64px;border-radius:10px;display:none;" alt="">
-      </div>
-      <div class="details-grid">
-        <div class="label">Nom</div><div class="value" id="details-name">-</div>
-        <div class="label">Dosage</div><div class="value" id="details-dosage">-</div>
-        <div class="label">Genre</div><div class="value" id="details-genre">-</div>
-        <div class="label">QuantitÃ©</div><div class="value" id="details-quantity">-</div>
-        <div class="label">Date d'achat</div><div class="value" id="details-purchase">-</div>
-        <div class="label">Stock initial</div><div class="value" id="details-initial">-</div>
-        <div class="label">Prix</div><div class="value" id="details-price">-</div>
-        <div class="label">BoÃ®tes</div><div class="value" id="details-boxes">-</div>
-        <div class="label">Péremption</div><div class="value" id="details-expiry">-</div>
-        <div class="label">Notes</div><div class="value" id="details-notes">-</div>
-      </div>
-      <div class="details-actions">
-        <button class="details-close" id="details-close-btn">Fermer</button>
-      </div>
-    </div>
-  </div>
-  <div id="image-zoom-modal" class="image-zoom-modal">
-    <img id="image-zoom-img" alt="">
-  </div>
-
-  <!-- Navigation -->
-  <nav id="main-nav" style="display:none;">
-    <ul>
-      <li><a href="#" data-target="home"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil</a></li>
-      <li><a href="#" data-target="inventory"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 7h-4V4c0-1.1-.9-2-2-2H10c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4z"/></svg> Stock actuel</a></li>
-      <li><a href="#" data-target="add"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Saisie</a></li>
-      <li><a href="#" data-target="edit-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Modifier</a></li>
-      <li><a href="#" data-target="delete-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Supprimer</a></li>
-      <li><a href="#" data-target="use-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Utiliser</a></li>
-      <li><a href="#" data-target="to-buy"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4V2C7 1.45 7.45 1 8 1s1 .45 1 1v2h6V2c0-.55.45-1 1-1s1 .45 1 1v2h5c.55 0 1 .45 1 1s-.45 1-1 1h-1v13c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6H2c-.55 0-1-.45-1-1s.45-1 1-1h5zm2 0V3c0-.55.45-1 1-1s1 .45 1 1v1h4V3c0-.55.45-1 1-1s1 .45 1 1v1h2v2H5V6h4zm-2 4v9h12V8H7z"/></svg> À acheter</a></li>
-
-      <!-- Theme Toggle Button -->
-      <li><button id="theme-toggle" class="theme-toggle-btn" title="Basculer mode sombre/clair">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
-        </svg>
-      </button></li>
-
-      <!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync -->
-      <li><a href="#" id="btn-save" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/></svg> Sauvegarder</a></li>
-      <li><a href="#" id="btn-restore" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li>
-      <li><a href="#" id="btn-clean-dup" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li>
-      <li><a href="#" id="btn-clear" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li>
-      <li><a href="#" id="btn-reset-all" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> Réinitialiser</a></li>
-      <li><a href="#" id="btn-clear-local" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider local</a></li>
-
-      <li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li>
-      <li><span style="color:#fff;font-size:.7rem;opacity:.7;">v<span id="app-version">-</span></span></li>
-    </ul>
-  </nav>
-
-  <!-- Debug Sync Status - cachÃ© par dÃ©faut -->
-  <!-- <div id="debug-sync" style="display:none;"> -->
-  <!--   <div class="log-info">ðŸ’» Debug Sync Cloud</div> -->
-  <!-- </div> -->
-
-  <div class="container" id="main" style="display:none;">
-
-    <!-- Accueil -->
-        <section id="home" class="section active">
-      <h1>Gestionnaire de Pharmacie ? Domicile</h1>
-
-      <div class="stats-grid">
-        <div class="stat-card"><h3>Stock total</h3><div class="stat-number" id="total-meds">0</div></div>
-        <div class="stat-card"><h3>Expir?s</h3><div class="stat-number" id="expired-count">0</div></div>
-        <div class="stat-card"><h3>Pr??expiration</h3><div class="stat-number" id="preexp-count">0</div></div>
-        <div class="stat-card"><h3>Stock nul</h3><div class="stat-number" id="zerostock-count">0</div></div>
-      </div>
-
-      <h3>M?dicaments n?cessitant une attention</h3>
-      <div id="attention-list" style="margin-top:.75rem;"></div>
-      
-      <!-- Debug sync status -->
-      <div style="background:#f0f0f0;padding:1rem;margin-top:1rem;border-radius:8px;font-size:0.9rem;">
-        <h4>?tat Sync Cloud</h4>
-        <p>Locaux: <strong id="debug-local-count">0</strong></p>
-        <p>Cloud: <strong id="debug-cloud-count">0</strong></p>
-        <p>Statut: <strong id="debug-status">En attente...</strong></p>
-        <button onclick="forceDebugSync()" style="margin-top:0.5rem;padding:0.5rem 1rem;background:#2196F3;color:#fff;border:none;border-radius:4px;cursor:pointer;">Tester Sync</button>
-      </div>
-    </section>
-
-    <!-- Stock actuel -->
-    <section id="inventory" class="section">
-      <h2>📦 Stock actuel</h2>
-
-      <div style="display:flex;gap:1rem;margin:1rem 0;align-items:center;flex-wrap:wrap;">
-        <input type="text" id="search" placeholder="🔎 Rechercher (nom, dosage, notes)…" style="flex:1;">
-      </div>
-
-      <table id="med-table">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Genre</th><th>Dosage</th><th>Qté</th>
-            <th>Péremption</th><th>Alerte</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-    <!-- Ajout -->
-    <section id="add" class="section">
-      <h2>Ajouter un médicament</h2>
-
-      <form id="add-form">
-        <div class="form-group"><label>Nom *</label><input type="text" id="name" required></div>
-        <div class="form-group"><label>Dosage *</label><input type="text" id="dosage" placeholder="ex : 500mg, 10ml" required></div>
-        <div class="form-group"><label>Genre *</label>
-          <select id="genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1.03rem;">
-            <option value="">Sélectionner...</option>
-            <option value="Comprimés">Comprimés</option>
-            <option value="Gélules">Gélules</option>
-            <option value="Suppositoires">Suppositoires</option>
-            <option value="Sachets">Sachets</option>
-            <option value="Gel">Gel</option>
-            <option value="Flacon">Flacon</option>
-            <option value="Sirop">Sirop</option>
-            <option value="Solution">Solution</option>
-            <option value="Pommade">Pommade</option>
-            <option value="Lotion">Lotion</option>
-            <option value="Crème">Crème</option>
-            <option value="Poudre">Poudre</option>
-            <option value="Gouttes">Gouttes</option>
-            <option value="Inhalation">Inhalation</option>
-            <option value="Patch">Patch</option>
-            <option value="Autre">Autre</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Date d'achat</label>
-          <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-            <input type="date" id="purchase-date" style="flex:1;min-width:160px;" disabled>
-            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;">
-              <input type="checkbox" id="purchase-date-custom">
+      </button><p id="pwd-error" style="color:#d32f2f;margin-top:1rem;display:none;">Mot de passe incorrect</p><p style="margin-top:.6rem;font-size:.85rem;color:#666;">Astuce : Entree = valider</p><p style="margin-top:.4rem;font-size:.8rem;color:#666;">L'empreinte fonctionne seulement sur mobile/PWA.</p></div></div><!-- Modal dAtails mAdicament --><div id="details-modal" class="details-modal"><div class="details-content"><h3 id="details-title">DAtails</h3><div style="display:flex;justify-content:center;margin:.5rem 0 1rem;"><img id="details-image" class="med-thumb" style="width:64px;height:64px;border-radius:10px;display:none;" alt=""></div><div class="details-grid"><div class="label">Nom</div><div class="value" id="details-name">-</div><div class="label">Dosage</div><div class="value" id="details-dosage">-</div><div class="label">Genre</div><div class="value" id="details-genre">-</div><div class="label">QuantitA</div><div class="value" id="details-quantity">-</div><div class="label">Date d'achat</div><div class="value" id="details-purchase">-</div><div class="label">Stock initial</div><div class="value" id="details-initial">-</div><div class="label">Prix</div><div class="value" id="details-price">-</div><div class="label">BoAtes</div><div class="value" id="details-boxes">-</div><div class="label">Peremption</div><div class="value" id="details-expiry">-</div><div class="label">Notes</div><div class="value" id="details-notes">-</div></div><div class="details-actions"><button class="details-close" id="details-close-btn">Fermer</button></div></div></div><div id="image-zoom-modal" class="image-zoom-modal"><img id="image-zoom-img" alt=""></div><!-- Navigation --><nav id="main-nav" style="display:none;"><ul><li><a href="#" data-target="home"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil</a></li><li><a href="#" data-target="inventory"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 7h-4V4c0-1.1-.9-2-2-2H10c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4z"/></svg> Stock actuel</a></li><li><a href="#" data-target="add"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Saisie</a></li><li><a href="#" data-target="edit-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Modifier</a></li><li><a href="#" data-target="delete-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Supprimer</a></li><li><a href="#" data-target="use-mode"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Utiliser</a></li><li><a href="#" data-target="to-buy"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4V2C7 1.45 7.45 1 8 1s1 .45 1 1v2h6V2c0-.55.45-1 1-1s1 .45 1 1v2h5c.55 0 1 .45 1 1s-.45 1-1 1h-1v13c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6H2c-.55 0-1-.45-1-1s.45-1 1-1h5zm2 0V3c0-.55.45-1 1-1s1 .45 1 1v1h4V3c0-.55.45-1 1-1s1 .45 1 1v1h2v2H5V6h4zm-2 4v9h12V8H7z"/></svg> A acheter</a></li><!-- Theme Toggle Button --><li><button id="theme-toggle" class="theme-toggle-btn" title="Basculer mode sombre/clair"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/></svg></button></li><!-- NOUVEAU : Sauvegarder / Restaurer / Vider / Sync --><li><a href="#" id="btn-save" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V7h10v2z"/></svg> Sauvegarder</a></li><li><a href="#" id="btn-restore" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg> Restaurer</a></li><li><a href="#" id="btn-clean-dup" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/></svg> Nettoyer</a></li><li><a href="#" id="btn-clear" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider</a></li><li><a href="#" id="btn-reset-all" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V3L8 7l4 4V8c3.31 0 6 2.69 6 6a6 6 0 11-6-6z"/></svg> Reinitialiser</a></li><li><a href="#" id="btn-clear-local" class="nav-btn nav-hidden"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Vider local</a></li><li><a href="#" id="logout-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Quitter</a></li><li><span style="color:#fff;font-size:.7rem;opacity:.7;">v<span id="app-version">-</span></span></li></ul></nav><!-- Debug Sync Status - cachA par dAfaut --><!-- <div id="debug-sync" style="display:none;"> --><!--   <div class="log-info">Y Debug Sync Cloud</div> --><!-- </div> --><div class="container" id="main" style="display:none;"><!-- Accueil --><section id="home" class="section active"><h1>Gestionnaire de Pharmacie  Domicile</h1><div class="stats-grid"><div class="stat-card"><h3>Stock total</h3><div class="stat-number" id="total-meds">0</div></div><div class="stat-card"><h3>Expirs</h3><div class="stat-number" id="expired-count">0</div></div><div class="stat-card"><h3>Prexpiration</h3><div class="stat-number" id="preexp-count">0</div></div><div class="stat-card"><h3>Stock nul</h3><div class="stat-number" id="zerostock-count">0</div></div></div><h3>Mdicaments ncessitant une attention</h3><div id="attention-list" style="margin-top:.75rem;"></div><!-- Debug sync status --><div style="background:#f0f0f0;padding:1rem;margin-top:1rem;border-radius:8px;font-size:0.9rem;"><h4>tat Sync Cloud</h4><p>Locaux: <strong id="debug-local-count">0</strong></p><p>Cloud: <strong id="debug-cloud-count">0</strong></p><p>Statut: <strong id="debug-status">En attente...</strong></p><button onclick="forceDebugSync()" style="margin-top:0.5rem;padding:0.5rem 1rem;background:#2196F3;color:#fff;border:none;border-radius:4px;cursor:pointer;">Tester Sync</button></div></section><!-- Stock actuel --><section id="inventory" class="section"><h2> Stock actuel</h2><div style="display:flex;gap:1rem;margin:1rem 0;align-items:center;flex-wrap:wrap;"><input type="text" id="search" placeholder=" Rechercher (nom, dosage, notes)..." style="flex:1;"></div><table id="med-table"><thead><tr><th>Nom</th><th>Genre</th><th>Dosage</th><th>Qte</th><th>Peremption</th><th>Alerte</th><th>Actions</th></tr></thead><tbody></tbody></table></section><!-- Ajout --><section id="add" class="section"><h2>Ajouter un medicament</h2><form id="add-form"><div class="form-group"><label>Nom *</label><input type="text" id="name" required></div><div class="form-group"><label>Dosage *</label><input type="text" id="dosage" placeholder="ex : 500mg, 10ml" required></div><div class="form-group"><label>Genre *</label><select id="genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1.03rem;"><option value="">Selectionner...</option><option value="Comprimes">Comprimes</option><option value="Gelules">Gelules</option><option value="Suppositoires">Suppositoires</option><option value="Sachets">Sachets</option><option value="Gel">Gel</option><option value="Flacon">Flacon</option><option value="Sirop">Sirop</option><option value="Solution">Solution</option><option value="Pommade">Pommade</option><option value="Lotion">Lotion</option><option value="Creme">Creme</option><option value="Poudre">Poudre</option><option value="Gouttes">Gouttes</option><option value="Inhalation">Inhalation</option><option value="Patch">Patch</option><option value="Autre">Autre</option></select></div><div class="form-group"><label>Date d'achat</label><div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;"><input type="date" id="purchase-date" style="flex:1;min-width:160px;" disabled><label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;"><input type="checkbox" id="purchase-date-custom">
               Autre jour
-            </label>
-          </div>
-          <small style="display:block;margin-top:.4rem;color:#666;">Par défaut : aujourd'hui. Cochez "Autre jour" pour saisir.</small>
-        </div>
-
-        <!-- Stock initial AVANT quantité actuelle -->
-        <div class="form-group"><label>Stock initial *</label><input type="number" id="initial-stock" min="0" required></div>
-        <div class="form-group"><label>Quantité actuelle *</label><input type="number" id="quantity" min="0" required></div>
-
-        <div class="form-group"><label>Prix (DH) *</label><input type="number" id="price" min="0" step="0.01" required></div>
-        <div class="form-group"><label>Nombre de boîtes *</label><input type="number" id="nb-boxes" min="1" value="1" required></div>
-
-        <div class="form-group">
-          <label>Date de Péremption (MM/AA) *</label>
-          <input type="text" id="expiry-mmaa" inputmode="numeric" placeholder="ex : 02/26" maxlength="5" required>
-          <small style="display:block;margin-top:.5rem;color:#666;">Format : MM/AA</small>
-        </div>
-
-        <div class="form-group">
-          <label>Photo (optionnel)</label>
-          <input type="file" id="image-file" accept="image/*" capture="environment">
-          <small style="display:block;margin-top:.4rem;color:#666;">Caméra ou galerie.</small>
-        </div>
-
-        <div class="form-group"><label>Notes</label><textarea id="notes" placeholder="Optionnel"></textarea></div>
-
-        <button type="submit">Ajouter</button>
-      </form>
-    </section>
-    <!-- Modifier -->
-    <section id="edit-mode" class="section">
-      <h2>Modifier</h2>
-      <input type="text" id="search-edit" placeholder="Rechercher..." />
-
-      <table id="med-table-edit">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Modifier</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-    <!-- Supprimer -->
-    <section id="delete-mode" class="section">
-      <h2>Supprimer</h2>
-      <input type="text" id="search-delete" placeholder="Rechercher..." />
-
-      <table id="med-table-delete">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Supprimer</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-    <!-- Utiliser -->
-    <section id="use-mode" class="section">
-      <h2>Utiliser</h2>
-
-      <div class="form-group" style="max-width:420px;">
-        <label for="use-qty">Quantité à utiliser :</label>
-        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-          <input type="number" id="use-qty" min="1" value="1" style="width:120px;">
-          <span class="chip">Alerte stock faible <= 5</span>
-        </div>
-      </div>
-
-      <input type="text" id="search-use" placeholder="Rechercher..." />
-
-      <table id="med-table-use">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Dosage</th><th>Qté</th><th>Péremption</th><th>Alerte</th><th>Utiliser</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- À acheter -->
-            <section id="to-buy" class="section">
-      <h2>Médicaments à acheter</h2>
-      <button id="tobuy-toggle" class="nav-btn" style="margin:.5rem 0;">Ajouter</button>
-
-      <form id="tobuy-form" style="max-width:420px;display:none;">
-        <div class="form-group"><label>Nom du médicament *</label><input type="text" id="tobuy-name" required></div>
-        <div class="form-group"><label>Quantité *</label><input type="number" id="tobuy-qty" min="1" value="1" required></div>
-        <div class="form-group"><label>Genre / Notes</label><input type="text" id="tobuy-notes" placeholder="ex : comprimé, sirop, crème..."></div>
-        <button type="submit">Ajouter à la liste</button>
-      </form>
-
-      <table id="tobuy-table" style="margin-top:1.5rem;">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Quantité</th><th>Genre</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-  </div>
-
-  <!-- Modal d'Ã©dition -->
-  <div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;overflow-y:auto;padding:1rem;">
-    <div style="background:#fff;padding:2rem;border-radius:8px;width:100%;max-width:540px;box-shadow:0 4px 20px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;">
-      <h3 style="margin-bottom:1.2rem;">âœï¸ Modifier le mÃ©dicament</h3>
-
-      <form id="edit-form">
-        <input type="hidden" id="edit-index">
-
-        <div class="form-group"><label>Nom *</label><input type="text" id="edit-name" required></div>
-        <div class="form-group"><label>Dosage *</label><input type="text" id="edit-dosage" required></div>
-        <div class="form-group"><label>Genre *</label>
-          <select id="edit-genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1.03rem;">
-            <option value="">SÃ©lectionner...</option>
-            <option value="ComprimÃ©s">ComprimÃ©s</option>
-            <option value="GÃ©lules">GÃ©lules</option>
-            <option value="Suppositoires">Suppositoires</option>
-            <option value="Sachets">Sachets</option>
-            <option value="Gel">Gel</option>
-            <option value="Flacon">Flacon</option>
-            <option value="Sirop">Sirop</option>
-            <option value="Solution">Solution</option>
-            <option value="Pommade">Pommade</option>
-            <option value="Lotion">Lotion</option>
-            <option value="CrÃ¨me">CrÃ¨me</option>
-            <option value="Poudre">Poudre</option>
-            <option value="Gouttes">Gouttes</option>
-            <option value="Inhalation">Inhalation</option>
-            <option value="Patch">Patch</option>
-            <option value="Autre">Autre</option>
-          </select>
-        </div>
-
-        <div class="form-group"><label>Date d'achat</label>
-          <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-            <input type="date" id="edit-purchase-date" style="flex:1;min-width:160px;" disabled>
-            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;">
-              <input type="checkbox" id="edit-purchase-date-custom">
+            </label></div><small style="display:block;margin-top:.4rem;color:#666;">Par defaut : aujourd'hui. Cochez "Autre jour" pour saisir.</small></div><!-- Stock initial AVANT quantite actuelle --><div class="form-group"><label>Stock initial *</label><input type="number" id="initial-stock" min="0" required></div><div class="form-group"><label>Quantite actuelle *</label><input type="number" id="quantity" min="0" required></div><div class="form-group"><label>Prix (DH) *</label><input type="number" id="price" min="0" step="0.01" required></div><div class="form-group"><label>Nombre de boites *</label><input type="number" id="nb-boxes" min="1" value="1" required></div><div class="form-group"><label>Date de Peremption (MM/AA) *</label><input type="text" id="expiry-mmaa" inputmode="numeric" placeholder="ex : 02/26" maxlength="5" required><small style="display:block;margin-top:.5rem;color:#666;">Format : MM/AA</small></div><div class="form-group"><label>Photo (optionnel)</label><input type="file" id="image-file" accept="image/*" capture="environment"><small style="display:block;margin-top:.4rem;color:#666;">Camera ou galerie.</small></div><div class="form-group"><label>Notes</label><textarea id="notes" placeholder="Optionnel"></textarea></div><button type="submit">Ajouter</button></form></section><!-- Modifier --><section id="edit-mode" class="section"><h2>Modifier</h2><input type="text" id="search-edit" placeholder="Rechercher..." /><table id="med-table-edit"><thead><tr><th>Nom</th><th>Dosage</th><th>Qte</th><th>Peremption</th><th>Alerte</th><th>Modifier</th></tr></thead><tbody></tbody></table></section><!-- Supprimer --><section id="delete-mode" class="section"><h2>Supprimer</h2><input type="text" id="search-delete" placeholder="Rechercher..." /><table id="med-table-delete"><thead><tr><th>Nom</th><th>Dosage</th><th>Qte</th><th>Peremption</th><th>Alerte</th><th>Supprimer</th></tr></thead><tbody></tbody></table></section><!-- Utiliser --><section id="use-mode" class="section"><h2>Utiliser</h2><div class="form-group" style="max-width:420px;"><label for="use-qty">Quantite a utiliser :</label><div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;"><input type="number" id="use-qty" min="1" value="1" style="width:120px;"><span class="chip">Alerte stock faible <= 5</span></div></div><input type="text" id="search-use" placeholder="Rechercher..." /><table id="med-table-use"><thead><tr><th>Nom</th><th>Dosage</th><th>Qte</th><th>Peremption</th><th>Alerte</th><th>Utiliser</th></tr></thead><tbody></tbody></table></section><!-- A acheter --><section id="to-buy" class="section"><h2>Medicaments a acheter</h2><button id="tobuy-toggle" class="nav-btn" style="margin:.5rem 0;">Ajouter</button><form id="tobuy-form" style="max-width:420px;display:none;"><div class="form-group"><label>Nom du medicament *</label><input type="text" id="tobuy-name" required></div><div class="form-group"><label>Quantite *</label><input type="number" id="tobuy-qty" min="1" value="1" required></div><div class="form-group"><label>Genre / Notes</label><input type="text" id="tobuy-notes" placeholder="ex : comprime, sirop, creme..."></div><button type="submit">Ajouter a la liste</button></form><table id="tobuy-table" style="margin-top:1.5rem;"><thead><tr><th>Nom</th><th>Quantite</th><th>Genre</th><th>Actions</th></tr></thead><tbody></tbody></table></section></div><!-- Modal d'Adition --><div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:1000;overflow-y:auto;padding:1rem;"><div style="background:#fff;padding:2rem;border-radius:8px;width:100%;max-width:540px;box-shadow:0 4px 20px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;"><h3 style="margin-bottom:1.2rem;">Modifier le medicament</h3><form id="edit-form"><input type="hidden" id="edit-index"><div class="form-group"><label>Nom *</label><input type="text" id="edit-name" required></div><div class="form-group"><label>Dosage *</label><input type="text" id="edit-dosage" required></div><div class="form-group"><label>Genre *</label><select id="edit-genre" required style="width:100%;padding:.75rem;border:1px solid #ddd;border-radius:var(--radius);font-size:1.03rem;"><option value="">SAlectionner...</option><option value="ComprimAs">ComprimAs</option><option value="GAlules">GAlules</option><option value="Suppositoires">Suppositoires</option><option value="Sachets">Sachets</option><option value="Gel">Gel</option><option value="Flacon">Flacon</option><option value="Sirop">Sirop</option><option value="Solution">Solution</option><option value="Pommade">Pommade</option><option value="Lotion">Lotion</option><option value="CrA me">CrA me</option><option value="Poudre">Poudre</option><option value="Gouttes">Gouttes</option><option value="Inhalation">Inhalation</option><option value="Patch">Patch</option><option value="Autre">Autre</option></select></div><div class="form-group"><label>Date d'achat</label><div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;"><input type="date" id="edit-purchase-date" style="flex:1;min-width:160px;" disabled><label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;"><input type="checkbox" id="edit-purchase-date-custom">
               Autre jour
-            </label>
-          </div>
-          <small style="display:block;margin-top:.4rem;color:#666;">Par dÃ©faut : aujourd'hui. Cochez "Autre jour" pour saisir.</small>
-        </div>
-
-        <div class="form-group"><label>Stock initial *</label><input type="number" id="edit-initial" min="0" required></div>
-        <div class="form-group"><label>QuantitÃ© actuelle *</label><input type="number" id="edit-quantity" min="0" required></div>
-
-        <div class="form-group"><label>Prix (DH) *</label><input type="number" id="edit-price" min="0" step="0.01" required></div>
-        <div class="form-group"><label>Nombre de boÃ®tes *</label><input type="number" id="edit-nb-boxes" min="1" value="1" required></div>
-
-        <div class="form-group">
-          <label>Péremption (MM/AA) *</label>
-          <input type="text" id="edit-expiry-mmaa" inputmode="numeric" maxlength="5" placeholder="ex : 02/26" required>
-        </div>
-
-        <div class="form-group">
-          <label>Photo (optionnel)</label>
-          <input type="file" id="edit-image-file" accept="image/*" capture="environment">
-          <small style="display:block;margin-top:.4rem;color:#666;">Laisser vide pour garder l'image actuelle.</small>
-        </div>
-
-        <div class="form-group"><label>Notes</label><textarea id="edit-notes"></textarea></div>
-
-        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
-          <button type="submit" style="flex:1;">ðŸ’¾ Enregistrer</button>
-          <button type="button" id="edit-cancel" style="flex:1;background:#6c757d;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1.03rem;font-weight:600;">âŒ Annuler</button>
-        </div>
-      </form>
-
-      <p style="margin-top:1rem;font-size:.9rem;color:#666;">Astuce : Ã‰chap = fermer</p>
-    </div>
-  </div>
-
-<script>
+            </label></div><small style="display:block;margin-top:.4rem;color:#666;">Par dAfaut : aujourd'hui. Cochez "Autre jour" pour saisir.</small></div><div class="form-group"><label>Stock initial *</label><input type="number" id="edit-initial" min="0" required></div><div class="form-group"><label>QuantitA actuelle *</label><input type="number" id="edit-quantity" min="0" required></div><div class="form-group"><label>Prix (DH) *</label><input type="number" id="edit-price" min="0" step="0.01" required></div><div class="form-group"><label>Nombre de boAtes *</label><input type="number" id="edit-nb-boxes" min="1" value="1" required></div><div class="form-group"><label>Peremption (MM/AA) *</label><input type="text" id="edit-expiry-mmaa" inputmode="numeric" maxlength="5" placeholder="ex : 02/26" required></div><div class="form-group"><label>Photo (optionnel)</label><input type="file" id="edit-image-file" accept="image/*" capture="environment"><small style="display:block;margin-top:.4rem;color:#666;">Laisser vide pour garder l'image actuelle.</small></div><div class="form-group"><label>Notes</label><textarea id="edit-notes"></textarea></div><div style="display:flex;gap:1rem;flex-wrap:wrap;"><button type="submit" style="flex:1;">Enregistrer</button><button type="button" id="edit-cancel" style="flex:1;background:#6c757d;color:#fff;border:none;padding:.75rem 1.5rem;border-radius:var(--radius);cursor:pointer;font-size:1.03rem;font-weight:600;">Annuler</button></div></form><p style="margin-top:1rem;font-size:.9rem;color:#666;">Astuce : Echap = fermer</p></div></div><script>
 /* =========================
    CONFIG / STOCKAGE
 ========================= */
@@ -1456,14 +1107,14 @@ const TOBUY_KEY = "medicines_to_buy";
 const PENDING_DELETE_KEY = "medicines_pending_delete";
 const PENDING_TOBUY_DELETE_KEY = "tobuy_pending_delete";
 
-// (optionnel) clÃ© si tu veux gÃ©rer des exemples une seule fois
+// (optionnel) clA si tu veux gArer des exemples une seule fois
 const SEEDED_KEY = "medicines_seeded_once";
 
 let auth = false;
 let meds = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let toBuyList = JSON.parse(localStorage.getItem(TOBUY_KEY)) || [];
 
-// Ajouter timestamps aux donnÃ©es existantes si manquant
+// Ajouter timestamps aux donnAes existantes si manquant
 meds.forEach(m => {
   if(!m.created_at) m.created_at = new Date().toISOString();
   if(!m.updated_at) m.updated_at = new Date().toISOString();
@@ -1477,7 +1128,7 @@ toBuyList.forEach(t => {
    UTILITAIRES
 ========================= */
 function escapeHtml(str){
-  return String(str ?? "")
+  return String(str || "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
@@ -1492,7 +1143,13 @@ function getTodayISODate(){
   return new Date().toISOString().slice(0,10);
 }
 
+let lastStockScrollTs = 0;
+window.addEventListener('scroll', () => { lastStockScrollTs = Date.now(); }, { passive: true });
+window.addEventListener('touchmove', () => { lastStockScrollTs = Date.now(); }, { passive: true });
+
 function openDetails(idx){
+  // Evite l'ouverture du popup pendant le scroll (mobile + PC).
+  if (Date.now() - lastStockScrollTs < 220) return;
   const m = meds[idx];
   if(!m) return;
 
@@ -1501,7 +1158,7 @@ function openDetails(idx){
     if(el) el.textContent = val;
   };
 
-  setText('details-title', `DÃ©tails: ${m.name || ''}`);
+  setText('details-title', `Details: ${m.name || ''}`);
   setText('details-name', m.name || '-');
   setText('details-dosage', m.dosage || '-');
   setText('details-genre', m.genre || '-');
@@ -1659,7 +1316,7 @@ async function uploadMedImageIfAny(file, name, dosage){
   const res = await uploadMedImage(file, path);
   if(res && res.error){
     console.warn('Erreur upload image:', res.error);
-    alert('âŒ Image non envoyÃ©e. Le mÃ©dicament sera enregistrÃ© sans image.');
+    alert('Image non envoyee. Le medicament sera enregistre sans image.');
     return '';
   }
   return res && res.url ? res.url : '';
@@ -1789,7 +1446,7 @@ async function biometricRegister(){
     attestation: 'none'
   };
   const cred = await navigator.credentials.create({ publicKey });
-  if(!cred) throw new Error('CrÃ©ation empreinte Ã©chouÃ©e');
+  if(!cred) throw new Error('CrAation empreinte AchouAe');
   const id = bufferToBase64Url(cred.rawId);
   localStorage.setItem(BIO_KEY, id);
   return id;
@@ -1801,7 +1458,7 @@ async function biometricVerify(){
     await biometricRegister();
   }
   const allowId = localStorage.getItem(BIO_KEY);
-  if(!allowId) throw new Error('Aucune empreinte enregistrÃ©e');
+  if(!allowId) throw new Error('Aucune empreinte enregistrAe');
   const challenge = crypto.getRandomValues(new Uint8Array(32));
   const publicKey = {
     challenge,
@@ -1814,7 +1471,7 @@ async function biometricVerify(){
     timeout: 60000
   };
   const assertion = await navigator.credentials.get({ publicKey });
-  if(!assertion) throw new Error('VÃ©rification Ã©chouÃ©e');
+  if(!assertion) throw new Error('VArification AchouAe');
   return true;
 }
 
@@ -1852,15 +1509,13 @@ function updateStats(){
 
     if(isExp || isPre || isZero){
       let status = '';
-      if(isExp) status = 'âŒ EXPIRÃ‰';
-      else if(isPre) status = 'âš ï¸ PRÃ‰â€‘EXPIRATION';
-      else status = 'ðŸ“¦ STOCK NUL';
+      if(isExp) status = 'a EXPIRA';
+      else if(isPre) status = 'as i  PRAaEXPIRATION';
+      else status = 'Y STOCK NUL';
 
       listHtml += `
-        <div style="background:#fff;padding:1rem;margin:.5rem 0;border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow);">
-          <strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.dosage)}) â€“ ${status}
-          <br><small>Qté : ${Number(m.quantity)||0}, Exp : ${fmtMMAA(m.expiry)}</small>
-        </div>`;
+        <div style="background:#fff;padding:1rem;margin:.5rem 0;border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow);"><strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.dosage)}) a ${status}
+          <br><small>Qte : ${Number(m.quantity)||0}, Exp : ${fmtMMAA(m.expiry)}</small></div>`;
     }
   });
 
@@ -1870,7 +1525,7 @@ function updateStats(){
   document.getElementById('zerostock-count').textContent = zer;
 
   document.getElementById('attention-list').innerHTML =
-    listHtml || '<p style="color:#2e7d32;">âœ… Aucun problÃ¨me dÃ©tectÃ©</p>';
+    listHtml || '<p style="color:#2e7d32;">a... Aucun problA me dAtectA</p>';
 }
 
 /* =========================
@@ -1919,7 +1574,7 @@ function renderAll(){
         tableId === 'med-table-delete' ? 6 :
         tableId === 'med-table-use' ? 6 : 7;
 
-      tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-msg">Aucun mÃ©dicament trouvÃ©</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty-msg">Aucun mAdicament trouvA</td></tr>`;
       return;
     }
 
@@ -1943,38 +1598,30 @@ function renderAll(){
       let alertHtml = alertMsgs.length > 0 ? alertMsgs.join('<br>') : '-';
 
       let row = `
-        <tr class="${stkCls}">
-          <td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" title="Voir dÃ©tails" onclick="openDetails(${idx})">${imgHtml}<span>${escapeHtml(m.name)}</span></td>
+        <tr class="${stkCls}"><td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" title="Voir dAtails" onclick="openDetails(${idx})">${imgHtml}<span>${escapeHtml(m.name)}</span></td>
       `;
       if(tableId === 'med-table'){
         row += `<td>${escapeHtml(m.genre || '-')}</td>`;
       }
       row += `
-          <td>${escapeHtml(m.dosage)}</td>
-          <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${q}</td>
-          <td class="${expCls}">${fmtMMAA(m.expiry)}</td>
-          <td>${alertHtml}</td>
+          <td>${escapeHtml(m.dosage)}</td><td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${q}</td><td class="${expCls}">${fmtMMAA(m.expiry)}</td><td>${alertHtml}</td>
       `;
 
       if(tableId === 'med-table'){
         row += `
-          <td>
-            <button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">âœï¸</button>
-            <button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">ðŸ—‘ï¸</button>
-            <button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">ðŸ’Š</button>
-          </td>
+          <td><button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">&#9998;</button><button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">&#128465;</button><button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">&#128138;</button></td>
         `;
       } else if(tableId === 'med-table-edit'){
         row += `
-          <td><button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">âœï¸</button></td>
+          <td><button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">&#9998;</button></td>
         `;
       } else if(tableId === 'med-table-delete'){
         row += `
-          <td><button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">ðŸ—‘ï¸</button></td>
+          <td><button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">&#128465;</button></td>
         `;
       } else if(tableId === 'med-table-use'){
         row += `
-          <td><button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">ðŸ’Š</button></td>
+          <td><button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">&#128138;</button></td>
         `;
       }
 
@@ -1988,7 +1635,7 @@ function renderAll(){
   renderTable('med-table-delete');
   renderTable('med-table-use');
 
-  // Valeur totale supprimÃ©e (prix non affichÃ©)
+  // Valeur totale supprimAe (prix non affichA)
 }
 
 /* =========================
@@ -2019,7 +1666,7 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
   const expiryMMAA = document.getElementById('expiry-mmaa').value;
   const expiryISO = parseMMAAtoISO(expiryMMAA);
   if(!expiryISO){
-    alert("âŒ Date invalide. Utilise MM/AA (ex : 02/26).");
+    alert("a Date invalide. Utilise MM/AA (ex : 02/26).");
     return;
   }
 
@@ -2042,7 +1689,7 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
     meds.push(newMed);
     save();
 
-    // Sauvegarder vers cloud IMMÃ‰DIATEMENT
+    // Sauvegarder vers cloud IMMADIATEMENT
     if(window.addMedicament){
       addMedicament({
         name, dosage, genre, initialStock, quantity, price, nbBoxes,
@@ -2051,13 +1698,13 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
         if(result.error){
           console.error('Erreur ajout cloud:', result.error);
         } else {
-          console.log('âœ… Ajout cloud rÃ©ussi');
-          // Assigner l'ID retournÃ© au mÃ©dicament local
+          console.log('a... Ajout cloud rAussi');
+          // Assigner l'ID retournA au mAdicament local
           if(result.data && result.data[0] && result.data[0].id){
             meds[meds.length - 1].id = result.data[0].id;
             meds[meds.length - 1].updated_at = new Date().toISOString();
             save();
-            console.log('ID cloud assignÃ©:', result.data[0].id);
+            console.log('ID cloud assignA:', result.data[0].id);
           }
         }
       });
@@ -2079,22 +1726,22 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
   const ex = meds[existingIndex];
 
   const msg =
-`âš ï¸ Ce mÃ©dicament existe dÃ©jÃ  :
+`as i  Ce mAdicament existe dAjA  :
 - ${ex.name} (${ex.dosage})
 
 Stock actuel :
-- QuantitÃ© actuelle : ${ex.quantity}
+- QuantitA actuelle : ${ex.quantity}
 - Stock initial : ${ex.initialStock}
 - Prix : ${Number(ex.price||0).toFixed(2)} DH
-- Péremption : ${fmtMMAA(ex.expiry)}
+- Peremption : ${fmtMMAA(ex.expiry)}
 
 Nouvelle saisie :
-- +Qté : ${quantity}
+- +Qte : ${quantity}
 - +Stock init. : ${initialStock}
 - Nouveau prix : ${price.toFixed(2)} DH (remplace l'ancien)
-- Péremption : ${fmtMMAA(expiryISO)}
+- Peremption : ${fmtMMAA(expiryISO)}
 
-âœ… Voulez-vous ACTUALISER (cumuler les stocks) ?`;
+a... Voulez-vous ACTUALISER (cumuler les stocks) `;
 
   if(!confirm(msg)) return;
 
@@ -2107,18 +1754,18 @@ Nouvelle saisie :
   ex.notes = mergeNotes(ex.notes, notes);
   ex.purchaseDate = purchaseDate;
   if(imageUrl) ex.imageUrl = imageUrl;
-  ex._localModified = true; // Marquer comme modifiÃ© localement
+  ex._localModified = true; // Marquer comme modifiA localement
 
   meds[existingIndex] = ex;
   save();
   
-  // Mettre Ã  jour le cloud IMMÃ‰DIATEMENT
+  // Mettre A  jour le cloud IMMADIATEMENT
   if(window.updateMedicament && ex.id){
     updateMedicament(ex.id, ex).then(result => {
       if(result.error){
         console.error('Erreur update cloud:', result.error);
       } else {
-        console.log('âœ… Update cloud rÃ©ussi');
+        console.log('a... Update cloud rAussi');
       }
     });
   }
@@ -2190,7 +1837,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
   const expiryMMAA = document.getElementById('edit-expiry-mmaa').value;
   const expiryISO = parseMMAAtoISO(expiryMMAA);
   if(!expiryISO){
-    alert("âŒ Date invalide. Utilise MM/AA (ex : 02/26).");
+    alert("a Date invalide. Utilise MM/AA (ex : 02/26).");
     return;
   }
 
@@ -2205,10 +1852,10 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
   if(otherIndex !== -1){
     const target = meds[otherIndex];
     const msg =
-`âš ï¸ Un autre mÃ©dicament existe dÃ©jÃ  avec le mÃªme Nom+Dosage :
+`as i  Un autre mAdicament existe dAjA  avec le mAame Nom+Dosage :
 - ${target.name} (${target.dosage})
 
-Voulez-vous FUSIONNER (cumuler) ce mÃ©dicament modifiÃ© avec l'existant ?`;
+Voulez-vous FUSIONNER (cumuler) ce mAdicament modifiA avec l'existant `;
 
     if(confirm(msg)){
       const oldId = meds[idx].id;
@@ -2221,24 +1868,24 @@ Voulez-vous FUSIONNER (cumuler) ce mÃ©dicament modifiÃ© avec l'existant ?`;
       target.notes = mergeNotes(target.notes, notes);
       if(!target.purchaseDate) target.purchaseDate = purchaseDate;
       if(imageUrl) target.imageUrl = imageUrl;
-      target._localModified = true; // Marquer comme modifiÃ© localement
+      target._localModified = true; // Marquer comme modifiA localement
 
       meds[otherIndex] = target;
       meds.splice(idx, 1);
 
       save();
       
-      // Mettre Ã  jour le cloud IMMÃ‰DIATEMENT
+      // Mettre A  jour le cloud IMMADIATEMENT
       if(window.updateMedicament && target.id){
         updateMedicament(target.id, target).then(result => {
           if(result.error){
             console.error('Erreur update cloud:', result.error);
           } else {
-            console.log('âœ… Update cloud rÃ©ussi (fusion)');
+            console.log('a... Update cloud rAussi (fusion)');
           }
         });
       }
-      // Supprimer l'ancien en cloud si nÃ©cessaire
+      // Supprimer l'ancien en cloud si nAcessaire
       if(window.deleteMedicament && oldId && oldId !== target.id){
         deleteMedicament(oldId).then(result => {
           if(result && result.error){
@@ -2257,16 +1904,16 @@ Voulez-vous FUSIONNER (cumuler) ce mÃ©dicament modifiÃ© avec l'existant ?`;
   const keepId = meds[idx].id;
   meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || '') };
   if(keepId) meds[idx].id = keepId;
-  meds[idx]._localModified = true; // Marquer comme modifiÃ© localement
+  meds[idx]._localModified = true; // Marquer comme modifiA localement
   save();
 
-  // Mettre Ã  jour le cloud IMMÃ‰DIATEMENT
+  // Mettre A  jour le cloud IMMADIATEMENT
   if(window.updateMedicament && meds[idx].id){
     updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || '') }).then(result => {
       if(result.error){
         console.error('Erreur update cloud:', result.error);
       } else {
-        console.log('âœ… Update cloud rÃ©ussi');
+        console.log('a... Update cloud rAussi');
       }
     });
   }
@@ -2283,18 +1930,18 @@ Voulez-vous FUSIONNER (cumuler) ce mÃ©dicament modifiÃ© avec l'existant ?`;
 function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
-  if(confirm(`Supprimer "${m.name} (${m.dosage})" ?`)){
+  if(confirm(`Supprimer "${m.name} (${m.dosage})" `)){
     const key = keyOf(m.name, m.dosage);
     markPendingDelete(key);
 
-    // Supprimer du cloud IMMÃ‰DIATEMENT (avec fallback nom+dosage)
+    // Supprimer du cloud IMMADIATEMENT (avec fallback nom+dosage)
     if(window.deleteMedicament){
       deleteMedicament(m.id, m.name, m.dosage).then(result => {
         if(result && result.error){
-          console.error('âŒ Erreur suppression cloud:', result.error);
+          console.error('a Erreur suppression cloud:', result.error);
         } else {
           clearPendingDelete(key);
-          console.log('âœ… Suppression cloud rÃ©ussie');
+          console.log('a... Suppression cloud rAussie');
         }
       });
     }
@@ -2311,28 +1958,28 @@ function useMed(idx){
   if(!m) return;
 
   const qty = parseInt(document.getElementById('use-qty').value, 10) || 1;
-  if(qty <= 0){ alert("âŒ QuantitÃ© invalide."); return; }
+  if(qty <= 0){ alert("a QuantitA invalide."); return; }
 
   if(Number(m.quantity) >= qty){
     const oldQty = Number(m.quantity);
     m.quantity = Number(m.quantity) - qty;
-    m._localModified = true; // Marquer comme modifiÃ© localement
+    m._localModified = true; // Marquer comme modifiA localement
     save();
     
-    logDebug('ðŸ’Š UTILISER: ' + m.name + ' -' + qty + ' (Ã©tait:' + oldQty + ', maintenant:' + m.quantity + ')');
+    logDebug('YS UTILISER: ' + m.name + ' -' + qty + ' (Atait:' + oldQty + ', maintenant:' + m.quantity + ')');
     
-    // Si stock Ã©puisÃ©, supprimer localement seulement (pas de sync)
+    // Si stock ApuisA, supprimer localement seulement (pas de sync)
     if(m.quantity === 0){
-      logInfo('ðŸ—‘ï¸ Stock Ã©puisÃ© - suppression locale de ' + m.name);
+      logInfo('Yi  Stock ApuisA - suppression locale de ' + m.name);
       const key = keyOf(m.name, m.dosage);
       markPendingDelete(key);
       if(window.deleteMedicament){
         deleteMedicament(m.id, m.name, m.dosage).then(result => {
           if(result && result.error){
-            logError('âŒ Erreur suppression cloud: ' + result.error);
+            logError('a Erreur suppression cloud: ' + result.error);
           } else {
             clearPendingDelete(key);
-            logSuccess('âœ… Suppression cloud: ' + m.name);
+            logSuccess('a... Suppression cloud: ' + m.name);
           }
         });
       }
@@ -2348,15 +1995,15 @@ function useMed(idx){
         }
       }, 100);
 
-      alert(`â„¹ï¸ DerniÃ¨re unitÃ© de ${m.name} utilisÃ©e â€“ stock Ã©puisÃ©.`);
+      alert(`a1i  DerniA re unitA de ${m.name} utilisAe a stock ApuisA.`);
     } else {
-      // Mettre Ã  jour le cloud IMMÃ‰DIATEMENT avec nouvelle quantitÃ©
+      // Mettre A  jour le cloud IMMADIATEMENT avec nouvelle quantitA
       if(window.updateMedicament && m.id){
         updateMedicament(m.id, m).then(result => {
           if(result.error){
             logError('Erreur sync cloud: ' + result.error);
           } else {
-            logSuccess('âœ… Sync: ' + m.name + ' = ' + m.quantity);
+            logSuccess('a... Sync: ' + m.name + ' = ' + m.quantity);
           }
         });
       }
@@ -2365,16 +2012,16 @@ function useMed(idx){
       updateStats();
       
       if(m.quantity <= 5){
-        alert(`âš ï¸ Stock faible : il ne reste plus que ${m.quantity} unitÃ©(s) de ${m.name}.`);
+        alert(`as i  Stock faible : il ne reste plus que ${m.quantity} unitA(s) de ${m.name}.`);
       }
     }
   } else {
-    alert(`âŒ Stock insuffisant ! ${m.name} possÃ¨de seulement ${m.quantity} unitÃ©(s).`);
+    alert(`a Stock insuffisant ! ${m.name} possA de seulement ${m.quantity} unitA(s).`);
   }
 }
 
 /* =========================
-   À acheter (Liste de courses)
+   A acheter (Liste de courses)
 ========================= */
 function renderToBuy(){
   const tbody = document.querySelector('#tobuy-table tbody');
@@ -2382,7 +2029,7 @@ function renderToBuy(){
   
   tbody.innerHTML = '';
   
-  // DÃ©dupliquer par nom (prÃ©fÃ©rer item avec id)
+  // DAdupliquer par nom (prAfArer item avec id)
   const dedupMap = {};
   toBuyList.forEach(item => {
     const key = (item.name || '').toLowerCase().trim();
@@ -2394,11 +2041,11 @@ function renderToBuy(){
   toBuyList = Object.values(dedupMap);
 
   if(toBuyList.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucun mÃ©dicament dans la liste</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucun mAdicament dans la liste</td></tr>';
     return;
   }
   
-  // Trier par ordre alphabÃ©tique
+  // Trier par ordre alphabAtique
   const sortedList = [...toBuyList].sort((a, b) => 
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
@@ -2407,19 +2054,14 @@ function renderToBuy(){
     const idAttr = item.id ? String(item.id) : '';
     const nameAttr = String(item.name || '');
     tbody.innerHTML += `
-      <tr>
-        <td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td>
-        <td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td>
-        <td>${escapeHtml(item.notes || '-')}</td>
-        <td><button class="action-btn delete tobuy-delete" data-id="${escapeAttr(idAttr)}" data-name="${escapeAttr(nameAttr)}">ðŸ—‘ï¸</button></td>
-      </tr>
+      <tr><td style="color:#1976d2;font-weight:bold;">${escapeHtml(item.name)}</td><td style="color:#d32f2f;font-weight:bold;font-size:1.1em;">${item.qty}</td><td>${escapeHtml(item.notes || '-')}</td><td><button class="action-btn delete tobuy-delete" data-id="${escapeAttr(idAttr)}" data-name="${escapeAttr(nameAttr)}">&#128465;</button></td></tr>
     `;
   });
 }
 
 // Supprimer par id si possible (fallback nom)
 function removeToBuyItem(id, name){
-  if(!confirm('Supprimer "' + name + '" de la liste ?')) return;
+  if(!confirm('Supprimer "' + name + '" de la liste ')) return;
   markPendingToBuyDelete(id, name);
   
   // Trouver l'index
@@ -2431,7 +2073,7 @@ function removeToBuyItem(id, name){
   );
   
   if(idx === -1) {
-    console.log('âš ï¸ Article non trouvÃ©:', name);
+    console.log('as i  Article non trouvA:', name);
     return;
   }
   
@@ -2439,22 +2081,22 @@ function removeToBuyItem(id, name){
   localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
   renderToBuy();
 
-  // Sync vers cloud - suppression activÃ©e avec confirmation
+  // Sync vers cloud - suppression activAe avec confirmation
   if(window.deleteAchatById && idStr){
-    console.log('â˜ï¸ Suppression cloud (id):', idStr);
+    console.log('a i  Suppression cloud (id):', idStr);
     deleteAchatById(idStr).then((result) => {
       if(result && result.error){
         throw new Error((result.status ? ('HTTP ' + result.status + ' ') : '') + result.error);
       }
       clearPendingToBuyDelete(idStr, nameStr);
-      console.log('âœ… Suppression cloud confirmÃ©e pour id:', idStr);
+      console.log('a... Suppression cloud confirmAe pour id:', idStr);
       setTimeout(() => {
         loadToBuyFromCloud();
       }, 500);
     }).catch(e => {
-      console.error('âŒ Erreur suppression cloud:', e);
+      console.error('a Erreur suppression cloud:', e);
       if(window.deleteAchatByName){
-        console.log('â˜ï¸ Fallback suppression cloud (nom):', nameStr);
+        console.log('a i  Fallback suppression cloud (nom):', nameStr);
         deleteAchatByName(nameStr).then((r) => {
           if(r && r.error){
             throw new Error((r.status ? ('HTTP ' + r.status + ' ') : '') + r.error);
@@ -2462,17 +2104,17 @@ function removeToBuyItem(id, name){
           clearPendingToBuyDelete(idStr, nameStr);
           loadToBuyFromCloud();
         }).catch(err => {
-          console.error('âŒ Erreur suppression cloud (nom):', err);
-          alert('âŒ Suppression cloud refusÃ©e: ' + err.message);
+          console.error('a Erreur suppression cloud (nom):', err);
+          alert('a Suppression cloud refusAe: ' + err.message);
           loadToBuyFromCloud();
         });
       } else {
-        alert('âŒ Suppression cloud refusÃ©e.');
+        alert('a Suppression cloud refusAe.');
         loadToBuyFromCloud();
       }
     });
   } else if(window.deleteAchatByName){
-    console.log('â˜ï¸ Suppression cloud (nom):', nameStr);
+    console.log('a i  Suppression cloud (nom):', nameStr);
     deleteAchatByName(nameStr).then((result) => {
       if(result && result.error){
         throw new Error((result.status ? ('HTTP ' + result.status + ' ') : '') + result.error);
@@ -2480,15 +2122,15 @@ function removeToBuyItem(id, name){
       clearPendingToBuyDelete(idStr, nameStr);
       loadToBuyFromCloud();
     }).catch(e => {
-      console.error('âŒ Erreur suppression cloud:', e);
-      alert('âŒ Suppression cloud refusÃ©e: ' + e.message);
+      console.error('a Erreur suppression cloud:', e);
+      alert('a Suppression cloud refusAe: ' + e.message);
       loadToBuyFromCloud();
     });
   }
 }
 
 function removeToBuy(idx){
-  if(confirm('Supprimer ce mÃ©dicament de la liste ?')){
+  if(confirm('Supprimer ce mAdicament de la liste ')){
     var deletedItem = toBuyList[idx];
     var deletedName = deletedItem.name;
     var deletedId = deletedItem.id;
@@ -2497,12 +2139,12 @@ function removeToBuy(idx){
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
     renderToBuy();
     
-    // Sync IMMÃ‰DIAT vers cloud - suppression directe
+    // Sync IMMADIAT vers cloud - suppression directe
     if(window.deleteAchatById && deletedId){
-      console.log('â˜ï¸ Suppression immÃ©diate id', deletedId, 'du cloud');
+      console.log('a i  Suppression immAdiate id', deletedId, 'du cloud');
       deleteAchatById(deletedId);
     } else if(window.deleteAchatByName){
-      console.log('â˜ï¸ Suppression immÃ©diate de', deletedName, 'du cloud');
+      console.log('a i  Suppression immAdiate de', deletedName, 'du cloud');
       deleteAchatByName(deletedName);
     }
   }
@@ -2517,7 +2159,7 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
 
   if(!name) return;
 
-  // VÃ©rifier si l'article existe dÃ©jÃ 
+  // VArifier si l'article existe dAjA 
   const existingIndex = toBuyList.findIndex(item =>
     item.name.toLowerCase() === name.toLowerCase()
   );
@@ -2526,7 +2168,7 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   let targetIndex = -1;
 
   if(existingIndex !== -1){
-    // Cumuler les quantitÃ©s
+    // Cumuler les quantitAs
     toBuyList[existingIndex].qty += qty;
     toBuyList[existingIndex].notes = mergeNotes(toBuyList[existingIndex].notes, notes);
     targetIndex = existingIndex;
@@ -2552,10 +2194,10 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
 
   localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
 
-  // Sync vers cloud immÃ©diatement (uniquement si nouvel enregistrement)
+  // Sync vers cloud immAdiatement (uniquement si nouvel enregistrement)
   if(shouldInsert){
     if(window.addAchat){
-      console.log('â˜ï¸ Sync ajout achat vers cloud:', { name, qty, notes });
+      console.log('a i  Sync ajout achat vers cloud:', { name, qty, notes });
       addAchat({ name, qty, notes }).then((res) => {
         if(res && res.data && res.data[0] && res.data[0].id){
           const newId = res.data[0].id;
@@ -2568,7 +2210,7 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
         loadToBuyFromCloud();
       });
     } else {
-      console.warn('âš ï¸ addAchat non disponible');
+      console.warn('as i  addAchat non disponible');
     }
   }
 
@@ -2602,7 +2244,7 @@ function saveBackup(){
     medicines: meds
   };
   downloadJSON("pharmacie-stock.json", payload);
-  alert("âœ… Sauvegarde tÃ©lÃ©chargÃ©e : pharmacie-stock.json");
+  alert("a... Sauvegarde tAlAchargAe : pharmacie-stock.json");
 }
 
 function restoreBackupFromFile(file){
@@ -2637,9 +2279,9 @@ function restoreBackupFromFile(file){
 
       renderAll();
       updateStats();
-      alert("âœ… Restauration terminÃ©e !");
+      alert("a... Restauration terminAe !");
     }catch(err){
-      alert("âŒ Impossible de restaurer : fichier JSON invalide.");
+      alert("a Impossible de restaurer : fichier JSON invalide.");
     }
   };
   reader.readAsText(file);
@@ -2652,7 +2294,7 @@ function restoreBackup(){
   input.accept = "application/json,.json";
   input.onchange = () => {
     if(input.files && input.files[0]){
-      const ok = confirm("âš ï¸ Restaurer va remplacer ton stock actuel. Continuer ?");
+      const ok = confirm("as i  Restaurer va remplacer ton stock actuel. Continuer ");
       if(!ok) return;
       restoreBackupFromFile(input.files[0]);
     }
@@ -2662,7 +2304,7 @@ function restoreBackup(){
 
 function clearAllStock(){
   if(!auth) return;
-  const ok = confirm("ðŸ§¹ Voulez-vous VRAIMENT vider tout le stock ? Cette action est irrÃ©versible.");
+  const ok = confirm("Y1 Voulez-vous VRAIMENT vider tout le stock  Cette action est irrAversible.");
   if(!ok) return;
 
   meds = [];
@@ -2672,13 +2314,13 @@ function clearAllStock(){
   // Effacer aussi le cloud
   if(window.clearAllCloudMeds){
     clearAllCloudMeds().then(() => {
-      alert('âœ… Stock local ET cloud effacÃ©s.');
+      alert('a... Stock local ET cloud effacAs.');
     }).catch(e => {
       console.error('Erreur effacement cloud:', e);
-      alert('âœ… Stock local effacÃ©. Le cloud n\'a pas pu Ãªtre effacÃ©.');
+      alert('a... Stock local effacA. Le cloud n\'a pas pu Aatre effacA.');
     });
   } else {
-    alert('âœ… Stock local effacÃ©.');
+    alert('a... Stock local effacA.');
   }
 
   renderAll();
@@ -2686,12 +2328,12 @@ function clearAllStock(){
 }
 
 /* =========================
-   Ã‰VÃ‰NEMENTS UI
+   AVANEMENTS UI
 ========================= */
 document.getElementById('pwd-btn').addEventListener('click', checkPwd);
 document.getElementById('bio-btn').addEventListener('click', async ()=>{
   if(!window.PublicKeyCredential || !navigator.credentials){
-    alert("âŒ Empreinte non supportÃ©e sur cet appareil.");
+    alert("a Empreinte non supportAe sur cet appareil.");
     return;
   }
   try{
@@ -2703,7 +2345,7 @@ document.getElementById('bio-btn').addEventListener('click', async ()=>{
     updateStats();
     renderAll();
   } catch(e){
-    alert('âŒ Empreinte refusÃ©e ou indisponible.');
+    alert('a Empreinte refusAe ou indisponible.');
   }
 });
 document.getElementById('logout-link').addEventListener('click', (e)=>{ e.preventDefault(); logout(); });
@@ -2760,7 +2402,7 @@ document.querySelectorAll('nav a[data-target]').forEach(a=>{
   });
 });
 
-// Suppression "À acheter" via dÃ©lÃ©gation (Ã©vite les onclick cassÃ©s)
+// Suppression "A acheter" via dAlAgation (Avite les onclick cassAs)
 document.addEventListener('click', (e)=>{
   const btn = e.target && e.target.closest ? e.target.closest('.tobuy-delete') : null;
   if(!btn) return;
@@ -2777,7 +2419,7 @@ document.getElementById('btn-clear').addEventListener('click', (e)=>{ e.preventD
 document.getElementById('btn-clean-dup').addEventListener('click', (e)=>{ e.preventDefault(); clearLocalDuplicates(); });
 document.getElementById('btn-reset-all').addEventListener('click', async (e)=>{
   e.preventDefault();
-  if(!confirm('âš ï¸ Tout effacer (local + cloud) ? Cette action est irrÃ©versible.')) return;
+  if(!confirm('Tout effacer (local + cloud) ? Cette action est irreversible.')) return;
 
   // Effacer cloud
   try {
@@ -2798,11 +2440,11 @@ document.getElementById('btn-reset-all').addEventListener('click', async (e)=>{
   renderAll();
   renderToBuy();
   updateStats();
-  alert('âœ… DonnÃ©es locales et cloud effacÃ©es.');
+  alert('a... DonnAes locales et cloud effacAes.');
 });
 document.getElementById('btn-clear-local').addEventListener('click', (e)=>{
   e.preventDefault();
-  if(!confirm('âš ï¸ Vider uniquement les donnÃ©es locales ?')) return;
+  if(!confirm('as i  Vider uniquement les donnAes locales ')) return;
   meds = [];
   toBuyList = [];
   localStorage.removeItem(STORAGE_KEY);
@@ -2813,7 +2455,7 @@ document.getElementById('btn-clear-local').addEventListener('click', (e)=>{
   renderAll();
   renderToBuy();
   updateStats();
-  alert('âœ… DonnÃ©es locales effacÃ©es.');
+  alert('a... DonnAes locales effacAes.');
 });
 
 const toBuyToggle = document.getElementById('tobuy-toggle');
@@ -2874,7 +2516,7 @@ function logDebug(msg, type){
   debugDiv.appendChild(entry);
   debugDiv.scrollTop = debugDiv.scrollHeight;
   
-  // Garder que les 20 derniÃ¨res lignes
+  // Garder que les 20 derniA res lignes
   while(debugDiv.children.length > 20){
     debugDiv.removeChild(debugDiv.firstChild);
   }
@@ -2895,15 +2537,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Initialiser le cloud
   function tryInitCloud(){
     if(typeof initCloud === 'function'){
-      logInfo('ðŸ”„ Connexion cloud...');
-      console.log('ðŸ”„ Tentative de connexion cloud...');
+      logInfo('Y Connexion cloud...');
+      console.log('Y Tentative de connexion cloud...');
       initCloud().then(function(enabled){
         if(enabled){
-          logSuccess('âœ… Cloud Supabase ACTIVÃ‰');
-          console.log('âœ… Cloud Supabase ACTIVÃ‰');
+          logSuccess('a... Cloud Supabase ACTIVA');
+          console.log('a... Cloud Supabase ACTIVA');
           window.cloudReady = true;
 
-          // Charger donnÃ©es cloud initiales
+          // Charger donnAes cloud initiales
           loadFromCloud();
           loadToBuyFromCloud();
 
@@ -2915,23 +2557,23 @@ document.addEventListener('DOMContentLoaded', ()=>{
             }
           }, FAST_SYNC_INTERVAL_MS);
 
-          // Abonnement (polling) pour dÃ©tection rapide des changements
+          // Abonnement (polling) pour dAtection rapide des changements
           if(cloudSubUnsubscribe) cloudSubUnsubscribe();
           cloudSubUnsubscribe = subscribeToCloudChanges();
 
           if(achatsSubUnsubscribe) achatsSubUnsubscribe();
           achatsSubUnsubscribe = subscribeToAchatsChanges();
         } else {
-          logInfo('âŒ Cloud Supabase NON activÃ©');
-          console.log('âŒ Cloud Supabase NON activÃ©');
+          logInfo('a Cloud Supabase NON activA');
+          console.log('a Cloud Supabase NON activA');
         }
       }).catch(function(e){
-        logError('âŒ Erreur initCloud: ' + e);
-        console.error('âŒ Erreur initCloud:', e);
+        logError('a Erreur initCloud: ' + e);
+        console.error('a Erreur initCloud:', e);
       });
     } else {
-      logInfo('â³ Attente de cloud.js...');
-      console.warn('â³ Attente de cloud.js...');
+      logInfo('a3 Attente de cloud.js...');
+      console.warn('a3 Attente de cloud.js...');
       setTimeout(tryInitCloud, 100);
     }
   }
@@ -2959,34 +2601,34 @@ if ('serviceWorker' in navigator) {
 }
 
 // Pas d'auto-sync - sync manuel uniquement
-// Les modifications sont syncÃ©es immÃ©diatement vers le cloud
+// Les modifications sont syncAes immAdiatement vers le cloud
 
 // Sync manuel via bouton
 
-// Sync automatique depuis cloud - VERSION AMÃ‰LIORÃ‰E AVEC CONFLITS
+// Sync automatique depuis cloud - VERSION AMALIORAE AVEC CONFLITS
 async function autoSyncFromCloud(){
   if(autoSyncFromCloud._running) return;
   autoSyncFromCloud._running = true;
   if(!window.getMedicaments) {
-    console.warn('â³ getMedicaments non disponible - sync retardÃ©');
+    console.warn('a3 getMedicaments non disponible - sync retardA');
     autoSyncFromCloud._running = false;
     return;
   }
 
-  if(DEBUG_LOGS) console.log('ðŸ”„ DÃ©marrage autoSyncFromCloud amÃ©liorÃ©...');
+  if(DEBUG_LOGS) console.log('Y DAmarrage autoSyncFromCloud amAliorA...');
 
   try {
     var result = await getMedicaments();
     var cloudMeds = [];
 
     if(!result || result.length === 0) {
-      if(DEBUG_LOGS) console.log('â„¹ï¸ Aucun mÃ©dicament dans le cloud');
+      if(DEBUG_LOGS) console.log('a1i  Aucun mAdicament dans le cloud');
       if(isOnline()){
         meds = [];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(meds));
         renderAll();
         updateStats();
-        if(DEBUG_LOGS) console.log('ðŸ§¹ Local stock effacÃ© (cloud vide)');
+        if(DEBUG_LOGS) console.log('Y1 Local stock effacA (cloud vide)');
       }
     } else {
       cloudMeds = result.map(function(m){
@@ -3007,7 +2649,7 @@ async function autoSyncFromCloud(){
         };
       });
 
-      if(DEBUG_LOGS) console.log('â˜ï¸ Cloud meds reÃ§us:', cloudMeds.length);
+      if(DEBUG_LOGS) console.log('a i  Cloud meds reAus:', cloudMeds.length);
     }
 
     if(cloudMeds.length > 0){
@@ -3022,14 +2664,14 @@ async function autoSyncFromCloud(){
         return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
       });
 
-      // PROTECTION ANTI-DOUBLONS : CrÃ©er une map unique par clÃ©
+      // PROTECTION ANTI-DOUBLONS : CrAer une map unique par clA
       var uniqueCloudMeds = {};
       cloudMeds.forEach(function(cm){
         var key = keyOf(cm.name, cm.dosage);
         if(!uniqueCloudMeds[key]){
           uniqueCloudMeds[key] = cm;
         } else {
-          console.warn('âš ï¸ Doublon cloud ignorÃ©:', cm.name, cm.dosage);
+          console.warn('as i  Doublon cloud ignorA:', cm.name, cm.dosage);
         }
       });
 
@@ -3040,7 +2682,7 @@ async function autoSyncFromCloud(){
       var addedCount = 0;
       var updatedCount = 0;
 
-      // CrÃ©er une map des mÃ©dicaments locaux par clÃ©
+      // CrAer une map des mAdicaments locaux par clA
       var localMap = {};
       meds.forEach(function(m, index){
         var key = keyOf(m.name, m.dosage);
@@ -3052,8 +2694,8 @@ async function autoSyncFromCloud(){
         var localEntry = localMap[key];
 
       if(!localEntry){
-        // NOUVEAU mÃ©dicament du cloud, l'ajouter
-        console.log('âž• Nouveau du cloud:', cm.name);
+        // NOUVEAU mAdicament du cloud, l'ajouter
+        console.log('az Nouveau du cloud:', cm.name);
 
         var validMed = {
           id: cm.id,
@@ -3073,18 +2715,18 @@ async function autoSyncFromCloud(){
         meds.push(validMed);
         localChanged = true;
         addedCount++;
-        console.log('âœ… MÃ©dicament ajoutÃ©:', cm.name, 'qty:', validMed.quantity, 'price:', validMed.price);
+        console.log('a... MAdicament ajoutA:', cm.name, 'qty:', validMed.quantity, 'price:', validMed.price);
       } else {
-        // MÃ©dicament existe dÃ©jÃ , vÃ©rifier si mise Ã  jour nÃ©cessaire
+        // MAdicament existe dAjA , vArifier si mise A  jour nAcessaire
         var localMed = localEntry.med;
         var cloudTime = new Date(cm.updated_at || 0);
         var localTime = new Date(localMed.updated_at || 0);
 
-        // Si cloud plus rÃ©cent OU si local n'a pas de timestamp
+        // Si cloud plus rAcent OU si local n'a pas de timestamp
         if(cloudTime > localTime || !localMed.updated_at){
-          console.log('ðŸ”„ Mise Ã  jour depuis cloud:', cm.name, 'ancien qty:', localMed.quantity, 'nouveau:', cm.quantity);
+          console.log('Y Mise A  jour depuis cloud:', cm.name, 'ancien qty:', localMed.quantity, 'nouveau:', cm.quantity);
 
-          // Mettre Ã  jour les donnÃ©es locales avec celles du cloud
+          // Mettre A  jour les donnAes locales avec celles du cloud
           localMed.id = cm.id;
           localMed.quantity = Math.max(0, Number(cm.quantity) || 0);
           localMed.initialStock = Math.max(0, Number(cm.initialStock) || 0);
@@ -3099,27 +2741,27 @@ async function autoSyncFromCloud(){
           meds[localEntry.index] = localMed;
           localChanged = true;
           updatedCount++;
-          console.log('âœ… MÃ©dicament mis Ã  jour:', cm.name, 'qty:', localMed.quantity, 'price:', localMed.price);
+          console.log('a... MAdicament mis A  jour:', cm.name, 'qty:', localMed.quantity, 'price:', localMed.price);
         }
       }
       });
 
       if(localChanged){
         save();
-        console.log('ðŸ’¾ Sync terminÃ©: +' + addedCount + ' ajoutÃ©s, ~' + updatedCount + ' mis Ã  jour');
+        console.log('Y34 Sync terminA: +' + addedCount + ' ajoutAs, ~' + updatedCount + ' mis A  jour');
         if(typeof renderAll === 'function') renderAll();
         if(typeof updateStats === 'function') updateStats();
       } else {
-        if(DEBUG_LOGS) console.log('â„¹ï¸ Aucune modification nÃ©cessaire');
+        if(DEBUG_LOGS) console.log('a1i  Aucune modification nAcessaire');
       }
     }
 
-    // Sync achats (À acheter) avec validation stricte
+    // Sync achats (A acheter) avec validation stricte
     if(window.getAchats){
       try {
         var achatsResult = await getAchats();
         if(achatsResult && achatsResult.length > 0){
-            if(DEBUG_LOGS) console.log('ðŸ”„ Sync achats: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
+            if(DEBUG_LOGS) console.log('Y Sync achats: cloud=' + achatsResult.length + ', local=' + toBuyList.length);
 
             var uniqueCloudAchats = {};
             achatsResult.forEach(function(a){
@@ -3140,7 +2782,7 @@ async function autoSyncFromCloud(){
 
             var changed = false;
 
-            // Mettre Ã  jour les achats existants
+            // Mettre A  jour les achats existants
             toBuyList.forEach(function(localItem, index){
               var key = localItem.name.toLowerCase().trim();
               var cloudItem = uniqueCloudAchats[key];
@@ -3155,7 +2797,7 @@ async function autoSyncFromCloud(){
                   toBuyList[index].notes = newNotes;
                   if(!toBuyList[index].id) toBuyList[index].id = cloudItem.id;
                   changed = true;
-                if(DEBUG_LOGS) console.log('ðŸ”„ Achat mis Ã  jour:', localItem.name, 'qty:', newQty);
+                if(DEBUG_LOGS) console.log('Y Achat mis A  jour:', localItem.name, 'qty:', newQty);
                 }
                 delete uniqueCloudAchats[key];
               }
@@ -3171,7 +2813,7 @@ async function autoSyncFromCloud(){
               if(!exists){
                 toBuyList.push(newItem);
                 changed = true;
-                if(DEBUG_LOGS) console.log('âž• Nouvel achat du cloud:', newItem.name);
+                if(DEBUG_LOGS) console.log('az Nouvel achat du cloud:', newItem.name);
               }
             });
 
@@ -3183,30 +2825,30 @@ async function autoSyncFromCloud(){
           toBuyList = [];
           localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
           if(typeof renderToBuy === 'function') renderToBuy();
-          if(DEBUG_LOGS) console.log('ðŸ§¹ Liste "À acheter" effacÃ©e (cloud vide)');
+          if(DEBUG_LOGS) console.log('Y1 Liste "A acheter" effacAe (cloud vide)');
         }
       } catch(e) {
-        console.warn('Sync achats Ã©chouÃ©:', e);
+        console.warn('Sync achats AchouA:', e);
       }
     }
 
     window.cloudReady = true;
-    if(DEBUG_LOGS) console.log('âœ… Auto-sync amÃ©liorÃ© terminÃ©');
+    if(DEBUG_LOGS) console.log('a... Auto-sync amAliorA terminA');
   } catch(e) {
-    console.warn('Sync auto Ã©chouÃ©:', e);
+    console.warn('Sync auto AchouA:', e);
   } finally {
     autoSyncFromCloud._running = false;
   }
 }
 
-// Subscription temps rÃ©el - Ã©couter les changements cloud
+// Subscription temps rAel - Acouter les changements cloud
 function subscribeToCloudChanges(){
   if(!window.subscribeToMedicaments) return null;
   
   return subscribeToMedicaments(function(payload){
     console.log('Cloud change detected:', payload);
     
-    // Recharger depuis cloud quand un changement est dÃ©tectÃ©
+    // Recharger depuis cloud quand un changement est dAtectA
     refreshFromCloud();
   }, { intervalMs: FAST_SYNC_INTERVAL_MS });
 }
@@ -3220,7 +2862,7 @@ function subscribeToAchatsChanges(){
   }, { intervalMs: FAST_SYNC_INTERVAL_MS });
 }
 
-// RafraÃ®chir depuis cloud (pour sync temps rÃ©el)
+// RafraAchir depuis cloud (pour sync temps rAel)
 function refreshFromCloud(){
   if(!window.getMedicaments) return;
   
@@ -3266,8 +2908,8 @@ function refreshFromCloud(){
       return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
     });
     
-    // Fusion cloud + local (AJOUTER + METTRE Ã€ JOUR + SUPPRIMER)
-    // CrÃ©er map cloud par clÃ©
+    // Fusion cloud + local (AJOUTER + METTRE A JOUR + SUPPRIMER)
+    // CrAer map cloud par clA
     var cloudByKey = {};
     cloudMeds.forEach(function(cm){
       var key = keyOf(cm.name, cm.dosage);
@@ -3277,24 +2919,24 @@ function refreshFromCloud(){
     var deletedCount = 0;
     var updatedCount = 0;
     
-    // Pour chaque med local, vÃ©rifier s'il existe dans cloud
+    // Pour chaque med local, vArifier s'il existe dans cloud
     meds.forEach(function(lm){
       var key = keyOf(lm.name, lm.dosage);
       var cm = cloudByKey[key];
       
       if(!cm){
-        // N'existe pas dans cloud â†’ supprimer local
-        console.log('ðŸ—‘ï¸ Supprimer local (pas dans cloud):', lm.name);
+        // N'existe pas dans cloud a supprimer local
+        console.log('Yi  Supprimer local (pas dans cloud):', lm.name);
         lm._toDelete = true;
         deletedCount++;
       } else {
-        // Existe dans cloud â†’ vÃ©rifier si modifiÃ©
+        // Existe dans cloud a vArifier si modifiA
         if(lm._localModified && !cm._localModified){
-          // Local modifiÃ© plus rÃ©cemment â†’ garder local
-          console.log('â­ï¸ Skip update (local plus rÃ©cent):', lm.name);
+          // Local modifiA plus rAcemment a garder local
+          console.log('ai  Skip update (local plus rAcent):', lm.name);
         } else if(lm.quantity !== cm.quantity || lm.price !== cm.price || lm.expiry !== cm.expiry || (lm.imageUrl || '') !== (cm.imageUrl || '')){
-          // Cloud plus rÃ©cent â†’ prendre les donnÃ©es cloud
-          console.log('âœ… Update depuis cloud:', lm.name, 'qty:', lm.quantity, 'â†’', cm.quantity);
+          // Cloud plus rAcent a prendre les donnAes cloud
+          console.log('a... Update depuis cloud:', lm.name, 'qty:', lm.quantity, 'a', cm.quantity);
           lm.id = cm.id;
           lm.quantity = cm.quantity;
           lm.price = cm.price;
@@ -3306,7 +2948,7 @@ function refreshFromCloud(){
       }
     });
     
-    // Supprimer les meds marquÃ©s
+    // Supprimer les meds marquAs
     meds = meds.filter(function(m){ return !m._toDelete; });
     
     // Ajouter les nouveaux du cloud
@@ -3314,11 +2956,11 @@ function refreshFromCloud(){
     cloudMeds.forEach(function(cm){
       var key = keyOf(cm.name, cm.dosage);
       var exists = meds.some(function(m){ return keyOf(m.name, m.dosage) === key; });
-      console.log('ðŸ” Check cloud med:', cm.name, '| key:', key, '| exists:', exists);
+      console.log('Y Check cloud med:', cm.name, '| key:', key, '| exists:', exists);
       if(!exists){
         meds.push(cm);
         addedCount++;
-        console.log('âž• AJOUTÃ‰:', cm.name);
+        console.log('az AJOUTA:', cm.name);
       }
     });
     
@@ -3326,11 +2968,11 @@ function refreshFromCloud(){
     renderAll();
     updateStats();
     
-    console.log('ðŸ“Š Final meds count:', meds.length);
+    console.log('YS Final meds count:', meds.length);
     if(addedCount > 0 || deletedCount > 0 || updatedCount > 0){
-      console.log('âœ… Sync terminÃ©e: +' + addedCount + ' ajoutÃ©s, -' + deletedCount + ' supprimÃ©s, ~' + updatedCount + ' mis Ã  jour');
+      console.log('a... Sync terminAe: +' + addedCount + ' ajoutAs, -' + deletedCount + ' supprimAs, ~' + updatedCount + ' mis A  jour');
     } else {
-      console.log('â„¹ï¸ Sync: pas de changements');
+      console.log('a1i  Sync: pas de changements');
     }
   });
 }
@@ -3339,11 +2981,11 @@ function refreshFromCloud(){
 function loadFromCloud(){
   if(!window.getMedicaments) return;
   
-  console.log('ðŸ”„ loadFromCloud: rÃ©cupÃ©ration donnÃ©es cloud...');
+  console.log('Y loadFromCloud: rAcupAration donnAes cloud...');
   
   getMedicaments().then(function(result){
     if(!result || result.length === 0){
-      console.log('â„¹ï¸ Aucune donnÃ©e cloud ou erreur');
+      console.log('a1i  Aucune donnAe cloud ou erreur');
       loadToBuyFromCloud();
       return;
     }
@@ -3377,7 +3019,7 @@ function loadFromCloud(){
       return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
     });
 
-    console.log('ðŸ“¥ Cloud meds:', cloudMeds.length);
+    console.log('Y Cloud meds:', cloudMeds.length);
     
     if(cloudMeds.length > 0){
       // FUSION intelligente : ajouter nouveaux meds du cloud
@@ -3400,36 +3042,36 @@ function loadFromCloud(){
         save();
         renderAll();
         updateStats();
-        console.log('âœ… Fusion cloud: ' + addedCount + ' nouveaux mÃ©dicaments ajoutÃ©s');
+        console.log('a... Fusion cloud: ' + addedCount + ' nouveaux mAdicaments ajoutAs');
       } else {
-        console.log('â„¹ï¸ Aucune nouvelle donnÃ©e cloud');
+        console.log('a1i  Aucune nouvelle donnAe cloud');
       }
     }
     
-    // Charger aussi la liste Ã  acheter
+    // Charger aussi la liste A  acheter
     loadToBuyFromCloud();
   });
 }
 
-// Charger liste Ã  acheter depuis cloud (FUSION)
+// Charger liste A  acheter depuis cloud (FUSION)
 function loadToBuyFromCloud(){
   if(!window.getAchats) return;
   
-  console.log('ðŸ”„ loadToBuyFromCloud...');
+  console.log('Y loadToBuyFromCloud...');
   
   getAchats().then(function(result){
     if(!result || result.length === 0){
-      console.log('â„¹ï¸ Aucune donnÃ©e achats cloud');
+      console.log('a1i  Aucune donnAe achats cloud');
       if(isOnline()){
         toBuyList = [];
         localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
         renderToBuy();
-        console.log('ðŸ§¹ Liste "À acheter" effacÃ©e (cloud vide)');
+        console.log('Y1 Liste "A acheter" effacAe (cloud vide)');
       }
       return;
     }
     
-    // Remplacer la liste locale par le cloud (source de vÃ©ritÃ©)
+    // Remplacer la liste locale par le cloud (source de vAritA)
     const pendingMap = getPendingToBuyDeleteMap();
     const cloudList = result.map(a => ({ id: a.id, name: a.nom }));
     cleanupPendingToBuyDeletes(cloudList);
@@ -3442,26 +3084,26 @@ function loadToBuyFromCloud(){
 
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
     renderToBuy();
-    console.log('âœ… Sync achats terminÃ©e:', toBuyList.length, 'articles');
+    console.log('a... Sync achats terminAe:', toBuyList.length, 'articles');
   });
 }
 
 // Charger depuis cloud ET afficher un message
 async function loadAndShowFromCloud(){
   if(typeof getMedicaments !== 'function') {
-    alert('âš ï¸ Cloud non activÃ©');
+    alert('as i  Cloud non activA');
     return;
   }
   
   var result = await getMedicaments();
   
   if(result.error){
-    alert('âŒ Erreur cloud: ' + result.error);
+    alert('a Erreur cloud: ' + result.error);
     return;
   }
   
   if(!result || result.length === 0){
-    alert('âš ï¸ Aucune donnÃ©e dans le cloud');
+    alert('as i  Aucune donnAe dans le cloud');
     return;
   }
   
@@ -3493,7 +3135,7 @@ async function loadAndShowFromCloud(){
     return !pendingDeleteMap[keyOf(cm.name, cm.dosage)];
   });
   
-  // Fusionner : ajouter les mÃ©dicaments cloud qui n'existent pas en local
+  // Fusionner : ajouter les mAdicaments cloud qui n'existent pas en local
   var localMap = {};
   meds.forEach(function(m){
     var key = (m.name + '_' + m.dosage).toLowerCase();
@@ -3515,34 +3157,34 @@ async function loadAndShowFromCloud(){
   renderAll();
   updateStats();
   
-  console.log('Fusion terminÃ©e:', added, 'nouveaux');
-  alert('âœ… ' + added + ' mÃ©dicaments ajoutÃ©s depuis cloud !');
+  console.log('Fusion terminAe:', added, 'nouveaux');
+  alert('a... ' + added + ' mAdicaments ajoutAs depuis cloud !');
 }
 
-// Sauvegarder TOUTES les donnÃ©es locales vers cloud
-// Sauvegarder VERS cloud (mode FUSION - pas d'Ã©crasement)
+// Sauvegarder TOUTES les donnAes locales vers cloud
+// Sauvegarder VERS cloud (mode FUSION - pas d'Acrasement)
 async function saveAllToCloud(callback){
   if(typeof addMedicament !== 'function') {
     if(callback) callback();
     return;
   }
   
-  console.log('DÃ©but sync fusion vers cloud, meds count:', meds.length);
+  console.log('DAbut sync fusion vers cloud, meds count:', meds.length);
   
-  // RÃ©cupÃ©rer les donnÃ©es cloud actuelles
+  // RAcupArer les donnAes cloud actuelles
   var cloudData = await getMedicaments();
   var cloudMeds = cloudData || [];
   
-  console.log('Cloud a:', cloudMeds.length, 'mÃ©dicaments');
+  console.log('Cloud a:', cloudMeds.length, 'mAdicaments');
   
-  // CrÃ©er une map pour les mÃ©dicaments cloud par nom+dosage
+  // CrAer une map pour les mAdicaments cloud par nom+dosage
   var cloudMap = {};
   cloudMeds.forEach(function(m){
     var key = keyOf(m.name, m.dosage);
     cloudMap[key] = m;
   });
   
-  // Pour chaque mÃ©dicament local, fusionner avec cloud
+  // Pour chaque mAdicament local, fusionner avec cloud
   for(var j = 0; j < meds.length; j++){
     var m = meds[j];
     var key = (m.name + '_' + m.dosage).toLowerCase();
@@ -3562,17 +3204,17 @@ async function saveAllToCloud(callback){
     };
     
     if(cloudMap[key]){
-      // Existe dÃ©jÃ  dans cloud, mettre Ã  jour
-      console.log('Mise Ã  jour:', medData.name);
+      // Existe dAjA  dans cloud, mettre A  jour
+      console.log('Mise A  jour:', medData.name);
       await updateMedicament(cloudMap[key].id, medData);
     } else {
-      // N'existe pas, crÃ©er
-      console.log('CrÃ©ation:', medData.name);
+      // N'existe pas, crAer
+      console.log('CrAation:', medData.name);
       await addMedicament(medData);
     }
   }
   
-  console.log('Sync fusion terminÃ©e');
+  console.log('Sync fusion terminAe');
   if(callback) callback();
 }
 
@@ -3580,7 +3222,7 @@ async function saveAllToCloud(callback){
 async function forceDebugSync(){
   var localCount = meds.length;
   document.getElementById('debug-local-count').textContent = localCount;
-  document.getElementById('debug-status').textContent = 'VÃ©rification...';
+  document.getElementById('debug-status').textContent = 'VArification...';
   if(!window.getMedicaments) return;
   try {
     var result = await getMedicaments();
@@ -3593,7 +3235,7 @@ async function forceDebugSync(){
         var addResult = await addMedicament(m);
         if(!addResult.error) synced++;
       }
-      document.getElementById('debug-status').textContent = 'TerminÃ©! ' + synced;
+      document.getElementById('debug-status').textContent = 'TerminA! ' + synced;
     } else if(cloudCount > 0){
       document.getElementById('debug-status').textContent = 'Sync OK';
     }
@@ -3605,20 +3247,20 @@ async function forceDebugSync(){
 // Clear local duplicates and sync with cloud
 async function clearLocalDuplicates(){
   if(!auth) return;
-  if(!confirm('âš ï¸ Voulez-vous supprimer les doublons locaux et synchroniser avec le cloud ?')) return;
+  if(!confirm('as i  Voulez-vous supprimer les doublons locaux et synchroniser avec le cloud ')) return;
 
-  console.log('ðŸ§¹ Suppression des doublons locaux...');
+  console.log('Y1 Suppression des doublons locaux...');
 
-  // CrÃ©er une map pour dÃ©tecter les doublons
+  // CrAer une map pour dAtecter les doublons
   var uniqueMeds = {};
   var duplicatesRemoved = 0;
 
   meds.forEach(function(m, index){
     var key = keyOf(m.name, m.dosage);
     if(uniqueMeds[key]){
-      // Doublon trouvÃ©, supprimer
+      // Doublon trouvA, supprimer
       duplicatesRemoved++;
-      console.log('ðŸ—‘ï¸ Doublon supprimÃ©:', m.name, m.dosage);
+      console.log('Yi  Doublon supprimA:', m.name, m.dosage);
     } else {
       uniqueMeds[key] = m;
     }
@@ -3627,8 +3269,8 @@ async function clearLocalDuplicates(){
   // Convertir la map en tableau
   meds = Object.values(uniqueMeds);
 
-  console.log('âœ… Doublons supprimÃ©s:', duplicatesRemoved);
-  console.log('ðŸ“Š MÃ©dicaments uniques restants:', meds.length);
+  console.log('a... Doublons supprimAs:', duplicatesRemoved);
+  console.log('YS MAdicaments uniques restants:', meds.length);
 
   save();
   renderAll();
@@ -3636,14 +3278,14 @@ async function clearLocalDuplicates(){
 
   // Synchroniser avec le cloud
   if(window.getMedicaments){
-    console.log('ðŸ”„ Synchronisation avec le cloud...');
+    console.log('Y Synchronisation avec le cloud...');
     loadFromCloud();
   }
 
-  alert('âœ… Nettoyage terminÃ© ! ' + duplicatesRemoved + ' doublons supprimÃ©s.');
+  alert('a... Nettoyage terminA ! ' + duplicatesRemoved + ' doublons supprimAs.');
 }
 
-// Improved sync for "À acheter" deletions
+// Improved sync for "A acheter" deletions
 async function syncToBuyDeletions(){
   if(!window.getAchats) return;
 
@@ -3654,11 +3296,11 @@ async function syncToBuyDeletions(){
       toBuyList = [];
       localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
       renderToBuy();
-      console.log('ðŸ—‘ï¸ Liste "À acheter" vidÃ©e (cloud vide)');
+      console.log('Yi  Liste "A acheter" vidAe (cloud vide)');
       return;
     }
 
-    // CrÃ©er map des noms cloud
+    // CrAer map des noms cloud
     var cloudNames = {};
     cloudResult.forEach(function(a){
       cloudNames[a.nom.toLowerCase()] = {
@@ -3673,17 +3315,17 @@ async function syncToBuyDeletions(){
     for(var i = toBuyList.length - 1; i >= 0; i--){
       var localName = toBuyList[i].name.toLowerCase();
       if(!cloudNames[localName]){
-        console.log('ðŸ—‘ï¸ Suppression locale (pas dans cloud):', toBuyList[i].name);
+        console.log('Yi  Suppression locale (pas dans cloud):', toBuyList[i].name);
         toBuyList.splice(i, 1);
         changed = true;
       } else {
-        // Mettre Ã  jour quantitÃ© si diffÃ©rente
+        // Mettre A  jour quantitA si diffArente
         var cloudItem = cloudNames[localName];
         if(toBuyList[i].qty !== cloudItem.qty || toBuyList[i].notes !== cloudItem.notes){
           toBuyList[i].qty = cloudItem.qty;
           toBuyList[i].notes = cloudItem.notes;
           changed = true;
-          console.log('ðŸ”„ QuantitÃ© mise Ã  jour:', toBuyList[i].name);
+          console.log('Y QuantitA mise A  jour:', toBuyList[i].name);
         }
       }
     }
@@ -3691,23 +3333,16 @@ async function syncToBuyDeletions(){
     if(changed){
       localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
       renderToBuy();
-      console.log('âœ… Sync "À acheter" terminÃ©');
+      console.log('a... Sync "A acheter" terminA');
     }
 
   } catch(e) {
-    console.warn('Erreur sync "À acheter":', e);
+    console.warn('Erreur sync "A acheter":', e);
   }
 }
 
-</script>
+</script><!-- Supabase Realtime SDK --><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><!-- Cloud Integration (REST API) --><script src="cloud.jsv=20260210d"></script></body></html>
 
-<!-- Supabase Realtime SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Cloud Integration (REST API) -->
-<script src="cloud.js?v=20260210d"></script>
-
-</body>
-</html>
 
 
 
