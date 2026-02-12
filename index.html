@@ -1821,6 +1821,10 @@ function setupExtraMenus(){
     main.insertAdjacentHTML('beforeend', `
       <section id="history" class="section">
         <h2>Historique</h2>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.75rem 0 1rem;">
+          <button id="history-save-btn" type="button" class="nav-btn">Sauvegarder</button>
+          <button id="history-restore-btn" type="button" class="nav-btn">Restaurer</button>
+        </div>
         <table id="history-table">
           <thead><tr><th>Date/Heure</th><th>Section</th><th>Action</th><th>Nom</th><th>Details</th></tr></thead>
           <tbody></tbody>
@@ -2723,6 +2727,18 @@ collapseHiddenNavItems();
 document.addEventListener('change', (e)=>{
   if(e.target && e.target.id === 'genre-filter'){
     renderGenreSection();
+  }
+});
+
+document.addEventListener('click', (e)=>{
+  const id = e.target && e.target.id;
+  if(id === 'history-save-btn'){
+    e.preventDefault();
+    saveBackup();
+  }
+  if(id === 'history-restore-btn'){
+    e.preventDefault();
+    restoreBackup();
   }
 });
 
