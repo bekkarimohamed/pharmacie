@@ -292,6 +292,7 @@
     nav a[data-target="to-buy"]{ background: linear-gradient(135deg,#f97316,#f43f5e); }
     nav a[data-target="alerts"]{ background: linear-gradient(135deg,#14b8a6,#0ea5e9); }
     nav a[data-target="genre-search"]{ background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    nav a[data-target="history"]{ background: linear-gradient(135deg,#0f766e,#14b8a6); }
     #logout-link{ background: linear-gradient(135deg,#64748b,#6366f1); }
     #theme-toggle{ background: linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; border-radius:12px; }
 
@@ -1119,6 +1120,7 @@ const FAST_SYNC_INTERVAL_MS = 5000;
 const DEBUG_LOGS = false;
 const STORAGE_KEY = "medicines";
 const TOBUY_KEY = "medicines_to_buy";
+const HISTORY_KEY = "medicines_history";
 const PENDING_DELETE_KEY = "medicines_pending_delete";
 const PENDING_TOBUY_DELETE_KEY = "tobuy_pending_delete";
 
@@ -1128,6 +1130,7 @@ const SEEDED_KEY = "medicines_seeded_once";
 let auth = false;
 let meds = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let toBuyList = JSON.parse(localStorage.getItem(TOBUY_KEY)) || [];
+let historyLog = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
 
 // Ajouter timestamps aux donnAes existantes si manquant
 meds.forEach(m => {
@@ -1156,6 +1159,41 @@ function escapeAttr(str){
 
 function getTodayISODate(){
   return new Date().toISOString().slice(0,10);
+}
+
+function saveHistory(){
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(historyLog));
+}
+function addHistory(action, section, name, details){
+  const row = {
+    ts: new Date().toISOString(),
+    action: String(action || ''),
+    section: String(section || ''),
+    name: String(name || ''),
+    details: String(details || '')
+  };
+  historyLog.unshift(row);
+  if(historyLog.length > 300) historyLog = historyLog.slice(0, 300);
+  saveHistory();
+}
+function renderHistorySection(){
+  const tbody = document.querySelector('#history-table tbody');
+  if(!tbody) return;
+  if(!historyLog.length){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun historique</td></tr>';
+    return;
+  }
+  tbody.innerHTML = historyLog.map(h => {
+    const when = new Date(h.ts);
+    const dt = isNaN(when.getTime()) ? '-' : when.toLocaleString();
+    return `<tr>
+      <td>${escapeHtml(dt)}</td>
+      <td>${escapeHtml(h.section)}</td>
+      <td>${escapeHtml(h.action)}</td>
+      <td>${escapeHtml(h.name)}</td>
+      <td>${escapeHtml(h.details)}</td>
+    </tr>`;
+  }).join('');
 }
 
 let lastStockScrollTs = 0;
@@ -1591,6 +1629,7 @@ function show(id){
   if(id === 'to-buy') renderToBuy();
   if(id === 'alerts') renderAlertsSection();
   if(id === 'genre-search') renderGenreSection();
+  if(id === 'history') renderHistorySection();
 }
 
 /* =========================
@@ -1772,6 +1811,23 @@ function setupExtraMenus(){
       </section>
     `);
   }
+
+  if(!document.querySelector('nav a[data-target="history"]')){
+    const li = document.createElement('li');
+    li.innerHTML = '<a href="#" data-target="history">Historique</a>';
+    navUl.insertBefore(li, document.getElementById('logout-link')?.parentElement || null);
+  }
+  if(!document.getElementById('history')){
+    main.insertAdjacentHTML('beforeend', `
+      <section id="history" class="section">
+        <h2>Historique</h2>
+        <table id="history-table">
+          <thead><tr><th>Date/Heure</th><th>Section</th><th>Action</th><th>Nom</th><th>Details</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    `);
+  }
 }
 
 function collapseHiddenNavItems(){
@@ -1889,6 +1945,7 @@ function renderAll(){
   renderTable('med-table-use');
   if(document.getElementById('alerts')?.classList.contains('active')) renderAlertsSection();
   if(document.getElementById('genre-search')?.classList.contains('active')) renderGenreSection();
+  if(document.getElementById('history')?.classList.contains('active')) renderHistorySection();
 
   // Valeur totale supprimAe (prix non affichA)
 }
@@ -1943,6 +2000,7 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
     };
     meds.push(newMed);
     save();
+    addHistory('AJOUT', 'Stock', name, `Qte ${quantity}, dosage ${dosage}`);
 
     // Sauvegarder vers cloud IMMADIATEMENT
     if(window.addMedicament){
@@ -2013,6 +2071,7 @@ a... Voulez-vous ACTUALISER (cumuler les stocks) `;
 
   meds[existingIndex] = ex;
   save();
+  addHistory('MAJ', 'Stock', name, `Cumul +${quantity}, total ${ex.quantity}`);
   
   // Mettre A  jour le cloud IMMADIATEMENT
   if(window.updateMedicament && ex.id){
@@ -2129,6 +2188,7 @@ Voulez-vous FUSIONNER (cumuler) ce mAdicament modifiA avec l'existant `;
       meds.splice(idx, 1);
 
       save();
+      addHistory('MAJ', 'Stock', name, `Fusion en ${target.quantity}`);
       
       // Mettre A  jour le cloud IMMADIATEMENT
       if(window.updateMedicament && target.id){
@@ -2161,6 +2221,7 @@ Voulez-vous FUSIONNER (cumuler) ce mAdicament modifiA avec l'existant `;
   if(keepId) meds[idx].id = keepId;
   meds[idx]._localModified = true; // Marquer comme modifiA localement
   save();
+  addHistory('MODIFIER', 'Stock', name, `Qte ${quantity}, dosage ${dosage}`);
 
   // Mettre A  jour le cloud IMMADIATEMENT
   if(window.updateMedicament && meds[idx].id){
@@ -2186,6 +2247,7 @@ function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
   if(confirm(`Supprimer "${m.name} (${m.dosage})" `)){
+    addHistory('SUPPRIMER', 'Stock', m.name, `Dosage ${m.dosage}`);
     const key = keyOf(m.name, m.dosage);
     markPendingDelete(key);
 
@@ -2218,6 +2280,7 @@ function useMed(idx){
   if(Number(m.quantity) >= qty){
     const oldQty = Number(m.quantity);
     m.quantity = Number(m.quantity) - qty;
+    addHistory('UTILISER', 'Stock', m.name, `-${qty}, reste ${m.quantity}`);
     m._localModified = true; // Marquer comme modifiA localement
     save();
     
@@ -2317,6 +2380,7 @@ function renderToBuy(){
 // Supprimer par id si possible (fallback nom)
 function removeToBuyItem(id, name){
   if(!confirm('Supprimer "' + name + '" de la liste ')) return;
+  addHistory('SUPPRIMER', 'A acheter', name, 'Suppression article');
   markPendingToBuyDelete(id, name);
   
   // Trouver l'index
@@ -2389,6 +2453,7 @@ function removeToBuy(idx){
     var deletedItem = toBuyList[idx];
     var deletedName = deletedItem.name;
     var deletedId = deletedItem.id;
+    addHistory('SUPPRIMER', 'A acheter', deletedName, 'Suppression article');
     
     toBuyList.splice(idx, 1);
     localStorage.setItem(TOBUY_KEY, JSON.stringify(toBuyList));
@@ -2430,6 +2495,7 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
 
     const existingId = toBuyList[existingIndex].id;
     if(window.updateAchatById && existingId){
+      addHistory('MAJ', 'A acheter', name, `+${qty}, total ${toBuyList[existingIndex].qty}`);
       updateAchatById(existingId, {
         name,
         qty: toBuyList[existingIndex].qty,
@@ -2443,6 +2509,7 @@ document.getElementById('tobuy-form').addEventListener('submit', function(e){
   } else {
     // Ajouter nouveau
     toBuyList.push({ name, qty, notes });
+    addHistory('AJOUT', 'A acheter', name, `Qte ${qty}`);
     shouldInsert = true;
     targetIndex = toBuyList.length - 1;
   }
