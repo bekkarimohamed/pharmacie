@@ -1709,10 +1709,19 @@ function getAlertFlags(m){
   return { expired, pre, zero, low };
 }
 
+function getAlertGroupMeta(flags){
+  if(flags.expired) return { key: 'expired', label: 'EXPIRE', order: 0 };
+  if(flags.zero) return { key: 'zero', label: 'STOCK NUL', order: 1 };
+  if(flags.low) return { key: 'low', label: 'STOCK FAIBLE', order: 2 };
+  if(flags.pre) return { key: 'pre', label: 'PRE-EXPIRATION', order: 3 };
+  return { key: 'other', label: 'AUTRE', order: 99 };
+}
+
 function collectCurrentAlertItems(){
   const items = [];
   meds.forEach(m => {
     const a = getAlertFlags(m);
+    const group = getAlertGroupMeta(a);
     const tags = [];
     if(a.expired) tags.push('EXPIRE');
     if(a.pre) tags.push('PRE-EXPIRATION');
@@ -1724,11 +1733,15 @@ function collectCurrentAlertItems(){
         dosage: m.dosage || '-',
         qty: Number(m.quantity) || 0,
         expiry: fmtMMAA(m.expiry),
-        tags
+        tags,
+        group
       });
     }
   });
-  return items.sort((x,y)=>(`${x.name} ${x.dosage}`).localeCompare(`${y.name} ${y.dosage}`));
+  return items.sort((x,y)=>{
+    if(x.group.order !== y.group.order) return x.group.order - y.group.order;
+    return (`${x.name} ${x.dosage}`).localeCompare(`${y.name} ${y.dosage}`);
+  });
 }
 
 function showColoredAlertsPopup(items){
@@ -1752,16 +1765,18 @@ function showColoredAlertsPopup(items){
   }
 
   const list = modal.querySelector('#startup-alerts-list');
+  list.style.fontSize = '.86rem';
   const preview = items.slice(0, 20);
+  let lastGroup = '';
   list.innerHTML = preview.map(it => {
     const hasExpired = it.tags.includes('EXPIRE');
     const hasPre = it.tags.includes('PRE-EXPIRATION');
     const hasZero = it.tags.includes('STOCK NUL');
     const hasLow = it.tags.includes('STOCK FAIBLE');
     const badges = it.tags.map(t => {
-      if(t === 'EXPIRE' || t === 'STOCK NUL') return '<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;">'+t+'</span>';
-      if(t === 'PRE-EXPIRATION') return '<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;">'+t+'</span>';
-      return '<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;">'+t+'</span>';
+      if(t === 'EXPIRE' || t === 'STOCK NUL') return '<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;font-size:.72rem;">'+t+'</span>';
+      if(t === 'PRE-EXPIRATION') return '<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;font-size:.72rem;">'+t+'</span>';
+      return '<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;font-size:.72rem;">'+t+'</span>';
     }).join(' ');
     const qtyStyle = hasZero
       ? 'background:#dc2626;color:#fff;'
@@ -1769,12 +1784,17 @@ function showColoredAlertsPopup(items){
     const expStyle = hasExpired
       ? 'background:#dc2626;color:#fff;'
       : (hasPre ? 'background:#f59e0b;color:#111827;' : 'background:#e2e8f0;color:#111827;');
+    const groupHeader = (lastGroup !== it.group.key)
+      ? `<div style="margin:.65rem 0 .35rem;padding:.28rem .5rem;border-left:4px solid #0f766e;background:#ecfeff;color:#0f172a;font-weight:700;font-size:.78rem;">${escapeHtml(it.group.label)}</div>`
+      : '';
+    lastGroup = it.group.key;
     return `
-      <div style="border:1px solid #e2e8f0;border-radius:10px;padding:.55rem .65rem;margin:.4rem 0;">
-        <div style="font-weight:700;color:#0f172a;">${escapeHtml(it.name)} (${escapeHtml(it.dosage)})</div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.25rem;">
-          <span style="display:inline-block;padding:2px 8px;border-radius:8px;${qtyStyle}font-weight:700;">Qte: ${it.qty}</span>
-          <span style="display:inline-block;padding:2px 8px;border-radius:8px;${expStyle}font-weight:700;">Exp: ${escapeHtml(it.expiry)}</span>
+      ${groupHeader}
+      <div style="border:1px solid #e2e8f0;border-radius:10px;padding:.45rem .55rem;margin:.3rem 0;">
+        <div style="font-weight:700;color:#0f172a;font-size:.84rem;">${escapeHtml(it.name)} (${escapeHtml(it.dosage)})</div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.2rem;">
+          <span style="display:inline-block;padding:1px 6px;border-radius:8px;${qtyStyle}font-weight:700;font-size:.72rem;">Qte: ${it.qty}</span>
+          <span style="display:inline-block;padding:1px 6px;border-radius:8px;${expStyle}font-weight:700;font-size:.72rem;">Exp: ${escapeHtml(it.expiry)}</span>
           ${badges}
         </div>
       </div>`;
@@ -1814,47 +1834,58 @@ function renderAlertsSection(){
       const a = getAlertFlags(m);
       return a.expired || a.pre || a.zero || a.low;
     })
-    .sort((a,b) => keyOf(a.name,a.dosage).localeCompare(keyOf(b.name,b.dosage)));
+    .sort((a,b) => {
+      const ga = getAlertGroupMeta(getAlertFlags(a));
+      const gb = getAlertGroupMeta(getAlertFlags(b));
+      if(ga.order !== gb.order) return ga.order - gb.order;
+      return keyOf(a.name,a.dosage).localeCompare(keyOf(b.name,b.dosage));
+    });
 
   if(list.length === 0){
     tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Aucune alerte</td></tr>';
     return;
   }
 
+  let lastGroup = '';
   tbody.innerHTML = list.map(m => {
     const a = getAlertFlags(m);
+    const group = getAlertGroupMeta(a);
     const tags = [];
     if(a.expired){
-      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;">EXPIRE</span>');
+      tags.push('<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;font-size:.72rem;">EXPIRE</span>');
     }
     if(a.pre){
-      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;">PRE-EXPIRATION</span>');
+      tags.push('<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;font-size:.72rem;">PRE-EXPIRATION</span>');
     }
     if(a.zero){
-      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;">STOCK NUL</span>');
+      tags.push('<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;font-size:.72rem;">STOCK NUL</span>');
     }
     if(a.low){
-      tags.push('<span style="display:inline-block;padding:2px 8px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;">STOCK FAIBLE</span>');
+      tags.push('<span style="display:inline-block;padding:1px 6px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;font-size:.72rem;">STOCK FAIBLE</span>');
     }
     const idx = meds.indexOf(m);
     const qty = Number(m.quantity)||0;
     const qtyStyle = a.zero
-      ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;'
+      ? 'display:inline-block;padding:1px 6px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;font-size:.72rem;'
       : (a.low
-          ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;'
-          : 'font-weight:700;color:#d32f2f;');
+          ? 'display:inline-block;padding:1px 6px;border-radius:8px;background:#fde047;color:#111827;font-weight:700;font-size:.72rem;'
+          : 'font-weight:700;color:#d32f2f;font-size:.82rem;');
     const expStyle = a.expired
-      ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;'
+      ? 'display:inline-block;padding:1px 6px;border-radius:8px;background:#dc2626;color:#fff;font-weight:700;font-size:.72rem;'
       : (a.pre
-          ? 'display:inline-block;padding:2px 8px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;'
-          : '');
-    return `<tr>
-      <td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;" onclick="openDetails(${idx})">${escapeHtml(m.name)}</td>
-      <td>${escapeHtml(m.genre || '-')}</td>
-      <td>${escapeHtml(m.dosage || '-')}</td>
+          ? 'display:inline-block;padding:1px 6px;border-radius:8px;background:#f59e0b;color:#111827;font-weight:700;font-size:.72rem;'
+          : 'font-size:.82rem;');
+    const groupHeader = (lastGroup !== group.key)
+      ? `<tr><td colspan="6" style="background:#ecfeff;color:#0f172a;font-weight:700;font-size:.78rem;padding:.45rem .55rem;border-left:4px solid #0f766e;">${escapeHtml(group.label)}</td></tr>`
+      : '';
+    lastGroup = group.key;
+    return `${groupHeader}<tr>
+      <td class="med-name-cell" style="color:#1976d2;font-weight:bold;cursor:pointer;text-decoration:underline;font-size:.85rem;" onclick="openDetails(${idx})">${escapeHtml(m.name)}</td>
+      <td style="font-size:.82rem;">${escapeHtml(m.genre || '-')}</td>
+      <td style="font-size:.82rem;">${escapeHtml(m.dosage || '-')}</td>
       <td><span style="${qtyStyle}">${qty}</span></td>
       <td><span style="${expStyle}">${fmtMMAA(m.expiry)}</span></td>
-      <td>${tags.join(' ')}</td>
+      <td style="font-size:.8rem;">${tags.join(' ')}</td>
     </tr>`;
   }).join('');
 }
