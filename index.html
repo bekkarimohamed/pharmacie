@@ -397,13 +397,14 @@
       background: none;
       border: none;
       cursor: pointer;
-      margin: 0 0.25rem;
-      font-size: 1.1rem;
-      padding: 0.5rem;
+      margin: 0 0.12rem;
+      font-size: 0.95rem;
+      padding: 0.28rem 0.34rem;
       border-radius: var(--radius);
       transition: var(--transition);
       position: relative;
       overflow: hidden;
+      line-height: 1;
     }
 
     .action-btn::before {
@@ -428,12 +429,21 @@
     .edit{color: var(--success);}
     .delete{color: var(--danger);}
     .use{color: var(--warning);}
+    .qty-plus{color:#059669;}
+    .qty-minus{color:#dc2626;}
+    #med-table td:nth-child(7),
+    #med-table-edit td:nth-child(6),
+    #med-table-delete td:nth-child(6),
+    #med-table-use td:nth-child(6){
+      white-space: nowrap;
+      min-width: 128px;
+    }
 
     form{
-      max-width: 520px;
+      max-width: 460px;
       margin-top: 1rem;
       background: var(--card-bg);
-      padding: 2rem;
+      padding: 1.4rem;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
@@ -1123,6 +1133,8 @@ const TOBUY_KEY = "medicines_to_buy";
 const HISTORY_KEY = "medicines_history";
 const PENDING_DELETE_KEY = "medicines_pending_delete";
 const PENDING_TOBUY_DELETE_KEY = "tobuy_pending_delete";
+const DEFAULT_STOCK_THRESHOLD = 5;
+const DEFAULT_PREEXP_DAYS = 30;
 
 // (optionnel) clA si tu veux gArer des exemples une seule fois
 const SEEDED_KEY = "medicines_seeded_once";
@@ -1159,6 +1171,16 @@ function escapeAttr(str){
 
 function getTodayISODate(){
   return new Date().toISOString().slice(0,10);
+}
+
+function getStockThreshold(m){
+  const v = Number(m && m.stockThreshold);
+  return Number.isFinite(v) && v >= 0 ? v : DEFAULT_STOCK_THRESHOLD;
+}
+
+function getPreExpiryDays(m){
+  const v = Number(m && m.preExpiryDays);
+  return Number.isFinite(v) && v >= 1 ? v : DEFAULT_PREEXP_DAYS;
 }
 
 function saveHistory(){
@@ -1536,6 +1558,7 @@ function checkPwd(){
     show('inventory');
     updateStats();
     renderAll();
+    setTimeout(maybeShowStartupAlerts, 200);
   } else {
     document.getElementById('pwd-error').style.display = 'block';
   }
@@ -1637,15 +1660,15 @@ function show(id){
 ========================= */
 function updateStats(){
   const today = new Date(); today.setHours(0,0,0,0);
-  const limit = new Date(today); limit.setDate(today.getDate() + 30);
 
   let exp=0, pre=0, zer=0;
   let listHtml = '';
 
   meds.forEach(m=>{
     const e = new Date(m.expiry); e.setHours(0,0,0,0);
+    const medLimit = new Date(today); medLimit.setDate(today.getDate() + getPreExpiryDays(m));
     const isExp = e < today;
-    const isPre = !isExp && e <= limit;
+    const isPre = !isExp && e <= medLimit;
     const isZero = Number(m.quantity) === 0;
 
     if(isExp) exp++;
@@ -1675,14 +1698,57 @@ function updateStats(){
 
 function getAlertFlags(m){
   const today = new Date(); today.setHours(0,0,0,0);
-  const limit = new Date(today); limit.setDate(today.getDate() + 30);
+  const limit = new Date(today); limit.setDate(today.getDate() + getPreExpiryDays(m));
   const exp = new Date(m.expiry); exp.setHours(0,0,0,0);
   const qty = Number(m.quantity) || 0;
+  const stockThreshold = getStockThreshold(m);
   const expired = exp < today;
   const pre = !expired && exp <= limit;
   const zero = qty === 0;
-  const low = qty > 0 && qty <= 5;
+  const low = qty > 0 && qty <= stockThreshold;
   return { expired, pre, zero, low };
+}
+
+function collectCurrentAlerts(){
+  const lines = [];
+  meds.forEach(m => {
+    const a = getAlertFlags(m);
+    const tags = [];
+    if(a.expired) tags.push('EXPIRE');
+    if(a.pre) tags.push('PRE-EXPIRATION');
+    if(a.zero) tags.push('STOCK NUL');
+    if(a.low) tags.push('STOCK FAIBLE');
+    if(tags.length){
+      lines.push(`${m.name || '-'} (${m.dosage || '-'}) -> ${tags.join(', ')}`);
+    }
+  });
+  return lines.sort((x,y)=>x.localeCompare(y));
+}
+
+function maybeShowStartupAlerts(){
+  const lines = collectCurrentAlerts();
+  if(!lines.length) return;
+
+  const preview = lines.slice(0, 12);
+  const more = lines.length > preview.length ? `\n... et ${lines.length - preview.length} autre(s)` : '';
+  alert(`ALERTES PHARMACIE\n\n${preview.join('\n')}${more}`);
+
+  if('Notification' in window){
+    const send = () => {
+      try{
+        const body = preview.slice(0, 3).join(' | ');
+        new Notification('Alertes pharmacie', { body: body || 'Verifier les alertes de stock et peremption.' });
+      }catch(_e){}
+    };
+
+    if(Notification.permission === 'granted'){
+      send();
+    } else if(Notification.permission === 'default'){
+      Notification.requestPermission().then(p => {
+        if(p === 'granted') send();
+      }).catch(()=>{});
+    }
+  }
 }
 
 function renderAlertsSection(){
@@ -1835,6 +1901,68 @@ function setupExtraMenus(){
   }
 }
 
+function setupPerMedSettingsUI(){
+  // Add form fields
+  const addForm = document.getElementById('add-form');
+  if(addForm && !document.getElementById('stock-threshold')){
+    const notesGroup = document.getElementById('notes') ? document.getElementById('notes').closest('.form-group') : null;
+    if(notesGroup){
+      notesGroup.insertAdjacentHTML('beforebegin', `
+        <div class="form-group">
+          <label>Seuil stock faible</label>
+          <input type="number" id="stock-threshold" min="0" value="${DEFAULT_STOCK_THRESHOLD}">
+        </div>
+        <div class="form-group">
+          <label>Jours pre-peremption</label>
+          <input type="number" id="preexp-days" min="1" value="${DEFAULT_PREEXP_DAYS}">
+        </div>
+      `);
+    }
+  }
+  const genreAdd = document.getElementById('genre');
+  if(genreAdd && !document.getElementById('custom-genre')){
+    const wrap = genreAdd.parentElement;
+    if(wrap){
+      wrap.insertAdjacentHTML('beforeend', `<input type="text" id="custom-genre" placeholder="Ajouter un genre personnalise" style="margin-top:.5rem;display:none;">`);
+      genreAdd.addEventListener('change', ()=>{
+        const c = document.getElementById('custom-genre');
+        if(!c) return;
+        c.style.display = genreAdd.value === 'Autre' ? 'block' : 'none';
+      });
+    }
+  }
+
+  // Edit form fields
+  const editForm = document.getElementById('edit-form');
+  if(editForm && !document.getElementById('edit-stock-threshold')){
+    const notesGroup = document.getElementById('edit-notes') ? document.getElementById('edit-notes').closest('.form-group') : null;
+    if(notesGroup){
+      notesGroup.insertAdjacentHTML('beforebegin', `
+        <div class="form-group">
+          <label>Seuil stock faible</label>
+          <input type="number" id="edit-stock-threshold" min="0" value="${DEFAULT_STOCK_THRESHOLD}">
+        </div>
+        <div class="form-group">
+          <label>Jours pre-peremption</label>
+          <input type="number" id="edit-preexp-days" min="1" value="${DEFAULT_PREEXP_DAYS}">
+        </div>
+      `);
+    }
+  }
+  const genreEdit = document.getElementById('edit-genre');
+  if(genreEdit && !document.getElementById('edit-custom-genre')){
+    const wrap = genreEdit.parentElement;
+    if(wrap){
+      wrap.insertAdjacentHTML('beforeend', `<input type="text" id="edit-custom-genre" placeholder="Ajouter un genre personnalise" style="margin-top:.5rem;display:none;">`);
+      genreEdit.addEventListener('change', ()=>{
+        const c = document.getElementById('edit-custom-genre');
+        if(!c) return;
+        c.style.display = genreEdit.value === 'Autre' ? 'block' : 'none';
+      });
+    }
+  }
+}
+
 function collapseHiddenNavItems(){
   document.querySelectorAll('#main-nav li').forEach(li => {
     const a = li.querySelector('a.nav-hidden');
@@ -1902,12 +2030,14 @@ function renderAll(){
 
       // Calcul des alertes
       let alertMsgs = [];
-      if (q < 5) alertMsgs.push('<span style="color:#d32f2f;font-weight:bold;">stock < 5</span>');
+      const stockThreshold = getStockThreshold(m);
+      if (q > 0 && q <= stockThreshold) alertMsgs.push(`<span style="color:#d32f2f;font-weight:bold;">stock <= ${stockThreshold}</span>`);
       
       const today = new Date(); today.setHours(0,0,0,0);
       const exp = new Date(m.expiry); exp.setHours(0,0,0,0);
       const diffDays = Math.ceil((exp - today) / (1000*60*60*24));
-      if (diffDays <= 30) alertMsgs.push('<span style="color:#f57c00;font-weight:bold;">date < 1mois</span>');
+      const preDays = getPreExpiryDays(m);
+      if (diffDays <= preDays) alertMsgs.push(`<span style="color:#f57c00;font-weight:bold;">date <= ${preDays}j</span>`);
 
       let alertHtml = alertMsgs.length > 0 ? alertMsgs.join('<br>') : '-';
 
@@ -1923,7 +2053,7 @@ function renderAll(){
 
       if(tableId === 'med-table'){
         row += `
-          <td><button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">&#9998;</button><button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">&#128465;</button><button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">&#128138;</button></td>
+          <td><button class="action-btn qty-minus" title="Inventaire -1" onclick="quickAdjustStock(${idx}, -1)">-1</button><button class="action-btn qty-plus" title="Inventaire +1" onclick="quickAdjustStock(${idx}, 1)">+1</button><button class="action-btn edit" title="Modifier" onclick="openEdit(${idx})">&#9998;</button><button class="action-btn delete" title="Supprimer" onclick="removeMed(${idx})">&#128465;</button><button class="action-btn use" title="Utiliser" onclick="useMed(${idx})">&#128138;</button></td>
         `;
       } else if(tableId === 'med-table-edit'){
         row += `
@@ -1963,7 +2093,12 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
 
   const name = normalizeName(document.getElementById('name').value);
   const dosage = normalizeName(document.getElementById('dosage').value);
-  const genre = document.getElementById('genre').value;
+  const genreSelect = document.getElementById('genre');
+  const customGenreEl = document.getElementById('custom-genre');
+  let genre = genreSelect ? genreSelect.value : '';
+  if(genre === 'Autre' && customGenreEl && customGenreEl.value.trim()){
+    genre = customGenreEl.value.trim();
+  }
   const purchaseDateEl = document.getElementById('purchase-date');
   const purchaseDateCustomEl = document.getElementById('purchase-date-custom');
   let purchaseDate = purchaseDateEl ? purchaseDateEl.value : '';
@@ -1988,6 +2123,8 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
   }
 
   const notes = document.getElementById('notes').value.trim();
+  const stockThreshold = Math.max(0, parseInt((document.getElementById('stock-threshold')||{}).value, 10) || DEFAULT_STOCK_THRESHOLD);
+  const preExpiryDays = Math.max(1, parseInt((document.getElementById('preexp-days')||{}).value, 10) || DEFAULT_PREEXP_DAYS);
   const now = new Date().toISOString();
   const imageFile = document.getElementById('image-file') ? document.getElementById('image-file').files[0] : null;
   const imageUrl = await uploadMedImageIfAny(imageFile, name, dosage);
@@ -1998,7 +2135,7 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
   if(existingIndex === -1){
     const newMed = {
       name, dosage, genre, initialStock, quantity, price, nbBoxes,
-      expiry: expiryISO, notes, purchaseDate, imageUrl,
+      expiry: expiryISO, notes, purchaseDate, imageUrl, stockThreshold, preExpiryDays,
       created_at: now,
       updated_at: now,
       _localModified: true
@@ -2029,6 +2166,12 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
     }
 
     e.target.reset();
+    if(customGenreEl){
+      customGenreEl.value = '';
+      customGenreEl.style.display = 'none';
+    }
+    if(document.getElementById('stock-threshold')) document.getElementById('stock-threshold').value = DEFAULT_STOCK_THRESHOLD;
+    if(document.getElementById('preexp-days')) document.getElementById('preexp-days').value = DEFAULT_PREEXP_DAYS;
     if(purchaseDateEl && purchaseDateCustomEl){
       purchaseDateCustomEl.checked = false;
       purchaseDateEl.disabled = true;
@@ -2068,6 +2211,8 @@ a... Voulez-vous ACTUALISER (cumuler les stocks) `;
   ex.price = price; // dernier prix remplace
   ex.nbBoxes = nbBoxes;
   ex.genre = genre;
+  ex.stockThreshold = stockThreshold;
+  ex.preExpiryDays = preExpiryDays;
   ex.expiry = earliestExpiry(ex.expiry, expiryISO);
   ex.notes = mergeNotes(ex.notes, notes);
   ex.purchaseDate = purchaseDate;
@@ -2090,6 +2235,12 @@ a... Voulez-vous ACTUALISER (cumuler les stocks) `;
   }
   
   e.target.reset();
+  if(customGenreEl){
+    customGenreEl.value = '';
+    customGenreEl.style.display = 'none';
+  }
+  if(document.getElementById('stock-threshold')) document.getElementById('stock-threshold').value = DEFAULT_STOCK_THRESHOLD;
+  if(document.getElementById('preexp-days')) document.getElementById('preexp-days').value = DEFAULT_PREEXP_DAYS;
   show('inventory');
   renderAll();
   updateStats();
@@ -2105,11 +2256,22 @@ function openEdit(idx){
   document.getElementById('edit-index').value = idx;
   document.getElementById('edit-name').value = m.name || '';
   document.getElementById('edit-dosage').value = m.dosage || '';
-  document.getElementById('edit-genre').value = m.genre || '';
+  const editGenreSelect = document.getElementById('edit-genre');
+  const editCustomGenre = document.getElementById('edit-custom-genre');
+  const hasGenreOption = editGenreSelect && [...editGenreSelect.options].some(o => o.value === (m.genre || ''));
+  if(editGenreSelect){
+    editGenreSelect.value = hasGenreOption ? (m.genre || '') : 'Autre';
+  }
+  if(editCustomGenre){
+    editCustomGenre.value = hasGenreOption ? '' : (m.genre || '');
+    editCustomGenre.style.display = (editGenreSelect && editGenreSelect.value === 'Autre') ? 'block' : 'none';
+  }
   document.getElementById('edit-quantity').value = Number(m.quantity) || 0;
   document.getElementById('edit-initial').value = Number(m.initialStock) || 0;
   document.getElementById('edit-price').value = Number(m.price) || 0;
   document.getElementById('edit-nb-boxes').value = Number(m.nbBoxes) || 1;
+  if(document.getElementById('edit-stock-threshold')) document.getElementById('edit-stock-threshold').value = getStockThreshold(m);
+  if(document.getElementById('edit-preexp-days')) document.getElementById('edit-preexp-days').value = getPreExpiryDays(m);
   document.getElementById('edit-expiry-mmaa').value = fmtMMAA(m.expiry);
   document.getElementById('edit-notes').value = m.notes || '';
   const editPurchaseDate = document.getElementById('edit-purchase-date');
@@ -2136,7 +2298,12 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 
   const name = normalizeName(document.getElementById('edit-name').value);
   const dosage = normalizeName(document.getElementById('edit-dosage').value);
-  const genre = document.getElementById('edit-genre').value;
+  const editGenreSelect = document.getElementById('edit-genre');
+  const editCustomGenre = document.getElementById('edit-custom-genre');
+  let genre = editGenreSelect ? editGenreSelect.value : '';
+  if(genre === 'Autre' && editCustomGenre && editCustomGenre.value.trim()){
+    genre = editCustomGenre.value.trim();
+  }
   const editPurchaseDate = document.getElementById('edit-purchase-date');
   const editPurchaseCustom = document.getElementById('edit-purchase-date-custom');
   let purchaseDate = editPurchaseDate ? editPurchaseDate.value : '';
@@ -2161,6 +2328,8 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
   }
 
   const notes = document.getElementById('edit-notes').value.trim();
+  const stockThreshold = Math.max(0, parseInt((document.getElementById('edit-stock-threshold')||{}).value, 10) || DEFAULT_STOCK_THRESHOLD);
+  const preExpiryDays = Math.max(1, parseInt((document.getElementById('edit-preexp-days')||{}).value, 10) || DEFAULT_PREEXP_DAYS);
   const editImageFile = document.getElementById('edit-image-file') ? document.getElementById('edit-image-file').files[0] : null;
   const imageUrl = await uploadMedImageIfAny(editImageFile, name, dosage);
 
@@ -2183,6 +2352,8 @@ Voulez-vous FUSIONNER (cumuler) ce mAdicament modifiA avec l'existant `;
       target.price = price; // dernier prix remplace
       target.nbBoxes = nbBoxes;
       target.genre = genre;
+      target.stockThreshold = stockThreshold;
+      target.preExpiryDays = preExpiryDays;
       target.expiry = earliestExpiry(target.expiry, expiryISO);
       target.notes = mergeNotes(target.notes, notes);
       if(!target.purchaseDate) target.purchaseDate = purchaseDate;
@@ -2222,7 +2393,7 @@ Voulez-vous FUSIONNER (cumuler) ce mAdicament modifiA avec l'existant `;
   }
 
   const keepId = meds[idx].id;
-  meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || '') };
+  meds[idx] = { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || ''), stockThreshold, preExpiryDays };
   if(keepId) meds[idx].id = keepId;
   meds[idx]._localModified = true; // Marquer comme modifiA localement
   save();
@@ -2230,7 +2401,7 @@ Voulez-vous FUSIONNER (cumuler) ce mAdicament modifiA avec l'existant `;
 
   // Mettre A  jour le cloud IMMADIATEMENT
   if(window.updateMedicament && meds[idx].id){
-    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || '') }).then(result => {
+    updateMedicament(meds[idx].id, { name, dosage, genre, quantity, initialStock, price, nbBoxes, expiry: expiryISO, notes, purchaseDate, imageUrl: (imageUrl || meds[idx].imageUrl || ''), stockThreshold, preExpiryDays }).then(result => {
       if(result.error){
         console.error('Erreur update cloud:', result.error);
       } else {
@@ -2248,6 +2419,31 @@ Voulez-vous FUSIONNER (cumuler) ce mAdicament modifiA avec l'existant `;
 /* =========================
    SUPPRESSION / UTILISATION
 ========================= */
+function quickAdjustStock(idx, delta){
+  const m = meds[idx];
+  if(!m) return;
+  const oldQty = Number(m.quantity) || 0;
+  const nextQty = Math.max(0, oldQty + Number(delta || 0));
+  if(nextQty === oldQty) return;
+
+  m.quantity = nextQty;
+  m._localModified = true;
+  m.updated_at = new Date().toISOString();
+  save();
+  addHistory('INVENTAIRE', 'Stock', m.name, `${oldQty} -> ${nextQty}`);
+
+  if(window.updateMedicament && m.id){
+    updateMedicament(m.id, m).then(result => {
+      if(result && result.error){
+        console.error('Erreur inventaire cloud:', result.error);
+      }
+    });
+  }
+
+  renderAll();
+  updateStats();
+}
+
 function removeMed(idx){
   const m = meds[idx];
   if(!m) return;
@@ -2599,7 +2795,9 @@ function restoreBackupFromFile(file){
         nbBoxes: Number(x.nbBoxes)||1,
         expiry: x.expiry,
         notes: (x.notes||"").toString(),
-        imageUrl: x.imageUrl || x.image_url || ''
+        imageUrl: x.imageUrl || x.image_url || '',
+        stockThreshold: Math.max(0, Number(x.stockThreshold ?? x.stock_threshold ?? DEFAULT_STOCK_THRESHOLD) || DEFAULT_STOCK_THRESHOLD),
+        preExpiryDays: Math.max(1, Number(x.preExpiryDays ?? x.pre_expiry_days ?? DEFAULT_PREEXP_DAYS) || DEFAULT_PREEXP_DAYS)
       }));
 
       meds = cleaned;
@@ -2675,6 +2873,7 @@ document.getElementById('bio-btn').addEventListener('click', async ()=>{
     show('inventory');
     updateStats();
     renderAll();
+    setTimeout(maybeShowStartupAlerts, 200);
   } catch(e){
     alert('a Empreinte refusAe ou indisponible.');
   }
@@ -2727,6 +2926,7 @@ if(savedTheme === 'dark') {
 }
 
 setupExtraMenus();
+setupPerMedSettingsUI();
 collapseHiddenNavItems();
 
 document.addEventListener('change', (e)=>{
